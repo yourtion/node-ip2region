@@ -2,14 +2,16 @@
   "name": "ip2region",
   "version": "0.0.1",
   "description": "ip to geo database",
-  "main": "index.js",
+  "main": "lib/index.js",
   "scripts": {
-    "lint": "eslint *.js --fix",
+    "lint": "eslint lib test --fix",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "Yourtion <yourtion@gmail.com>",
   "license": "MIT",
   "devDependencies": {
+    "debug": "^2.6.6",
     "eslint-config-guo": "^0.4.0"
-  }
+  },
+  "dependencies": {}
 }
