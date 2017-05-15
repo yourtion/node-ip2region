@@ -5,11 +5,13 @@
   "main": "lib/index.js",
   "scripts": {
     "lint": "eslint lib test --fix",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "ava",
+    "test-debug": "export NODE_ENV='dev' && export DEBUG=ip2region:* && npm test"
   },
   "author": "Yourtion <yourtion@gmail.com>",
   "license": "MIT",
   "devDependencies": {
+    "ava": "^0.19.1",
     "debug": "^2.6.6",
     "eslint-config-guo": "^0.4.0"
   },
