@@ -2,8 +2,8 @@
 
 import test from 'ava';
 
-const ip = require('../lib');
-const query = ip.create('./data/ip2region.db');
+const IP2Region = require('../lib');
+const query = new IP2Region();
 
 test('btreeSearchSync - Found', t => {
   const res = query.btreeSearchSync('120.24.78.68');
