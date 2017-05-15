@@ -1,0 +1,11 @@
+{
+  "name": "ip2region",
+  "version": "0.0.1",
+  "description": "ip to geo database",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Yourtion <yourtion@gmail.com>",
+  "license": "MIT"
+}
