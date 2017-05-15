@@ -4,8 +4,12 @@
   "description": "ip to geo database",
   "main": "index.js",
   "scripts": {
+    "lint": "eslint *.js --fix",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "Yourtion <yourtion@gmail.com>",
-  "license": "MIT"
+  "license": "MIT",
+  "devDependencies": {
+    "eslint-config-guo": "^0.4.0"
+  }
 }
