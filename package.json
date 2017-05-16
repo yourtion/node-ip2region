@@ -3,6 +3,14 @@
   "version": "0.2.0",
   "description": "ip to geo database",
   "main": "lib/index.js",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/yourtion/node-ip2region.git"
+  },
+  "bugs": {
+    "url": "https://github.com/yourtion/node-ip2region/issues"
+  },
+  "homepage": "https://github.com/yourtion/node-ip2region#readme",
   "scripts": {
     "lint": "eslint lib test --fix",
     "test": "ava",
