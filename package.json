@@ -13,13 +13,15 @@
   "homepage": "https://github.com/yourtion/node-ip2region#readme",
   "scripts": {
     "lint": "eslint lib test --fix",
-    "test": "ava",
+    "benmark": "node test/benmark.js",
+    "test": "ava test/index.js",
     "test-debug": "export NODE_ENV='dev' && export DEBUG=ip2region:* && npm test"
   },
   "author": "Yourtion <yourtion@gmail.com>",
   "license": "MIT",
   "devDependencies": {
     "ava": "^0.19.1",
+    "benchmark": "^2.1.4",
     "debug": "^2.6.6",
     "eslint-config-guo": "^0.4.0"
   },
