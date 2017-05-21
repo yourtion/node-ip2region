@@ -24,3 +24,17 @@
 # node-ip2region
 
 IP to region on Node.js
+
+## 安装使用使用
+
+```bash
+$ npm install ip2region --save
+```
+
+```javascript
+'use strict';
+
+const IP2Region = require('ip2region');
+const query = new IP2Region({ inMemory: true });
+const res = query.inMemoryBtreeSearch('120.24.78.68');
+```
