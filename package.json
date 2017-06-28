@@ -1,6 +1,6 @@
 {
   "name": "ip2region",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "description": "ip to geo database",
   "main": "lib/index.js",
   "repository": {
