@@ -15,7 +15,7 @@
 [coveralls-url]: https://coveralls.io/r/yourtion/node-ip2region?branch=master
 [david-image]: https://img.shields.io/david/yourtion/node-ip2region.svg?style=flat-square
 [david-url]: https://david-dm.org/yourtion/node-ip2region
-[node-image]: https://img.shields.io/badge/node.js-%3E=4.0-green.svg?style=flat-square
+[node-image]: https://img.shields.io/badge/node.js-%3E=6.0-green.svg?style=flat-square
 [node-url]: http://nodejs.org/download/
 [download-image]: https://img.shields.io/npm/dm/ip2region.svg?style=flat-square
 [download-url]: https://npmjs.org/package/ip2region
