@@ -35,6 +35,6 @@ $ npm install ip2region --save
 'use strict';
 
 const IP2Region = require('ip2region');
-const query = new IP2Region({ inMemory: true });
-const res = query.inMemoryBtreeSearch('120.24.78.68');
+const query = new IP2Region();
+const res = query.search('120.24.78.68');
 ```
