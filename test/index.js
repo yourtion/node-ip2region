@@ -104,3 +104,24 @@ test('search without Parse - Found', t => {
   t.deepEqual(res, { city: 2163, region: '中国|华南|广东省|深圳市|阿里云' });
 });
 
+test('More Search Test', t => {
+  query2.search(-1);
+  query2.search(0);
+  query2.search(4294967040);
+  query2.search('');
+  query2.search('aa');
+  query.btreeSearchSync(-1);
+  query.btreeSearchSync(0);
+  query.btreeSearchSync(4294967040);
+  query.btreeSearchSync('');
+  query.btreeSearchSync('aa');
+  query2.binarySearchSync('120.24.78.68');
+  t.pass();
+});
+
+test('Error - init with db file', t => {
+  const error = t.throws(() => {
+    new IP2Region({ dbPath: '/tmp/db.db' });
+  });
+  t.is(error.message, '[ip2region] db file not exists : /tmp/db.db');
+});
