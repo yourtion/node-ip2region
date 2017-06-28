@@ -38,3 +38,23 @@ const IP2Region = require('ip2region');
 const query = new IP2Region();
 const res = query.search('120.24.78.68');
 ```
+
+## 性能
+
+库中实现了四种搜索方法，包括基于内存和基于文件的 `BinarySearch` 与 `BtreeSearch`。
+
+从 benmark 可以看出效果最好的是 `inMemoryBtreeSearch`，所以默认的 search 方法使用这个。
+
+测试结果如下：
+
+```
+$ node test/benmark.js
+
+inMemoryBinarySearch x 70,936 ops/sec ±2.50% (81 runs sampled)
+inMemoryBtreeSearch x 105,500 ops/sec ±21.11% (58 runs sampled)
+binarySearchSync x 15,926 ops/sec ±8.47% (79 runs sampled)
+btreeSearchSync x 42,713 ops/sec ±7.10% (74 runs sampled)
+Fastest is inMemoryBtreeSearch
+```
+
+需要其他方法可以参考 [test/index.js](test/index.js) 调用。
