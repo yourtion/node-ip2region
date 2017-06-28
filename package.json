@@ -14,16 +14,26 @@
   "scripts": {
     "lint": "eslint lib test --fix",
     "benmark": "node test/benmark.js",
-    "test": "ava test/index.js",
-    "test-debug": "export NODE_ENV='dev' && export DEBUG=ip2region:* && npm test"
+    "test": "ava",
+    "test-debug": "export NODE_ENV='dev' && export DEBUG=ip2region:* && npm test",
+    "test-cov": "nyc --reporter=html --reporter=text ava",
+    "test-coveralls": "nyc ava report --reporter=text-lcov | coveralls",
+    "prepublish": "npm run lint && npm run test-coveralls"
   },
   "author": "Yourtion <yourtion@gmail.com>",
   "license": "MIT",
   "devDependencies": {
     "ava": "^0.19.1",
     "benchmark": "^2.1.4",
+    "coveralls": "^2.13.1",
     "debug": "^2.6.8",
-    "eslint-config-guo": "^0.4.0"
+    "eslint-config-guo": "^0.4.0",
+    "nyc": "^11.0.3"
+  },
+  "ava": {
+		"files": [
+			"test/index.js"
+		]
   },
   "dependencies": {}
 }
