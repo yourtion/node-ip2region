@@ -17,7 +17,7 @@
     "test": "ava",
     "test-debug": "export NODE_ENV='dev' && export DEBUG=ip2region:* && npm test",
     "test-cov": "nyc --reporter=html --reporter=text ava",
-    "coverage": "npm run test-cov && nyc report --reporter=text-lcov | coveralls",
+    "coverage": "export NODE_ENV='dev' && npm run test-cov && nyc report --reporter=text-lcov | coveralls",
     "prepublish": "npm run lint && npm run coverage"
   },
   "author": "Yourtion <yourtion@gmail.com>",
@@ -27,13 +27,14 @@
     "benchmark": "^2.1.4",
     "coveralls": "^2.13.1",
     "debug": "^2.6.8",
+    "eslint": "^4.1.1",
     "eslint-config-guo": "^0.4.0",
     "nyc": "^11.0.3"
   },
   "ava": {
-		"files": [
-			"test/index.js"
-		]
+    "files": [
+      "test/index.js"
+    ]
   },
   "dependencies": {}
 }
