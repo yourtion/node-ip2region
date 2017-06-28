@@ -1,6 +1,6 @@
 {
   "name": "ip2region",
-  "version": "0.4.0",
+  "version": "0.5.0",
   "description": "ip to geo database",
   "main": "lib/index.js",
   "repository": {
@@ -17,8 +17,8 @@
     "test": "ava",
     "test-debug": "export NODE_ENV='dev' && export DEBUG=ip2region:* && npm test",
     "test-cov": "nyc --reporter=html --reporter=text ava",
-    "test-coveralls": "nyc ava report --reporter=text-lcov | coveralls",
-    "prepublish": "npm run lint && npm run test-coveralls"
+    "coverage": "npm run test-cov && nyc report --reporter=text-lcov | coveralls",
+    "prepublish": "npm run lint && npm run coverage"
   },
   "author": "Yourtion <yourtion@gmail.com>",
   "license": "MIT",
