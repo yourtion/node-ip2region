@@ -1,7 +1,8 @@
 {
   "name": "ip2region",
   "version": "1.0.0",
-  "description": "ip to geo database",
+  "description": "ip to geo database, IP 地址到区域运营商",
+  "keywords": [ "ip", "ipaddress-to-address", "ip-address", "ip-location", "ip-region", "ip-lookup", "ip-search", "ip-geo" ],
   "main": "lib/index.js",
   "repository": {
     "type": "git",
@@ -35,6 +36,5 @@
     "files": [
       "test/index.js"
     ]
-  },
-  "dependencies": {}
+  }
 }
