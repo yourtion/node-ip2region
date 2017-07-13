@@ -24,7 +24,7 @@
   "author": "Yourtion <yourtion@gmail.com>",
   "license": "MIT",
   "devDependencies": {
-    "ava": "^0.19.1",
+    "ava": "^0.20.0",
     "benchmark": "^2.1.4",
     "coveralls": "^2.13.1",
     "debug": "^2.6.8",
