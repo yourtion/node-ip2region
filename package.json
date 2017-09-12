@@ -29,7 +29,7 @@
     "coveralls": "^2.13.1",
     "debug": "^3.0.0",
     "eslint": "^4.1.1",
-    "eslint-config-guo": "^0.5.0",
+    "eslint-config-guo": "^0.6.0",
     "nyc": "^11.0.3"
   },
   "ava": {
