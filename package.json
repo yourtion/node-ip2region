@@ -26,7 +26,7 @@
   "devDependencies": {
     "ava": "^0.22.0",
     "benchmark": "^2.1.4",
-    "coveralls": "^2.13.1",
+    "coveralls": "^3.0.0",
     "debug": "^3.0.0",
     "eslint": "^4.1.1",
     "eslint-config-guo": "^0.6.0",
