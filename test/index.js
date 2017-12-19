@@ -13,7 +13,7 @@ test('btreeSearchSync - Found', t => {
 
 test('btreeSearchSync - Not Found', t => {
   const res = query.btreeSearch('10.10.10.10');
-  t.deepEqual(res, { city: 0, region: '未分配或者内网IP|0|0|0|0' });
+  t.deepEqual(res, { city: 0, region: '内网IP|0|0|内网IP|内网IP' });
 });
 
 test('btreeSearchSync Parse - Found', t => {
@@ -23,7 +23,7 @@ test('btreeSearchSync Parse - Found', t => {
 
 test('btreeSearchSync Parse - Not Found', t => {
   const res = query.btreeSearch('10.10.10.10', true);
-  t.deepEqual(res, { id: 0, country: '未分配或者内网IP', region: '0', province: '0', city: '0', isp: '0' });
+  t.deepEqual(res, { id: 0, country: '内网IP', region: '0', province: '0', city: '内网IP', isp: '内网IP' });
 });
 
 
@@ -34,7 +34,7 @@ test('binarySearchSync - Found', t => {
 
 test('binarySearchSync - Not Found', t => {
   const res = query.binarySearch('10.10.10.10');
-  t.deepEqual(res, { city: 0, region: '未分配或者内网IP|0|0|0|0' });
+  t.deepEqual(res, { city: 0, region: '内网IP|0|0|内网IP|内网IP' });
 });
 
 test('binarySearchSync Parse - Found', t => {
@@ -44,7 +44,7 @@ test('binarySearchSync Parse - Found', t => {
 
 test('binarySearchSync Parse - Not Found', t => {
   const res = query.binarySearch('10.10.10.10', true);
-  t.deepEqual(res, { id: 0, country: '未分配或者内网IP', region: '0', province: '0', city: '0', isp: '0' });
+  t.deepEqual(res, { id: 0, country: '内网IP', region: '0', province: '0', city: '内网IP', isp: '内网IP' });
 });
 
 
@@ -55,7 +55,7 @@ test('inMemoryBinarySearch - Found', t => {
 
 test('inMemoryBinarySearch - Not Found', t => {
   const res = query2.binarySearch('10.10.10.10');
-  t.deepEqual(res, { city: 0, region: '未分配或者内网IP|0|0|0|0' });
+  t.deepEqual(res, { city: 0, region: '内网IP|0|0|内网IP|内网IP' });
 });
 
 test('inMemoryBinarySearch Parse - Found', t => {
@@ -65,7 +65,7 @@ test('inMemoryBinarySearch Parse - Found', t => {
 
 test('inMemoryBinarySearch Parse - Not Found', t => {
   const res = query2.binarySearch('10.10.10.10', true);
-  t.deepEqual(res, { id: 0, country: '未分配或者内网IP', region: '0', province: '0', city: '0', isp: '0' });
+  t.deepEqual(res, { id: 0, country: '内网IP', region: '0', province: '0', city: '内网IP', isp: '内网IP' });
 });
 
 
@@ -76,7 +76,7 @@ test('inMemoryBtreeSearch - Found', t => {
 
 test('inMemoryBtreeSearch - Not Found', t => {
   const res = query2.btreeSearch('10.10.10.10');
-  t.deepEqual(res, { city: 0, region: '未分配或者内网IP|0|0|0|0' });
+  t.deepEqual(res, { city: 0, region: '内网IP|0|0|内网IP|内网IP' });
 });
 
 test('inMemoryBtreeSearch Parse - Found', t => {
@@ -86,7 +86,7 @@ test('inMemoryBtreeSearch Parse - Found', t => {
 
 test('inMemoryBtreeSearch Parse - Not Found', t => {
   const res = query2.btreeSearch('10.10.10.10', true);
-  t.deepEqual(res, { id: 0, country: '未分配或者内网IP', region: '0', province: '0', city: '0', isp: '0' });
+  t.deepEqual(res, { id: 0, country: '内网IP', region: '0', province: '0', city: '内网IP', isp: '内网IP' });
 });
 
 test('search - Found', t => {
@@ -96,7 +96,7 @@ test('search - Found', t => {
 
 test('search - Not Found', t => {
   const res = query2.search('10.10.10.10');
-  t.deepEqual(res, { id: 0, country: '未分配或者内网IP', region: '0', province: '0', city: '0', isp: '0' });
+  t.deepEqual(res, { id: 0, country: '内网IP', region: '0', province: '0', city: '内网IP', isp: '内网IP' });
 });
 
 test('search without Parse - Found', t => {
