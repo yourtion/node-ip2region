@@ -24,12 +24,12 @@
   "author": "Yourtion <yourtion@gmail.com>",
   "license": "MIT",
   "devDependencies": {
-    "ava": "^0.21.0",
+    "ava": "^0.24.0",
     "benchmark": "^2.1.4",
-    "coveralls": "^2.13.1",
-    "debug": "^2.6.8",
+    "coveralls": "^3.0.0",
+    "debug": "^3.0.0",
     "eslint": "^4.1.1",
-    "eslint-config-guo": "^0.5.0",
+    "eslint-config-guo": "^0.6.0",
     "nyc": "^11.0.3"
   },
   "ava": {
