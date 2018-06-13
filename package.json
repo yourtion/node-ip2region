@@ -2,7 +2,16 @@
   "name": "ip2region",
   "version": "1.2.0",
   "description": "ip to geo database, IP 地址到区域运营商",
-  "keywords": [ "ip", "ipaddress-to-address", "ip-address", "ip-location", "ip-region", "ip-lookup", "ip-search", "ip-geo" ],
+  "keywords": [
+    "ip",
+    "ipaddress-to-address",
+    "ip-address",
+    "ip-location",
+    "ip-region",
+    "ip-lookup",
+    "ip-search",
+    "ip-geo"
+  ],
   "main": "lib/index.js",
   "repository": {
     "type": "git",
@@ -26,11 +35,11 @@
   "devDependencies": {
     "ava": "^0.25.0",
     "benchmark": "^2.1.4",
-    "coveralls": "^3.0.0",
+    "coveralls": "^3.0.1",
     "debug": "^3.0.0",
-    "eslint": "^4.1.1",
-    "eslint-config-guo": "^0.7.0",
-    "nyc": "^11.0.3"
+    "eslint": "^4.19.1",
+    "eslint-config-guo": "^0.8.0",
+    "nyc": "^12.0.2"
   },
   "ava": {
     "files": [
