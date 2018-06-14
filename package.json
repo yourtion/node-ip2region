@@ -27,8 +27,8 @@
     "test": "ava",
     "test:debug": "export NODE_ENV='dev' && export DEBUG=ip2region:* && npm test",
     "test:cov": "nyc --reporter=html --reporter=text ava",
-    "coveralls": "npm run test-cov && nyc report --reporter=text-lcov | coveralls",
-    "prepublish": "npm run lint && npm run coveralls"
+    "coveralls": "npm run test:cov && nyc report --reporter=text-lcov | coveralls",
+    "prepublishOnly": "npm run lint && npm run coveralls"
   },
   "author": "Yourtion <yourtion@gmail.com>",
   "license": "MIT",
