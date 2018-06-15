@@ -24,26 +24,23 @@
   "scripts": {
     "lint": "eslint lib test --fix",
     "benmark": "node test/benmark.js",
-    "test": "ava",
+    "test": "jest",
     "test:debug": "export NODE_ENV='dev' && export DEBUG=ip2region:* && npm test",
-    "test:cov": "nyc --reporter=html --reporter=text ava",
-    "coveralls": "npm run test:cov && nyc report --reporter=text-lcov | coveralls",
+    "test:cov": "jest --coverage",
+    "coveralls": "jest --coverage --coverageReporters=text-lcov | coveralls",
     "prepublishOnly": "npm run lint && npm run coveralls"
   },
   "author": "Yourtion <yourtion@gmail.com>",
   "license": "MIT",
   "devDependencies": {
-    "ava": "^0.25.0",
     "benchmark": "^2.1.4",
     "coveralls": "^3.0.1",
     "debug": "^3.0.0",
     "eslint": "^4.19.1",
     "eslint-config-guo": "^0.8.0",
-    "nyc": "^12.0.2"
+    "jest": "^23.1.0"
   },
-  "ava": {
-    "files": [
-      "test/index.js"
-    ]
+  "jest": {
+    "testRegex": "test/index.js"
   }
 }
