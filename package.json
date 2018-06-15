@@ -1,6 +1,6 @@
 {
   "name": "ip2region",
-  "version": "1.2.0",
+  "version": "1.3.0",
   "description": "ip to geo database, IP 地址到区域运营商",
   "keywords": [
     "ip",
@@ -24,9 +24,8 @@
   "scripts": {
     "lint": "eslint lib test --fix",
     "benmark": "node test/benmark.js",
-    "test": "jest",
+    "test": "jest --coverage",
     "test:debug": "export NODE_ENV='dev' && export DEBUG=ip2region:* && npm test",
-    "test:cov": "jest --coverage",
     "coveralls": "jest --coverage --coverageReporters=text-lcov | coveralls",
     "prepublishOnly": "npm run lint && npm run coveralls"
   },
