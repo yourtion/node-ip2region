@@ -34,7 +34,7 @@
   "devDependencies": {
     "benchmark": "^2.1.4",
     "coveralls": "^3.0.1",
-    "debug": "^3.0.0",
+    "debug": "^4.0.0",
     "eslint": "^5.0.1",
     "eslint-config-guo": "^0.8.0",
     "jest": "^23.1.0"
