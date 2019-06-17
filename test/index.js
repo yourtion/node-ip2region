@@ -121,3 +121,18 @@ test('Error - init with db file', function () {
   const error = () => new IP2Region({ dbPath: '/tmp/db.db' });
   expect(error).toThrow('[ip2region] db file not exists : /tmp/db.db');
 });
+
+describe('BugFix - 1', function () {
+  const ip = '218.70.78.68';
+  const ret = Object.freeze({ city: 2430, region: '中国|0|重庆|重庆市|电信' });
+
+  it('search', function () {
+    expect(query2.search(ip, false)).toMatchObject(ret);
+  });
+  it('btreeSearch', function () {
+    expect(query2.btreeSearch(ip)).toMatchObject(ret);
+  });
+  it('binarySearch', function () {
+    expect(query2.binarySearch(ip)).toMatchObject(ret);
+  });
+});
