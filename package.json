@@ -1,6 +1,6 @@
 {
   "name": "ip2region",
-  "version": "1.6.0",
+  "version": "1.7.0",
   "description": "ip to geo database, IP 地址到区域运营商",
   "keywords": [
     "ip",
@@ -20,6 +20,10 @@
   "bugs": {
     "url": "https://github.com/yourtion/node-ip2region/issues"
   },
+  "files": [
+    "lib/index.js",
+    "data/ip2region.db"
+  ],
   "homepage": "https://github.com/yourtion/node-ip2region#readme",
   "scripts": {
     "lint": "eslint lib test --fix",
@@ -36,8 +40,8 @@
     "coveralls": "^3.0.1",
     "debug": "^4.0.0",
     "eslint": "^5.0.1",
-    "eslint-config-guo": "^0.8.0",
-    "jest": "^23.1.0"
+    "eslint-config-guo": "^0.10.0",
+    "jest": "^24.8.0"
   },
   "jest": {
     "testRegex": "test/index.js"
