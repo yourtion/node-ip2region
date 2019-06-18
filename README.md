@@ -23,7 +23,7 @@
 
 # node-ip2region
 
-IP 地址到区域运营商 IP to region on Node.js 
+IP 地址到区域运营商 IP to region on Node.js
 
 ## 安装使用使用
 
@@ -48,13 +48,14 @@ console.log(res);
 测试结果如下：
 
 ```
-$ node test/benmark.js
+$ node test/benchmark.js
 
-inMemoryBinarySearch x 70,936 ops/sec ±2.50% (81 runs sampled)
-inMemoryBtreeSearch x 105,500 ops/sec ±21.11% (58 runs sampled)
-binarySearchSync x 15,926 ops/sec ±8.47% (79 runs sampled)
-btreeSearchSync x 42,713 ops/sec ±7.10% (74 runs sampled)
-Fastest is inMemoryBtreeSearch
+search x 742,123 ops/sec ±0.78% (86 runs sampled)
+inMemoryBinarySearch x 168,323 ops/sec ±1.05% (89 runs sampled)
+inMemoryBtreeSearch x 163,726 ops/sec ±2.11% (81 runs sampled)
+binarySearchSync x 15,210 ops/sec ±1.00% (87 runs sampled)
+btreeSearchSync x 63,495 ops/sec ±1.80% (76 runs sampled)
+Fastest is search
 ```
 
 需要其他方法可以参考 [test/index.js](test/index.js) 调用。

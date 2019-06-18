@@ -27,7 +27,7 @@
   "homepage": "https://github.com/yourtion/node-ip2region#readme",
   "scripts": {
     "lint": "eslint lib test --fix",
-    "benmark": "node test/benmark.js",
+    "benchmark": "node test/benchmark.js",
     "test": "jest --coverage",
     "test:debug": "export NODE_ENV='dev' && export DEBUG=ip2region:* && npm test",
     "coveralls": "jest --coverage --coverageReporters=text-lcov | coveralls",
