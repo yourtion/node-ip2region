@@ -2,124 +2,137 @@
 /* eslint-env node, jest */
 
 const IP2Region = require('../lib');
-const query = new IP2Region({ inMemory: false });
-const query2 = new IP2Region();
+const queryInFS = new IP2Region({ inMemory: false });
+const queryInMemoey = new IP2Region();
 
+const ALIYUN_IP = '120.24.78.68';
 const ALIYUN = Object.freeze({ city: 2163, region: '中国|0|广东省|深圳市|阿里云' });
 const ALIYUN2 = Object.freeze({ id: 2163, country: '中国', region: '0', province: '广东省', city: '深圳市', isp: '阿里云' });
+const NEIWAN_IP = '10.10.10.10';
 const NEIWAN = Object.freeze({ city: 0, region: '0|0|0|内网IP|内网IP' });
 const NEIWAN2 = Object.freeze({ id: 0, country: '0', region: '0', province: '0', city: '内网IP', isp: '内网IP' });
 
-test('btreeSearchSync - Found', function () {
-  const res = query.btreeSearch('120.24.78.68');
-  expect(res).toMatchObject(ALIYUN);
-});
+describe('btreeSearchSync', function () {
+  it('Found', function () {
+    const res = queryInFS.btreeSearch(ALIYUN_IP);
+    expect(res).toMatchObject(ALIYUN);
+  });
 
-test('btreeSearchSync - Not Found', function () {
-  const res = query.btreeSearch('10.10.10.10');
-  expect(res).toMatchObject(NEIWAN);
-});
+  it('Not Found', function () {
+    const res = queryInFS.btreeSearch(NEIWAN_IP);
+    expect(res).toMatchObject(NEIWAN);
+  });
 
-test('btreeSearchSync Parse - Found', function () {
-  const res = query.btreeSearch('120.24.78.68', true);
-  expect(res).toMatchObject(ALIYUN2);
-});
+  it('Parse - Found', function () {
+    const res = queryInFS.btreeSearch(ALIYUN_IP, true);
+    expect(res).toMatchObject(ALIYUN2);
+  });
 
-test('btreeSearchSync Parse - Not Found', function () {
-  const res = query.btreeSearch('10.10.10.10', true);
-  expect(res).toMatchObject(NEIWAN2);
-});
-
-
-test('binarySearchSync - Found', function () {
-  const res = query.binarySearch('120.24.78.68');
-  expect(res).toMatchObject(ALIYUN);
-});
-
-test('binarySearchSync - Not Found', function () {
-  const res = query.binarySearch('10.10.10.10');
-  expect(res).toMatchObject(NEIWAN);
-});
-
-test('binarySearchSync Parse - Found', function () {
-  const res = query.binarySearch('120.24.78.68', true);
-  expect(res).toMatchObject(ALIYUN2);
-});
-
-test('binarySearchSync Parse - Not Found', function () {
-  const res = query.binarySearch('10.10.10.10', true);
-  expect(res).toMatchObject(NEIWAN2);
+  it('Parse - Not Found', function () {
+    const res = queryInFS.btreeSearch(NEIWAN_IP, true);
+    expect(res).toMatchObject(NEIWAN2);
+  });
 });
 
 
-test('inMemoryBinarySearch - Found', function () {
-  const res = query2.binarySearch('120.24.78.68');
-  expect(res).toMatchObject(ALIYUN);
+describe('binarySearchSync', function () {
+  it('Found', function () {
+    const res = queryInFS.binarySearch(ALIYUN_IP);
+    expect(res).toMatchObject(ALIYUN);
+  });
+
+  it('Not Found', function () {
+    const res = queryInFS.binarySearch(NEIWAN_IP);
+    expect(res).toMatchObject(NEIWAN);
+  });
+
+  it('Parse - Found', function () {
+    const res = queryInFS.binarySearch(ALIYUN_IP, true);
+    expect(res).toMatchObject(ALIYUN2);
+  });
+
+  it('Parse - Not Found', function () {
+    const res = queryInFS.binarySearch(NEIWAN_IP, true);
+    expect(res).toMatchObject(NEIWAN2);
+  });
 });
 
-test('inMemoryBinarySearch - Not Found', function () {
-  const res = query2.binarySearch('10.10.10.10');
-  expect(res).toMatchObject(NEIWAN);
+
+describe('inMemoryBinarySearch', function () {
+  it('Found', function () {
+    const res = queryInMemoey.binarySearch(ALIYUN_IP);
+    expect(res).toMatchObject(ALIYUN);
+  });
+
+  it('Not Found', function () {
+    const res = queryInMemoey.binarySearch(NEIWAN_IP);
+    expect(res).toMatchObject(NEIWAN);
+  });
+
+  it('Parse - Found', function () {
+    const res = queryInMemoey.binarySearch(ALIYUN_IP, true);
+    expect(res).toMatchObject(ALIYUN2);
+  });
+
+  it('Parse - Not Found', function () {
+    const res = queryInMemoey.binarySearch(NEIWAN_IP, true);
+    expect(res).toMatchObject(NEIWAN2);
+  });
 });
 
-test('inMemoryBinarySearch Parse - Found', function () {
-  const res = query2.binarySearch('120.24.78.68', true);
-  expect(res).toMatchObject(ALIYUN2);
+describe('inMemoryBtreeSearch', function () {
+  it('Found', function () {
+    const res = queryInMemoey.btreeSearch(ALIYUN_IP);
+    expect(res).toMatchObject(ALIYUN);
+  });
+
+  it('Not Found', function () {
+    const res = queryInMemoey.btreeSearch(NEIWAN_IP);
+    expect(res).toMatchObject(NEIWAN);
+  });
+
+  it('Parse - Found', function () {
+    const res = queryInMemoey.btreeSearch(ALIYUN_IP, true);
+    expect(res).toMatchObject(ALIYUN2);
+  });
+
+  it('Parse - Not Found', function () {
+    const res = queryInMemoey.btreeSearch(NEIWAN_IP, true);
+    expect(res).toMatchObject(NEIWAN2);
+  });
 });
 
-test('inMemoryBinarySearch Parse - Not Found', function () {
-  const res = query2.binarySearch('10.10.10.10', true);
-  expect(res).toMatchObject(NEIWAN2);
+describe('search', function () {
+  it('Found', function () {
+    const res = queryInMemoey.search(ALIYUN_IP);
+    expect(res).toMatchObject(ALIYUN2);
+  });
+
+  it('Not Found', function () {
+    const res = queryInMemoey.search(NEIWAN_IP);
+    expect(res).toMatchObject(NEIWAN2);
+  });
+
+  it('without Parse - Found', function () {
+    const res = queryInMemoey.search(ALIYUN_IP, false);
+    expect(res).toMatchObject(ALIYUN);
+  });
 });
 
+describe('More Tests', function () {
+  it('Search Test', function () {
+    queryInMemoey.search(-1);
+    queryInMemoey.search(0);
+    queryInMemoey.search(4294967040);
+    queryInMemoey.search('');
+    queryInMemoey.search('aa');
+    queryInMemoey.binarySearch(ALIYUN_IP);
+  });
 
-test('inMemoryBtreeSearch - Found', function () {
-  const res = query2.btreeSearch('120.24.78.68');
-  expect(res).toMatchObject(ALIYUN);
-});
-
-test('inMemoryBtreeSearch - Not Found', function () {
-  const res = query2.btreeSearch('10.10.10.10');
-  expect(res).toMatchObject(NEIWAN);
-});
-
-test('inMemoryBtreeSearch Parse - Found', function () {
-  const res = query2.btreeSearch('120.24.78.68', true);
-  expect(res).toMatchObject(ALIYUN2);
-});
-
-test('inMemoryBtreeSearch Parse - Not Found', function () {
-  const res = query2.btreeSearch('10.10.10.10', true);
-  expect(res).toMatchObject(NEIWAN2);
-});
-
-test('search - Found', function () {
-  const res = query2.search('120.24.78.68');
-  expect(res).toMatchObject(ALIYUN2);
-});
-
-test('search - Not Found', function () {
-  const res = query2.search('10.10.10.10');
-  expect(res).toMatchObject(NEIWAN2);
-});
-
-test('search without Parse - Found', function () {
-  const res = query2.search('120.24.78.68', false);
-  expect(res).toMatchObject(ALIYUN);
-});
-
-test('More Search Test', function () {
-  query2.search(-1);
-  query2.search(0);
-  query2.search(4294967040);
-  query2.search('');
-  query2.search('aa');
-  query2.binarySearch('120.24.78.68');
-});
-
-test('Error - init with db file', function () {
-  const error = () => new IP2Region({ dbPath: '/tmp/db.db' });
-  expect(error).toThrow('[ip2region] db file not exists : /tmp/db.db');
+  it('Error - init with db file', function () {
+    const error = () => new IP2Region({ dbPath: '/tmp/db.db' });
+    expect(error).toThrow('[ip2region] db file not exists : /tmp/db.db');
+  });
 });
 
 describe('BugFix - 1', function () {
@@ -127,12 +140,14 @@ describe('BugFix - 1', function () {
   const ret = Object.freeze({ city: 2430, region: '中国|0|重庆|重庆市|电信' });
 
   it('search', function () {
-    expect(query2.search(ip, false)).toMatchObject(ret);
+    expect(queryInMemoey.search(ip, false)).toMatchObject(ret);
   });
+
   it('btreeSearch', function () {
-    expect(query2.btreeSearch(ip)).toMatchObject(ret);
+    expect(queryInMemoey.btreeSearch(ip)).toMatchObject(ret);
   });
+
   it('binarySearch', function () {
-    expect(query2.binarySearch(ip)).toMatchObject(ret);
+    expect(queryInMemoey.binarySearch(ip)).toMatchObject(ret);
   });
 });
