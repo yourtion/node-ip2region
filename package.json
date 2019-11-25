@@ -39,7 +39,7 @@
     "benchmark": "^2.1.4",
     "coveralls": "^3.0.1",
     "debug": "^4.0.0",
-    "eslint": "^5.0.1",
+    "eslint": "^6.0.0",
     "eslint-config-guo": "^0.10.0",
     "jest": "^24.8.0"
   },
