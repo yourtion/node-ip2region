@@ -1,6 +1,6 @@
 {
   "name": "ip2region",
-  "version": "1.7.0",
+  "version": "1.8.0",
   "description": "ip to geo database, IP 地址到区域运营商",
   "keywords": [
     "ip",
@@ -31,7 +31,9 @@
     "test": "jest --coverage",
     "test:debug": "export NODE_ENV='dev' && export DEBUG=ip2region:* && npm test",
     "coveralls": "jest --coverage --coverageReporters=text-lcov | coveralls",
-    "prepublishOnly": "npm run lint && npm run coveralls"
+    "tag": "git tag v`node -p 'require(\"./package\").version'`",
+    "prepublishOnly": "npm run lint && npm run coveralls",
+    "postpublish": "npm run tag && git push && git push --tags"
   },
   "author": "Yourtion <yourtion@gmail.com>",
   "license": "MIT",
@@ -39,9 +41,9 @@
     "benchmark": "^2.1.4",
     "coveralls": "^3.0.1",
     "debug": "^4.0.0",
-    "eslint": "^6.0.0",
+    "eslint": "^7.14.0",
     "eslint-config-guo": "^0.10.0",
-    "jest": "^24.8.0"
+    "jest": "^26.6.3"
   },
   "jest": {
     "testRegex": "test/index.js"
