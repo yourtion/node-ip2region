@@ -31,31 +31,11 @@ IP 地址到区域运营商 IP to region on Node.js
 $ npm install ip2region --save
 ```
 
-```javascript
-const IP2Region = require('ip2region');
+```typescript
+// const IP2Region = require('ip2region');
+import IP2Region from "ip2region";
 const query = new IP2Region();
 const res = query.search('120.24.78.68');
 console.log(res);
 > { id: 2163, country: '中国', region: '华南', province: '广东省', city: '深圳市', isp: '阿里云' }
 ```
-
-## 性能
-
-库中实现了四种搜索方法，包括基于内存和基于文件的 `BinarySearch` 与 `BtreeSearch`。
-
-从 benmark 可以看出效果最好的是 `inMemoryBtreeSearch`，所以默认的 search 方法使用这个。
-
-测试结果如下：
-
-```
-$ node test/benchmark.js
-
-search x 742,123 ops/sec ±0.78% (86 runs sampled)
-inMemoryBinarySearch x 168,323 ops/sec ±1.05% (89 runs sampled)
-inMemoryBtreeSearch x 163,726 ops/sec ±2.11% (81 runs sampled)
-binarySearchSync x 15,210 ops/sec ±1.00% (87 runs sampled)
-btreeSearchSync x 63,495 ops/sec ±1.80% (76 runs sampled)
-Fastest is search
-```
-
-需要其他方法可以参考 [test/index.js](test/index.js) 调用。

@@ -6,26 +6,38 @@ import { resolve as pathResolve, isAbsolute } from "path";
 import { isIPv4 } from "net";
 
 const debug = createDebug();
-
-export interface Ipv4ToRegionOpts {
-  dbPath?: string;
-}
-
+/**
+ * IP 结果
+ */
 export interface Ipv4ToRegionRes {
+  /** 城市 id */
   city: number;
+  /** 区域字符串 */
   region: string;
 }
-
+/**
+ * IP 解析结果
+ */
 export interface Ipv4ToRegionResult {
+  /** 城市 id */
   id: number;
+  /** 国家 */
   country: string;
+  /** 区域 */
   region: string;
+  /** 省份 */
   province: string;
+  /** 城市 */
   city: string;
+  /** ISP 供应商 */
   isp: string;
 }
 
+/**
+ * IP v4 解析
+ */
 export default class Ipv4ToRegion {
+  /**  数据库文件位置 */
   private dbFilePath: string;
   // init basic search environment
   private superBlock = Buffer.allocUnsafe(8);
@@ -77,7 +89,7 @@ export default class Ipv4ToRegion {
     }
   }
 
-  parseResult(res: Ipv4ToRegionRes) {
+  private parseResult(res: Ipv4ToRegionRes) {
     // 城市Id|国家|区域|省份|城市|ISP
     const data = res.region.split("|");
     return {
@@ -90,6 +102,8 @@ export default class Ipv4ToRegion {
     };
   }
 
+  search(ipaddr: string): Ipv4ToRegionResult;
+  search(ipaddr: string, parse: boolean): Ipv4ToRegionRes;
   search(ipaddr: string, parse: boolean = true) {
     if (!isIPv4(ipaddr)) return null;
     const ip = ipv4ToLong(ipaddr);
