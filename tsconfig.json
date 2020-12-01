@@ -1,0 +1,15 @@
+{
+  "compilerOptions": {
+    "rootDir": "src",
+    "outDir": "dist",
+    "module": "commonjs",
+    "moduleResolution": "node",
+    "declaration": true,
+    "strict": true,
+    "target": "esnext",
+    "esModuleInterop": true,
+    "sourceMap": false,
+    "allowUnusedLabels": false,
+    "noUnusedLocals": true
+  }
+}

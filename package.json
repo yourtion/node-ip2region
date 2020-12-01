@@ -1,6 +1,6 @@
 {
   "name": "ip2region",
-  "version": "1.8.0",
+  "version": "2.0.0",
   "description": "ip to geo database, IP 地址到区域运营商",
   "keywords": [
     "ip",
@@ -12,7 +12,7 @@
     "ip-search",
     "ip-geo"
   ],
-  "main": "lib/index.js",
+  "main": "dist/lib/index.js",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/yourtion/node-ip2region.git"
@@ -26,26 +26,49 @@
   ],
   "homepage": "https://github.com/yourtion/node-ip2region#readme",
   "scripts": {
-    "lint": "eslint lib test --fix",
-    "benchmark": "node test/benchmark.js",
-    "test": "jest --coverage",
-    "test:debug": "export NODE_ENV='dev' && export DEBUG=ip2region:* && npm test",
-    "coveralls": "jest --coverage --coverageReporters=text-lcov | coveralls",
+    "dev": "jest --verbose --watch",
+    "test": "npm run compile && jest --coverage",
     "tag": "git tag v`node -p 'require(\"./package\").version'`",
-    "prepublishOnly": "npm run lint && npm run coveralls",
+    "format": "prettier --write \"src/**/*.ts\"",
+    "clean": "rm -rf dist",
+    "compile": "npm run clean && tsc",
+    "prepublishOnly": "npm run format && npm run test && coveralls < coverage/lcov.info && npm test",
     "postpublish": "npm run tag && git push && git push --tags"
   },
   "author": "Yourtion <yourtion@gmail.com>",
   "license": "MIT",
+  "peerDependencies": {
+    "@types/node": "*"
+  },
   "devDependencies": {
-    "benchmark": "^2.1.4",
-    "coveralls": "^3.0.1",
-    "debug": "^4.0.0",
-    "eslint": "^7.14.0",
-    "eslint-config-guo": "^0.10.0",
-    "jest": "^26.6.3"
+    "@types/jest": "^26.0.15",
+    "coveralls": "^3.1.0",
+    "jest": "^26.4.2",
+    "prettier": "^2.2.1",
+    "ts-jest": "^26.4.4",
+    "ts-node": "^9.0.0",
+    "typescript": "^4.0.3"
   },
   "jest": {
-    "testRegex": "test/index.js"
+    "transform": {
+      "^.+\\.tsx?$": "ts-jest"
+    },
+    "testRegex": "./src/test/test",
+    "collectCoverageFrom": [
+      "src/lib/**/*.ts"
+    ],
+    "coverageThreshold": {
+      "global": {
+        "branches": 80,
+        "functions": 95,
+        "lines": 80,
+        "statements": 80
+      }
+    },
+    "moduleFileExtensions": [
+      "ts",
+      "js",
+      "json"
+    ]
   }
 }
