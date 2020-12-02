@@ -15,7 +15,7 @@
 [coveralls-url]: https://coveralls.io/r/yourtion/node-ip2region?branch=master
 [david-image]: https://img.shields.io/david/yourtion/node-ip2region.svg?style=flat-square
 [david-url]: https://david-dm.org/yourtion/node-ip2region
-[node-image]: https://img.shields.io/badge/node.js-%3E=4.0-green.svg?style=flat-square
+[node-image]: https://img.shields.io/badge/node.js-%3E=12.0-green.svg?style=flat-square
 [node-url]: http://nodejs.org/download/
 [download-image]: https://img.shields.io/npm/dm/ip2region.svg?style=flat-square
 [download-url]: https://npmjs.org/package/ip2region
@@ -23,7 +23,7 @@
 
 # node-ip2region
 
-IP 地址到区域运营商 IP to region on Node.js
+IP 地址到区域运营商 IP（支持IPv6） to region on Node.js
 
 ## 安装使用使用
 
@@ -37,5 +37,8 @@ import IP2Region from "ip2region";
 const query = new IP2Region();
 const res = query.search('120.24.78.68');
 console.log(res);
-> { id: 2163, country: '中国', region: '华南', province: '广东省', city: '深圳市', isp: '阿里云' }
+> { country: '中国', province: '广东省', city: '深圳市', isp: '阿里云' }
+const res2 = query.search('240e:47d:c20:1627:30a3:ba0d:a5e6:ec19');
+console.log(res2);
+> { country: "中国", province: "广东省", city: "0", isp: "中国电信" }
 ```

@@ -1,7 +1,7 @@
 {
   "name": "ip2region",
   "version": "2.0.0",
-  "description": "ip to geo database, IP 地址到区域运营商",
+  "description": "ip/ipv6 to geo database, IP（支持IPv6）地址到区域运营商",
   "keywords": [
     "ip",
     "ipaddress-to-address",
@@ -10,7 +10,15 @@
     "ip-region",
     "ip-lookup",
     "ip-search",
-    "ip-geo"
+    "ip-geo",
+    "ipv6",
+    "ipv6address-to-address",
+    "ipv6-address",
+    "ipv6-location",
+    "ipv6-region",
+    "ipv6-lookup",
+    "ipv6-search",
+    "ipv6-geo"
   ],
   "main": "dist/lib/index.js",
   "repository": {
@@ -21,8 +29,9 @@
     "url": "https://github.com/yourtion/node-ip2region/issues"
   },
   "files": [
-    "lib/index.js",
-    "data/ip2region.db"
+    "dist/lib",
+    "data/ip2region.db",
+    "data/ipv6wry.db"
   ],
   "homepage": "https://github.com/yourtion/node-ip2region#readme",
   "scripts": {

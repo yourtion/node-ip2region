@@ -2,11 +2,37 @@ import { createDebug, ipv6ToLong } from "./utils";
 import { existsSync, readFileSync } from "fs";
 import { resolve as pathResolve, isAbsolute } from "path";
 import { isIPv6 } from "net";
-import Ipv4ToRegion from "./ipv4";
+import Ipv4ToRegion, { Ipv4ToRegionRes, Ipv4ToRegionResult } from "./ipv4";
 
 const debug = createDebug("ipv6");
 const FF = 0xffffffffffffffffn;
 const N64 = 64n;
+
+/**
+ * IP 结果
+ */
+export interface Ipv6ToRegionRes {
+  /** 区域字符串 */
+  cArea: string;
+  /** 运营商 */
+  aArea: string;
+}
+
+/**
+ * IP 解析结果
+ */
+export interface Ipv6ToRegionResult {
+  /** 国家 */
+  country: string;
+  /** 省份 */
+  province: string;
+  /** 城市 */
+  city: string;
+  /** ISP 供应商 */
+  isp: string;
+  /** 原始数据 */
+  data: string;
+}
 
 export default class Ipv6ToRegion {
   /**  数据库文件位置 */
@@ -111,7 +137,7 @@ export default class Ipv6ToRegion {
    * 获取地址信息
    * @param offset 偏移量
    */
-  private getAddr(offset: number): { cArea: string; aArea: string } {
+  private getAddr(offset: number): Ipv6ToRegionRes {
     let o = offset;
     const byte = this.data.readInt8(o);
     debug(byte);
@@ -131,6 +157,70 @@ export default class Ipv6ToRegion {
       debug(aArea);
       return { cArea, aArea };
     }
+  }
+
+  private parseResult(ret: Ipv4ToRegionRes | Ipv6ToRegionRes | null): Ipv4ToRegionResult | Ipv6ToRegionResult | null {
+    if (ret === null) return ret;
+    if ("city" in ret) {
+      return this.ipv4 ? this.ipv4.parseResult(ret) : null;
+    }
+    let country = "0";
+    let province = "0";
+    let city = "0";
+    let first = ret.cArea.indexOf("国");
+    if (first >= 0) {
+      first += 1;
+      country = ret.cArea.slice(0, first);
+    } else {
+      first = 0;
+    }
+    let isCity = false;
+    let second = ret.cArea.indexOf("省");
+    if (second >= 0) {
+      second += 1;
+      province = ret.cArea.slice(first, second);
+    } else {
+      const provinceArr = ["内蒙古", "广西", "西藏", "宁夏", "新疆"];
+      const goverCity = ["北京市", "天津市", "上海市", "重庆市"];
+      for (let gover of goverCity) {
+        second = ret.cArea.indexOf(gover);
+        if (second >= 0) {
+          second = second + gover.length;
+          province = ret.cArea.slice(first, second);
+          isCity = true;
+          break;
+        }
+      }
+      if (isCity != true) {
+        for (let province of provinceArr) {
+          second = ret.cArea.indexOf(province);
+          if (second >= 0) {
+            second = second + province.length;
+            province = ret.cArea.slice(first, second);
+            break;
+          }
+        }
+      }
+    }
+    if (isCity != true) {
+      const city1 = ret.cArea.indexOf("市");
+      const city2 = ret.cArea.indexOf("州");
+      // fmt.Println("second", second, city1, city2, string(value))
+      if (city1 >= 0 && city2 >= 0 && city1 < city2 && second < city1) {
+        city = ret.cArea.slice(second, city1 + 1);
+      } else if (city1 >= 0 && city2 >= 0 && city1 > city2 && second < city2) {
+        if (city1 - city2 == 1) {
+          city = ret.cArea.slice(second, city2 + 2);
+        } else {
+          city = ret.cArea.slice(second, city2 + 1);
+        }
+      } else if (city1 >= 0 && second < city1) {
+        city = ret.cArea.slice(second, city1 + 1);
+      } else if (city2 >= 0 && second < city2) {
+        city = ret.cArea.slice(second, city2 + 1);
+      }
+    }
+    return { isp: ret.aArea, data: ret.cArea, country, province, city };
   }
 
   private getIpAddrLong(ip: bigint) {
@@ -180,11 +270,13 @@ export default class Ipv6ToRegion {
     return this.getIpAddrLong(ip);
   }
 
-  search(ipaddr: string) {
+  search(ipaddr: string, parse = true) {
     // 把IP地址转成数字
     const { ip, num } = ipv6ToLong(ipaddr);
     if (!isIPv6(ip)) return null;
     debug({ ipaddr, ip, num });
-    return this.searchLong(num);
+    const ret = this.searchLong(num);
+    debug(ret);
+    return parse ? this.parseResult(ret) : ret;
   }
 }

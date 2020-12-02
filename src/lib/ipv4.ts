@@ -89,7 +89,8 @@ export default class Ipv4ToRegion {
     }
   }
 
-  private parseResult(res: Ipv4ToRegionRes) {
+  parseResult(res: Ipv4ToRegionRes | null) {
+    if (res === null) return res;
     // 城市Id|国家|区域|省份|城市|ISP
     const data = res.region.split("|");
     return {
@@ -102,7 +103,7 @@ export default class Ipv4ToRegion {
     };
   }
 
-  searchLong(ip: number) {
+  searchLong(ip: number): Ipv4ToRegionRes | null {
     let low = 0;
     let mid = 0;
     let high = this.headerLen;
@@ -188,7 +189,7 @@ export default class Ipv4ToRegion {
 
     debug(city_id);
     debug(data);
-    return { city_id, data };
+    return { city: city_id, region: data };
   }
 
   search(ipaddr: string): Ipv4ToRegionResult;
@@ -198,10 +199,6 @@ export default class Ipv4ToRegion {
     const ip = ipv4ToLong(ipaddr);
     // first search  (in header index)
     const ret = this.searchLong(ip);
-    if (ret === null) {
-      return ret;
-    }
-    const { city_id, data } = ret;
-    return parse ? this.parseResult({ city: city_id, region: data }) : { city: city_id, region: data };
+    return parse ? this.parseResult(ret) : ret;
   }
 }
