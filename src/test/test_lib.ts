@@ -26,6 +26,6 @@ describe("ipv4", function () {
 
   it("Error - init with db file", function () {
     const error = () => new IP2Region({ ipv4db: "/tmp/db.db" });
-    expect(error).toThrow("[ip2region] db file not exists : /tmp/db.db");
+    expect(error).toThrow("[Ipv4ToRegion] db file not exists : /tmp/db.db");
   });
 });

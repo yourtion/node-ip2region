@@ -52,7 +52,7 @@ describe("More Tests", function () {
 
   it("Error - init with db file", function () {
     const error = () => new Ipv4ToRegion("/tmp/db.db");
-    expect(error).toThrow("[ip2region] db file not exists : /tmp/db.db");
+    expect(error).toThrow("[Ipv4ToRegion] db file not exists : /tmp/db.db");
   });
 });
 

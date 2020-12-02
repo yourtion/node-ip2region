@@ -5,7 +5,7 @@ import { existsSync, readFileSync } from "fs";
 import { resolve as pathResolve, isAbsolute } from "path";
 import { isIPv4 } from "net";
 
-const debug = createDebug();
+const debug = createDebug("ipv4");
 /**
  * IP 结果
  */
@@ -58,7 +58,7 @@ export default class Ipv4ToRegion {
     const p = dbPath || "../../data/ip2region.db";
     this.dbFilePath = isAbsolute(p) ? p : pathResolve(__dirname, p);
     if (!existsSync(this.dbFilePath)) {
-      throw new Error("[ip2region] db file not exists : " + this.dbFilePath);
+      throw new Error("[Ipv4ToRegion] db file not exists : " + this.dbFilePath);
     }
 
     this.data = readFileSync(this.dbFilePath);
