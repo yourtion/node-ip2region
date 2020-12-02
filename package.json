@@ -26,7 +26,7 @@
   ],
   "homepage": "https://github.com/yourtion/node-ip2region#readme",
   "scripts": {
-    "dev": "jest --verbose --watch",
+    "dev": "export NODE_ENV=dev && jest --verbose --watch",
     "test": "npm run compile && jest --coverage",
     "tag": "git tag v`node -p 'require(\"./package\").version'`",
     "format": "prettier --write \"src/**/*.ts\"",

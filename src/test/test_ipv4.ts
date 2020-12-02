@@ -46,6 +46,10 @@ describe("search", function () {
 
 describe("More Tests", function () {
   it("Search Test", function () {
+    queryInMemoey.searchLong(-1);
+    queryInMemoey.searchLong(0);
+    queryInMemoey.searchLong(1747920896);
+    queryInMemoey.searchLong(3220758528);
     queryInMemoey.search("");
     queryInMemoey.search("aa");
   });

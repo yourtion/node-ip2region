@@ -2,6 +2,7 @@ import { createDebug, ipv6ToLong } from "./utils";
 import { existsSync, readFileSync } from "fs";
 import { resolve as pathResolve, isAbsolute } from "path";
 import { isIPv6 } from "net";
+import Ipv4ToRegion from "./ipv4";
 
 const debug = createDebug("ipv6");
 const FF = 0xffffffffffffffffn;
@@ -19,6 +20,7 @@ export default class Ipv6ToRegion {
   private record: number;
   private indexStart: number;
   //private versionStart: number;
+  private ipv4?: Ipv4ToRegion;
 
   constructor(dbPath?: string) {
     const p = dbPath || "../../data/ipv6wry.db";
@@ -37,6 +39,18 @@ export default class Ipv6ToRegion {
     this.record = Number(this.data.readBigInt64LE(8));
     this.indexStart = Number(this.data.readBigInt64LE(16));
     //this.versionStart = Number(this.data.readBigInt64LE(32));
+  }
+
+  setIpv4Ins(ins: Ipv4ToRegion) {
+    this.ipv4 = ins;
+  }
+
+  private searchIpv4(ip: bigint) {
+    if (!this.ipv4) {
+      return { cArea: "未知", aArea: "未知" };
+    }
+    debug("searchIpv4", Number(ip));
+    return this.ipv4.searchLong(Number(ip));
   }
 
   /**
@@ -119,12 +133,7 @@ export default class Ipv6ToRegion {
     }
   }
 
-  search(ipaddr: string) {
-    if (!isIPv6(ipaddr)) return null;
-    // 把IP地址转成数字
-    const ip6 = ipv6ToLong(ipaddr);
-    const ip = (ip6 >> N64) & FF;
-    debug("ip", ip);
+  private getIpAddrLong(ip: bigint) {
     // 查找ip的索引偏移
     const idx = this.find(ip, 0, this.record);
     debug(idx);
@@ -133,5 +142,49 @@ export default class Ipv6ToRegion {
     const ipRecOff = this.readLongData(ipOff + 8);
     debug({ ipOff, ipRecOff });
     return this.getAddr(ipRecOff);
+  }
+
+  searchLong(ip6: bigint) {
+    // 本机地址
+    if (ip6 === 0x1n) {
+      return { cArea: "IANA保留地址", aArea: "本机地址" };
+    }
+    const ip = (ip6 >> N64) & FF;
+    debug("ip", ip);
+    // IPv4映射地址
+    if (ip == 0n) {
+      debug("IPv4映射地址");
+      const realip = ip6 & 0xffffffffn;
+      return this.searchIpv4(realip);
+    }
+    // 6to4
+    if (((ip >> 48n) & 0xffffn) === 0x2002n) {
+      debug("6to4");
+      const realip = (ip & 0x0000ffffffff0000n) >> 16n;
+      return this.searchIpv4(realip);
+    }
+    // teredo
+    if (((ip >> 32n) & 0xffffffffn) == 0x20010000n) {
+      debug("teredo");
+      // const serverip = (ip & 0xFFFFFFFFn);
+      const realip = ~ip6 & 0xffffffffn;
+      return this.searchIpv4(realip);
+    }
+    // isatap
+    if (((ip6 >> 32n) & 0xffffn) == 0x5efen) {
+      debug("isatap");
+      const realip = ip6 & 0xffffffffn;
+      return this.searchIpv4(realip);
+    }
+    debug("IPv6");
+    return this.getIpAddrLong(ip);
+  }
+
+  search(ipaddr: string) {
+    // 把IP地址转成数字
+    const { ip, num } = ipv6ToLong(ipaddr);
+    if (!isIPv6(ip)) return null;
+    debug({ ipaddr, ip, num });
+    return this.searchLong(num);
   }
 }

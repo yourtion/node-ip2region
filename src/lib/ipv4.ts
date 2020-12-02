@@ -102,12 +102,7 @@ export default class Ipv4ToRegion {
     };
   }
 
-  search(ipaddr: string): Ipv4ToRegionResult;
-  search(ipaddr: string, parse: boolean): Ipv4ToRegionRes;
-  search(ipaddr: string, parse: boolean = true) {
-    if (!isIPv4(ipaddr)) return null;
-    const ip = ipv4ToLong(ipaddr);
-    // first search  (in header index)
+  searchLong(ip: number) {
     let low = 0;
     let mid = 0;
     let high = this.headerLen;
@@ -193,7 +188,20 @@ export default class Ipv4ToRegion {
 
     debug(city_id);
     debug(data);
+    return { city_id, data };
+  }
 
+  search(ipaddr: string): Ipv4ToRegionResult;
+  search(ipaddr: string, parse: boolean): Ipv4ToRegionRes;
+  search(ipaddr: string, parse: boolean = true) {
+    if (!isIPv4(ipaddr)) return null;
+    const ip = ipv4ToLong(ipaddr);
+    // first search  (in header index)
+    const ret = this.searchLong(ip);
+    if (ret === null) {
+      return ret;
+    }
+    const { city_id, data } = ret;
     return parse ? this.parseResult({ city: city_id, region: data }) : { city: city_id, region: data };
   }
 }

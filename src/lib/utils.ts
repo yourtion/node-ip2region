@@ -23,11 +23,11 @@ export function ipv4ToLong(ip: string) {
 }
 
 export function ipv6ToLong(ip: string) {
-  let number = BigInt(0);
+  let num = BigInt(0);
   let exp = BigInt(0);
 
+  // 处理 IPv4 混合地址
   if (ip.includes(".")) {
-    // result.ipv4mapped = true;
     ip = ip
       .split(":")
       .map((part) => {
@@ -40,12 +40,6 @@ export function ipv6ToLong(ip: string) {
       })
       .join(":");
   }
-
-  // if (ip.includes("%")) {
-  //   let scopeid;
-  //   [, ip, scopeid] = /(.+)%(.+)/.exec(ip);
-  //   result.scopeid = scopeid;
-  // }
 
   const parts = ip.split(":");
   const index = parts.indexOf("");
@@ -60,9 +54,9 @@ export function ipv6ToLong(ip: string) {
     .map(Number)
     .reverse();
   for (const n of p) {
-    number += BigInt(n) * BigInt(2) ** BigInt(exp);
+    num += BigInt(n) * BigInt(2) ** BigInt(exp);
     exp += BigInt(16);
   }
 
-  return number;
+  return { ip, num };
 }
