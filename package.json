@@ -1,6 +1,6 @@
 {
   "name": "ip2region",
-  "version": "2.0.0",
+  "version": "2.1.0",
   "description": "ip/ipv6 to geo database, IP（支持IPv6）地址到区域运营商",
   "keywords": [
     "ip",

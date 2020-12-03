@@ -95,11 +95,11 @@ export default class Ipv4ToRegion {
     const data = res.region.split("|");
     return {
       id: res.city,
-      country: data[0],
-      region: data[1],
-      province: data[2],
-      city: data[3],
-      isp: data[4],
+      country: data[0] !== "0" ? data[0] : "",
+      region: data[1] !== "0" ? data[1] : "",
+      province: data[2] !== "0" ? data[2] : "",
+      city: data[3] !== "0" ? data[3] : "",
+      isp: data[4] !== "0" ? data[4] : "",
     };
   }
 

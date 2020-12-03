@@ -7,7 +7,7 @@ const ALIYUN = Object.freeze({ city: 2163, region: "中国|0|广东省|深圳市
 const ALIYUN2 = Object.freeze({
   id: 2163,
   country: "中国",
-  region: "0",
+  region: "",
   province: "广东省",
   city: "深圳市",
   isp: "阿里云",
@@ -15,7 +15,7 @@ const ALIYUN2 = Object.freeze({
 const NEIWAN_IP = "10.10.10.10";
 const IPV6 = "2409:8946:2d51:1569:dfdb:6dcf:dd39:5d9a";
 const NEIWAN = Object.freeze({ city: 0, region: "0|0|0|内网IP|内网IP" });
-const NEIWAN2 = Object.freeze({ id: 0, country: "0", region: "0", province: "0", city: "内网IP", isp: "内网IP" });
+const NEIWAN2 = Object.freeze({ id: 0, country: "", region: "", province: "", city: "内网IP", isp: "内网IP" });
 
 describe("search", function () {
   it("Found", function () {

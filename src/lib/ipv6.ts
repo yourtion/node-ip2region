@@ -164,9 +164,9 @@ export default class Ipv6ToRegion {
     if ("city" in ret) {
       return this.ipv4 ? this.ipv4.parseResult(ret) : null;
     }
-    let country = "0";
-    let province = "0";
-    let city = "0";
+    let country = "";
+    let province = "";
+    let city = "";
     let first = ret.cArea.indexOf("国");
     if (first >= 0) {
       first += 1;
