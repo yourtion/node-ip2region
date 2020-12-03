@@ -1,6 +1,6 @@
 {
   "name": "ip2region",
-  "version": "2.1.0",
+  "version": "2.1.1",
   "description": "ip/ipv6 to geo database, IP（支持IPv6）地址到区域运营商",
   "keywords": [
     "ip",
@@ -36,12 +36,12 @@
   "homepage": "https://github.com/yourtion/node-ip2region#readme",
   "scripts": {
     "dev": "export NODE_ENV=dev && jest --verbose --watch",
-    "test": "npm run compile && jest --coverage",
+    "test": "jest --coverage",
     "tag": "git tag v`node -p 'require(\"./package\").version'`",
     "format": "prettier --write \"src/**/*.ts\"",
     "clean": "rm -rf dist",
     "compile": "npm run clean && tsc",
-    "prepublishOnly": "npm run format && npm run test && coveralls < coverage/lcov.info && npm test",
+    "prepublishOnly": "npm run format && npm run compile && npm test && coveralls < coverage/lcov.info",
     "postpublish": "npm run tag && git push && git push --tags"
   },
   "author": "Yourtion <yourtion@gmail.com>",

@@ -5,8 +5,6 @@ import { isIPv6 } from "net";
 import Ipv4ToRegion, { Ipv4ToRegionRes, Ipv4ToRegionResult } from "./ipv4";
 
 const debug = createDebug("ipv6");
-const FF = 0xffffffffffffffffn;
-const N64 = 64n;
 
 /**
  * IP 结果
@@ -168,7 +166,7 @@ export default class Ipv6ToRegion {
     let province = "";
     let city = "";
     let first = ret.cArea.indexOf("国");
-    if (first >= 0) {
+    if (first === 1) {
       first += 1;
       country = ret.cArea.slice(0, first);
     } else {
@@ -192,10 +190,10 @@ export default class Ipv6ToRegion {
         }
       }
       if (isCity != true) {
-        for (let province of provinceArr) {
-          second = ret.cArea.indexOf(province);
+        for (let p of provinceArr) {
+          second = ret.cArea.indexOf(p);
           if (second >= 0) {
-            second = second + province.length;
+            second = second + p.length;
             province = ret.cArea.slice(first, second);
             break;
           }
@@ -205,7 +203,7 @@ export default class Ipv6ToRegion {
     if (isCity != true) {
       const city1 = ret.cArea.indexOf("市");
       const city2 = ret.cArea.indexOf("州");
-      // fmt.Println("second", second, city1, city2, string(value))
+      // console.log("second",ret,second, city1, city2)
       if (city1 >= 0 && city2 >= 0 && city1 < city2 && second < city1) {
         city = ret.cArea.slice(second, city1 + 1);
       } else if (city1 >= 0 && city2 >= 0 && city1 > city2 && second < city2) {
@@ -239,7 +237,7 @@ export default class Ipv6ToRegion {
     if (ip6 === 0x1n) {
       return { cArea: "IANA保留地址", aArea: "本机地址" };
     }
-    const ip = (ip6 >> N64) & FF;
+    const ip = (ip6 >> 64n) & 0xffffffffffffffffn;
     debug("ip", ip);
     // IPv4映射地址
     if (ip == 0n) {
