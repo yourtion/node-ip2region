@@ -3,8 +3,8 @@ import IP2Region from "../lib";
 const queryInMemoey = new IP2Region();
 
 const ALIYUN_IP = "120.24.78.68";
-const ALIYUN = Object.freeze({ city: 2163, region: "中国|0|广东省|深圳市|阿里云" });
-const ALIYUN2 = Object.freeze({ country: "中国", province: "广东省", city: "深圳市", isp: "阿里云" });
+const ALIYUN = Object.freeze({ city: 0, region: "中国|0|广东|深圳|阿里云" });
+const ALIYUN2 = Object.freeze({ country: "中国", province: "广东", city: "深圳", isp: "阿里云" });
 const DX_IP = "240e:47d:c20:1627:30a3:ba0d:a5e6:ec19";
 const DX = Object.freeze({ cArea: "中国广东省", aArea: "中国电信" });
 const DX2 = Object.freeze({ country: "中国", province: "广东省", city: "", isp: "中国电信" });

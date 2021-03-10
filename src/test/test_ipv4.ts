@@ -3,13 +3,13 @@ import Ipv4ToRegion from "../lib/ipv4";
 const queryInMemoey = new Ipv4ToRegion();
 
 const ALIYUN_IP = "120.24.78.68";
-const ALIYUN = Object.freeze({ city: 2163, region: "中国|0|广东省|深圳市|阿里云" });
+const ALIYUN = Object.freeze({ city: 0, region: "中国|0|广东|深圳|阿里云" });
 const ALIYUN2 = Object.freeze({
-  id: 2163,
+  id: 0,
   country: "中国",
   region: "",
-  province: "广东省",
-  city: "深圳市",
+  province: "广东",
+  city: "深圳",
   isp: "阿里云",
 });
 const NEIWAN_IP = "10.10.10.10";
@@ -62,7 +62,7 @@ describe("More Tests", function () {
 
 describe("BugFix - 1", function () {
   const ip = "218.70.78.68";
-  const ret = Object.freeze({ city: 2430, region: "中国|0|重庆|重庆市|电信" });
+  const ret = Object.freeze({ city: 0, region: "中国|0|重庆|重庆|电信" });
 
   it("search", function () {
     expect(queryInMemoey.search(ip, false)).toMatchObject(ret);
