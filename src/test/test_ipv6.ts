@@ -6,7 +6,13 @@ const queryInMemoey = new Ipv6ToRegion();
 queryInMemoey.setIpv4Ins(v4);
 
 const IP1 = "240e:47d:c20:1627:30a3:ba0d:a5e6:ec19";
-const RET1 = Object.freeze({ city: "", country: "中国", data: "中国广东省", isp: "中国电信", province: "广东省" });
+const RET1 = Object.freeze({
+  city: "广州市",
+  country: "中国",
+  data: "中国广东省广州市番禺区",
+  isp: "中国电信CTNET网络",
+  province: "广东省",
+});
 const NEIWAN_IP = "0:0:0:0:0:0:0:1";
 const NEIWAN2 = Object.freeze({ city: "", country: "", data: "IANA保留地址", isp: "本机地址", province: "" });
 const IP4on6 = "0000:0000:0000:0000:0000:0000:135.75.43.52";

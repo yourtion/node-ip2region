@@ -153,7 +153,7 @@ export default class Ipv6ToRegion {
       }
       const aArea = this.getAreaAddr(o);
       debug(aArea);
-      return { cArea, aArea };
+      return { cArea: cArea.replace(/\s/g, ""), aArea };
     }
   }
 
@@ -178,6 +178,7 @@ export default class Ipv6ToRegion {
       second += 1;
       province = ret.cArea.slice(first, second);
     } else {
+      // TODO: 重构省份处理程序
       const provinceArr = ["内蒙古", "广西", "西藏", "宁夏", "新疆"];
       const goverCity = ["北京市", "天津市", "上海市", "重庆市"];
       for (let gover of goverCity) {
@@ -218,6 +219,8 @@ export default class Ipv6ToRegion {
         city = ret.cArea.slice(second, city2 + 1);
       }
     }
+    province = province.trim();
+    city = city.trim();
     return { isp: ret.aArea, data: ret.cArea, country, province, city };
   }
 
