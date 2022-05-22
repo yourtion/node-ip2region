@@ -11,16 +11,17 @@ on:
 
 jobs:
   build:
-
-    runs-on: ubuntu-latest
-
+  
     strategy:
       matrix:
+        os: [windows-latest, ubuntu-latest, macos-latest]
         node-version: [12.x, 14.x, 16.x, 18.x]
-
+        
+    runs-on: ${{ matrix.os }}
+  
     steps:
     - uses: actions/checkout@v3
-    - name: Use Node.js ${{ matrix.node-version }}
+    - name: Use Node.js ${{ matrix.node-version }} on ${{ matrix.os }}
       uses: actions/setup-node@v3
       with:
         node-version: ${{ matrix.node-version }}
