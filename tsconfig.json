@@ -8,7 +8,7 @@
     "strict": true,
     "target": "esnext",
     "esModuleInterop": true,
-    "sourceMap": false,
+    "sourceMap": true,
     "allowUnusedLabels": false,
     "noUnusedLocals": true
   }
