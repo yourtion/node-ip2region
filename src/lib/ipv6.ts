@@ -91,7 +91,7 @@ export default class Ipv6ToRegion {
    * @param l 左边界
    * @param r 右边界
    */
-  private find(ip: BigInt, l: number, r: number): number {
+  private find(ip: bigint, l: number, r: number): number {
     if (r - l <= 1) {
       return l;
     }
