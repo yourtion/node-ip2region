@@ -1,4 +1,6 @@
 import Ipv4ToRegion from "../lib/ipv4";
+import * as fs from "fs";
+import * as path from "path";
 
 const queryInMemoey = new Ipv4ToRegion();
 
@@ -42,6 +44,25 @@ describe("search", function () {
     const res = queryInMemoey.search(NEIWAN_IP, false);
     expect(res).toMatchObject(NEIWAN);
   });
+
+  // Test for an IP that is valid but not expected to be in the database
+  // Assuming "0.0.0.1" is not in the ip2region.db or resolves to a default/null entry
+  // If this test fails because "0.0.0.1" IS in the database, pick another IP.
+  // For example, an IP from a reserved range like "240.0.0.1"
+  // Using an IP from 240.0.0.0/4 (Class E, reserved)
+  const UNKNOWN_IP = "250.250.250.250";
+
+  it("Not Found - Valid IP not in DB (parsed result)", function () {
+    const res = queryInMemoey.search(UNKNOWN_IP);
+    // Expecting null because if searchLong returns null, parseResult(null) is null
+    expect(res).toBeNull();
+  });
+
+  it("Not Found - Valid IP not in DB (raw result)", function () {
+    const res = queryInMemoey.search(UNKNOWN_IP, false);
+    // Expecting null because searchLong should return null
+    expect(res).toBeNull();
+  });
 });
 
 describe("More Tests", function () {
@@ -57,6 +78,58 @@ describe("More Tests", function () {
   it("Error - init with db file", function () {
     const error = () => new Ipv4ToRegion("/tmp/db.db");
     expect(error).toThrow("[Ipv4ToRegion] db file not exists : /tmp/db.db");
+  });
+});
+
+describe("Initialization Tests", function () {
+  const tempDbPath = path.join("/tmp", "ip2region_test.db");
+  const originalDbPath = path.resolve(__dirname, "../../data/ip2region.db"); // Corrected path to project root data
+
+  beforeAll(() => {
+    // Copy the original database to a temporary location
+    try {
+      fs.copyFileSync(originalDbPath, tempDbPath);
+    } catch (err) {
+      console.error("Error copying DB for test:", err);
+      // If copy fails, we might want to skip or fail the test suite for this block
+      throw new Error(`Failed to copy DB from ${originalDbPath} to ${tempDbPath}: ${err}`);
+    }
+  });
+
+  afterAll(() => {
+    // Clean up the temporary database file
+    try {
+      if (fs.existsSync(tempDbPath)) {
+        fs.unlinkSync(tempDbPath);
+      }
+    } catch (err) {
+      console.error("Error deleting temporary DB:", err);
+    }
+  });
+
+  it("should instantiate with an absolute path to a valid DB file", function () {
+    let queryWithAbsolutePath: Ipv4ToRegion | null = null;
+    // Attempt to instantiate
+    try {
+      queryWithAbsolutePath = new Ipv4ToRegion(tempDbPath);
+    } catch (e) {
+      // Let Jest handle unexpected errors during instantiation
+      throw e;
+    }
+
+    // Assert that instantiation was successful and the object is not null
+    expect(queryWithAbsolutePath).not.toBeNull();
+
+    // Perform checks only if queryWithAbsolutePath is confirmed to be non-null
+    if (queryWithAbsolutePath) {
+      const res = queryWithAbsolutePath.search(ALIYUN_IP);
+      expect(res).toMatchObject(ALIYUN2); // Check if a known IP lookup works
+    } else {
+      // This path should ideally not be reached if instantiation is expected to succeed.
+      // Explicitly fail if queryWithAbsolutePath is null, which means instantiation failed silently
+      // or the logic is flawed.
+      fail("Ipv4ToRegion instantiation with absolute path resulted in a null object without throwing an error.");
+    }
   });
 });
 
