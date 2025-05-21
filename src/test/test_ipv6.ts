@@ -100,6 +100,14 @@ describe("More Tests", function () {
 });
 
 describe("Parse Tests", function () {
+  it("should return null for IPv4-style input if ipv4 instance is not set", function () {
+    const ipv6InstanceWithoutV4 = new Ipv6ToRegion(); // No setIpv4Ins
+    const ipv4StyleResult = { city: 123, region: "Some|Region|String" };
+    // Type assertion needed as 'city' is not in Ipv6ToRegionRes
+    const result = (ipv6InstanceWithoutV4 as any).parseResult(ipv4StyleResult as any);
+    expect(result).toBeNull();
+  });
+
   it("parse gover", function () {
     const ret = (queryInMemoey as any).parseResult({ cArea: "中国北京市", aArea: "" });
     expect(ret).toMatchObject({ isp: "", data: "中国北京市", country: "中国", province: "北京市", city: "" });
@@ -123,7 +131,50 @@ describe("Parse Tests", function () {
       data: "中国湖北省恩施土家族苗族自治州恩施市",
       country: "中国",
       province: "湖北省",
-      city: "恩施土家族苗族自治州",
+      city: "恩施土家族苗族自治州", // Correctly extracts the full autonomous prefecture
+    });
+  });
+
+  it("parse city with '市' before '州' (Scenario B1)", function () {
+    // Example: 中国测试省石家庄市辛集自治州 (hypothetical)
+    // Here, "石家庄市" is city1, "辛集自治州" contains city2='州'. city1 is before city2.
+    const cArea = "中国测试省石家庄市辛集自治州";
+    const ret = (queryInMemoey as any).parseResult({ cArea, aArea: "TestISP_B1" });
+    expect(ret).toMatchObject({
+      isp: "TestISP_B1",
+      data: cArea,
+      country: "中国",
+      province: "测试省",
+      city: "石家庄市", // Expects to extract "石家庄市"
+    });
+  });
+
+  it("parse city with '市' immediately after '州' (Scenario B2, city1 - city2 == 1)", function () {
+    // Example: 中国测试省测试州市开发区 (hypothetical: "测试州市" is the city)
+    // Here, city2 is '州', city1 is '市'. city1 - city2 == 1.
+    const cArea = "中国测试省测试州市开发区";
+    const ret = (queryInMemoey as any).parseResult({ cArea, aArea: "TestISP_B2" });
+    expect(ret).toMatchObject({
+      isp: "TestISP_B2",
+      data: cArea,
+      country: "中国",
+      province: "测试省",
+      city: "测试州市", // Expects to extract "测试州市" due to city1 - city2 == 1 logic
+    });
+  });
+
+  it("parse city with '市' after '州' but not immediately (Scenario B2, city1 - city2 != 1 false path)", function () {
+    // Example from existing tests: "中国湖北省恩施土家族苗族自治州恩施市"
+    // city2 is '州' in "自治州", city1 is '市' in "恩施市". city1 > city2, but city1 - city2 is not 1.
+    // This will take the `else` of `if (city1 - city2 == 1)`
+    const cArea = "中国湖北省恩施土家族苗族自治州恩施市"; // Existing complex case
+    const ret = (queryInMemoey as any).parseResult({ cArea, aArea: "TestISP_B2_else" });
+    expect(ret).toMatchObject({
+      isp: "TestISP_B2_else",
+      data: cArea,
+      country: "中国",
+      province: "湖北省",
+      city: "恩施土家族苗族自治州", // Extracts "恩施土家族苗族自治州"
     });
   });
 });
