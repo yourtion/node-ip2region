@@ -12,8 +12,10 @@ on:
 jobs:
   build:
     strategy:
+      fail-fast: false
       matrix:
-        os: [windows-latest, ubuntu-latest, macos-latest]
+        # Node 14 has no native macOS arm64 build.
+        os: [windows-latest, ubuntu-latest, macos-15-intel]
         node-version: [14.x, 16.x, 18.x]
 
     runs-on: ${{ matrix.os }}
