@@ -92,8 +92,8 @@ const query = new IP2Region({
 4. 将生成的库放在应用自己的数据目录，通过绝对路径加载：
 
    ```js
-   import IP2Region from "ip2region";
-   import { resolve } from "path";
+   const IP2Region = require("ip2region").default;
+   const { resolve } = require("path");
 
    const query = new IP2Region({
      ipv4db: resolve("./custom-data/ip2region.db"),
