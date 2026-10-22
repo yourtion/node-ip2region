@@ -42,6 +42,27 @@ console.log(res2);
 > { country: "中国", province: "广东省", city: "", isp: "中国电信" }
 ```
 
+### CommonJS、ESM 和 TypeScript
+
+原生 Node.js ESM（`.mjs` 或 `package.json` 中设置 `"type": "module"`）直接使用
+`import IP2Region from "ip2region"`，无需再取 `.default`。旧的 ESM `imported.default` 绕过写法保留为兼容别名，建议新代码直接使用默认导入。
+CommonJS 保持原来的 `const IP2Region = require("ip2region").default` 用法。
+两种入口使用同一个类和实现。TypeScript 同时提供默认类导出及
+`IP2RegionOpts`、`IP2RegionResult` 类型，支持传统 `moduleResolution: "node"`
+以及 `Node16`、`NodeNext` 和 `bundler` 模式。
+
+### 开发验证
+
+```sh
+pnpm install --frozen-lockfile
+npm test -- --runInBand
+npm run compile
+npm run test:package
+```
+
+`test:package` 构建后执行 `npm pack`，在临时目录离线安装 tarball，验证 CommonJS、原生 ESM、
+动态导入、TypeScript 类型及编译后的消费者运行行为。发布生命周期不会在该测试中执行。
+
 ### 配置
 
 - `ipv4db`: ipv4 数据库地址

@@ -11,5 +11,6 @@
     "sourceMap": true,
     "allowUnusedLabels": false,
     "noUnusedLocals": true
-  }
+  },
+  "include": ["src"]
 }

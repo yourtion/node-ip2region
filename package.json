@@ -31,7 +31,8 @@
   "files": [
     "dist/lib",
     "data/ip2region.db",
-    "data/ipv6wry.db"
+    "data/ipv6wry.db",
+    "esm"
   ],
   "homepage": "https://github.com/yourtion/node-ip2region#readme",
   "scripts": {
@@ -42,7 +43,8 @@
     "clean": "rm -rf dist",
     "compile": "npm run clean && tsc",
     "prepublishOnly": "npm run format && npm run compile && npm test && coveralls < coverage/lcov.info",
-    "postpublish": "npm run tag && git push && git push --tags"
+    "postpublish": "npm run tag && git push && git push --tags",
+    "test:package": "npm run compile && node scripts/test-package.cjs"
   },
   "author": "Yourtion <yourtion@gmail.com>",
   "license": "MIT",
@@ -79,5 +81,25 @@
       "js",
       "json"
     ]
+  },
+  "types": "dist/lib/index.d.ts",
+  "exports": {
+    ".": {
+      "import": {
+        "types": "./esm/index.d.mts",
+        "default": "./esm/index.mjs"
+      },
+      "require": {
+        "types": "./dist/lib/index.d.ts",
+        "default": "./dist/lib/index.js"
+      },
+      "default": "./dist/lib/index.js"
+    },
+    "./dist/lib": "./dist/lib/index.js",
+    "./dist/lib/index": "./dist/lib/index.js",
+    "./dist/lib/ipv4": "./dist/lib/ipv4.js",
+    "./dist/lib/ipv6": "./dist/lib/ipv6.js",
+    "./dist/lib/utils": "./dist/lib/utils.js",
+    "./*": "./*"
   }
 }
