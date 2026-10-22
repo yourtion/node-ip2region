@@ -82,7 +82,7 @@ export default class Ipv4ToRegion {
   searchLong(ip: number): Ipv4ToRegionRes | null {
     let low = 0;
     let mid = 0;
-    let high = this.totalBlocks;
+    let high = this.totalBlocks - 1;
     let dataPos = 0;
     let pos = 0;
     let sip = 0;
