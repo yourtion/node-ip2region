@@ -2,6 +2,8 @@
 
 ## 3.0.0 (Unreleased)
 
+- Add tag-triggered npm Trusted Publishing, validated-tarball consumer checks,
+  stable/prerelease channels and resumable GitHub Release completion.
 - Add a runtime-independent lookup core, external function/instance protocols,
   explicit native Node/Bun/Deno loading, and separate sync/async lifecycles.
 - Replace legacy `.db` data and contracts with pinned upstream IPv4/IPv6 XDB

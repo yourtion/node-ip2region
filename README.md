@@ -5,6 +5,8 @@
 
 **`main` 开发 3.0.0，目前尚未发布；`v2` 保留旧版实现。既有 2.x 接口不提供以下新 API，升级请参阅[迁移指南](docs/migration.md)。**
 
+维护者的 npm Trusted Publisher 配置、tag 发版与失败重跑方式见[发布说明](docs/releasing.md)。
+
 ## 开箱即用
 
 ```js

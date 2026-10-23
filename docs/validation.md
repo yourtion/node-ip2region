@@ -41,3 +41,10 @@ current Bun/Deno releases on Linux. Those remote runs are separate evidence from
 the local results above. The next version is 3.0.0; npm publication remains a
 separate decision. Performance observations are recorded in [performance.md](performance.md),
 not used as geographic-accuracy results.
+
+Release automation additionally has network-free helper tests in `npm run test:release`
+and workflow validation with actionlint. `npm run test:packed -- /path/to/package.tgz`
+runs the same consumers against an existing archive, without repacking or modifying it.
+The tag workflow uses this mode before publishing that exact archive. Mocked release
+tests and local archive validation do not establish successful npm OIDC authentication;
+see [release setup](releasing.md).

@@ -35,21 +35,33 @@ function run(binary, args, cwd = consumer, extraEnv = {}) {
 }
 
 try {
-  if (!process.env.npm_execpath) throw new Error("Run this check through npm run test:package or pnpm test:package");
-  run(process.execPath, [process.env.npm_execpath, "pack", "--pack-destination", directory], root, {
-    npm_config_ignore_scripts: "true",
-    npm_config_cache: join(directory, "npm-cache"),
-  });
-  const archive = readdirSync(directory).find((name) => name.endsWith(".tgz"));
-  if (!archive) throw new Error("The package manager did not produce a tarball");
+  if (process.argv.length > 3) throw new Error("Expected at most one existing tarball path");
+  let archive;
+  if (process.argv[2]) {
+    archive = resolve(process.argv[2]);
+    if (!archive.endsWith(".tgz")) throw new Error("Expected a .tgz tarball");
+  } else {
+    if (!process.env.npm_execpath) throw new Error("Run this check through npm run test:package or pnpm test:package");
+    run(process.execPath, [process.env.npm_execpath, "pack", "--pack-destination", directory], root, {
+      npm_config_ignore_scripts: "true",
+      npm_config_cache: join(directory, "npm-cache"),
+    });
+    const filename = readdirSync(directory).find((name) => name.endsWith(".tgz"));
+    if (!filename) throw new Error("The package manager did not produce a tarball");
+    archive = join(directory, filename);
+  }
+  const archiveDigest = createHash("sha256").update(readFileSync(archive)).digest("hex");
   mkdirSync(installed, { recursive: true });
-  run("tar", ["-xzf", join(directory, archive), "--strip-components=1", "-C", installed], root);
+  run("tar", ["-xzf", archive, "--strip-components=1", "-C", installed], root);
+  const packedManifest = JSON.parse(readFileSync(join(installed, "package.json"), "utf8"));
+  if (packedManifest.name !== manifest.name || packedManifest.version !== manifest.version)
+    throw new Error("Tarball name/version does not match this checkout");
   writeFileSync(
     join(consumer, "package.json"),
     JSON.stringify({ private: true, type: "module", dependencies: { ip2region: manifest.version } })
   );
 
-  const files = run("tar", ["-tzf", join(directory, archive)], root).split(/\r?\n/);
+  const files = run("tar", ["-tzf", archive], root).split(/\r?\n/);
   if (files.some((file) => /node_modules|ipv6wry|src\/|dist\/lib|install\.sh|update_db\.sh/.test(file)))
     throw new Error("Tarball contains obsolete or development files");
   for (const [name, expected] of [
@@ -214,6 +226,9 @@ try {
       run(process.env.IP2REGION_DENO, ["run", "--no-prompt", join(installed, "tests/deno-permissions.mjs")])
     );
   }
+  if (createHash("sha256").update(readFileSync(archive)).digest("hex") !== archiveDigest)
+    throw new Error("Release tarball changed during validation");
+  console.log(`Validated tarball SHA-256: ${archiveDigest}`);
   console.log("Real tarball consumers passed; no runtime dependencies or vendor data downloads required");
 } finally {
   rmSync(directory, { recursive: true, force: true });

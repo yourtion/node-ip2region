@@ -10,6 +10,13 @@ permissions:
   contents: read
 
 jobs:
+  workflows:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate GitHub Actions workflows
+        uses: docker://rhysd/actionlint:1.7.7
+
   node:
     strategy:
       fail-fast: false

@@ -1,0 +1,80 @@
+name: Release
+
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: read
+
+concurrency:
+  # Serialize versions; maintainers must still release them in order.
+  group: npm-release
+  cancel-in-progress: false
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: write
+      id-token: write
+    env:
+      RELEASE_TAG: ${{ github.ref_name }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          # No registry-url/token placeholder or dependency cache for publishing.
+          node-version: 24.x
+      - name: Validate release tag, commit and npm toolchain
+        run: |
+          node scripts/npm-release.mjs check "$RELEASE_TAG"
+          test "$(git rev-parse "${RELEASE_TAG}^{commit}")" = "$(git rev-parse HEAD)"
+          git merge-base --is-ancestor HEAD origin/main
+          node --version
+          npm --version
+          node --input-type=module -e '
+            import { execFileSync } from "node:child_process";
+            const [major, minor, patch] = execFileSync("npm", ["--version"], { encoding: "utf8" }).trim().split(".").map(Number);
+            if (!(major > 11 || (major === 11 && (minor > 5 || (minor === 5 && patch >= 1))))) {
+              throw new Error("Trusted Publishing requires npm >=11.5.1");
+            }
+          '
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9.15.9
+          run_install: false
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.2.0
+      - uses: denoland/setup-deno@v2
+        with:
+          deno-version: v2.0.0
+      - run: pnpm install --frozen-lockfile --ignore-scripts
+      - run: npm run typecheck
+      # Builds, then runs core/reference and mocked release-helper tests.
+      - run: npm test
+      - name: Pack and validate public entry points
+        id: pack
+        run: node scripts/npm-release.mjs pack "$RELEASE_TAG" "$RUNNER_TEMP/npm-release"
+      # Equivalent to prepublishOnly, but inspect this exact archive without repacking.
+      - name: Test the release tarball in Node, Bun and Deno
+        env:
+          RELEASE_TARBALL: ${{ steps.pack.outputs.tarball }}
+          IP2REGION_BUN: bun
+          IP2REGION_DENO: deno
+        run: npm run test:packed -- "$RELEASE_TARBALL"
+      # npm Trusted Publisher: yourtion/node-ip2region, release.yml, no environment.
+      # Allowed actions must permit direct npm publish. No NPM_TOKEN is needed.
+      - name: Publish validated tarball to npm
+        env:
+          RELEASE_TARBALL: ${{ steps.pack.outputs.tarball }}
+        run: node scripts/npm-release.mjs publish "$RELEASE_TAG" "$RELEASE_TARBALL"
+      - name: Complete GitHub Release after npm succeeds
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: node scripts/npm-release.mjs release "$RELEASE_TAG"

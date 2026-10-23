@@ -89,10 +89,12 @@
     "build": "node scripts/build.mjs",
     "compile": "npm run build",
     "typecheck": "tsc --noEmit",
-    "test": "npm run build && node --test tests/node.test.mjs tests/reference.test.mjs",
-    "format": "prettier --write src tests scripts docs data/README.md README.md CHANGELOG.md package.json tsconfig.json .github/workflows/test.yml .prettierrc.cjs",
+    "test": "npm run build && node --test tests/node.test.mjs tests/reference.test.mjs scripts/npm-release.test.mjs",
+    "format": "prettier --write src tests scripts docs data/README.md README.md CHANGELOG.md package.json tsconfig.json .github/workflows/*.yml .prettierrc.cjs",
     "prepublishOnly": "npm run test:package",
     "test:package": "npm test && node scripts/test-package.mjs",
+    "test:packed": "node scripts/test-package.mjs",
+    "test:release": "node --test scripts/npm-release.test.mjs",
     "benchmark": "npm run build && node --expose-gc scripts/benchmark.mjs"
   },
   "repository": {
