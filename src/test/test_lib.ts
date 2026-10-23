@@ -57,3 +57,27 @@ describe("More Tests", function () {
     expect(ins.search(ALIYUN_IP)).toMatchObject(ALIYUN2);
   });
 });
+
+describe("Invalid Inputs", function () {
+  const INVALID_IP_STRING_1 = "not-an-ip";
+  const INVALID_IP_STRING_2 = "123.456.789.0"; // Invalid octet
+  const INVALID_IP_STRING_3 = ""; // Empty string
+
+  it("searchRaw should return null for invalid IP string with parse=true", function () {
+    expect(queryInMemoey.searchRaw(INVALID_IP_STRING_1, true)).toBeNull();
+    expect(queryInMemoey.searchRaw(INVALID_IP_STRING_2, true)).toBeNull();
+    expect(queryInMemoey.searchRaw(INVALID_IP_STRING_3, true)).toBeNull();
+  });
+
+  it("searchRaw should return null for invalid IP string with parse=false", function () {
+    expect(queryInMemoey.searchRaw(INVALID_IP_STRING_1, false)).toBeNull();
+    expect(queryInMemoey.searchRaw(INVALID_IP_STRING_2, false)).toBeNull();
+    expect(queryInMemoey.searchRaw(INVALID_IP_STRING_3, false)).toBeNull();
+  });
+
+  it("search should return null for invalid IP string", function () {
+    expect(queryInMemoey.search(INVALID_IP_STRING_1)).toBeNull();
+    expect(queryInMemoey.search(INVALID_IP_STRING_2)).toBeNull();
+    expect(queryInMemoey.search(INVALID_IP_STRING_3)).toBeNull();
+  });
+});
