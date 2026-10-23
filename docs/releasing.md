@@ -2,7 +2,7 @@
 
 `main` 使用 `.github/workflows/release.yml`，只在推送 `v*` tag 时触发发布。
 普通 `main` 提交、PR 和 GitHub Release 页面操作都不会触发发包。
-当前版本是尚未发布的 `3.0.0`；接入 workflow 本身不会发布这个版本。
+版本由 `package.json` 指定；仅提交 workflow 不会发布 npm 版本。
 旧 `v2` 分支不使用这套流程。
 
 ## 首次发布前配置 npm
@@ -21,7 +21,7 @@
 无需添加 `NPM_TOKEN` 或 `NODE_AUTH_TOKEN`，也无需授予独立的 `npm dist-tag` 权限。
 Publishing access 中限制传统 token 的选项与 OIDC publisher 的 Allowed actions 是不同设置。
 
-**代码接入不等于 npm 后台已绑定，也不等于 OIDC 已验证。** 本次配置没有执行真实发布。
+**代码接入不等于 npm 后台已绑定，也不等于 OIDC 已验证。** 实际验证以 Release 工作流和 npm 发布记录为准。
 按 [npm 官方文档](https://docs.npmjs.com/trusted-publishers/)，新 publisher 配置需在创建后
 两天内完成首次成功发布，否则会过期。因此准备首发时再完成或核实绑定，不为验证配置提前发包。
 公开仓库、公开包通过 OIDC 发布会自动生成 npm provenance；这里不提供 GitHub 附件

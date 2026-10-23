@@ -1,6 +1,6 @@
 # Changelog
 
-## 3.0.0 (Unreleased)
+## 3.0.0 — 2026-10-23
 
 - Add tag-triggered npm Trusted Publishing, validated-tarball consumer checks,
   stable/prerelease channels and resumable GitHub Release completion.

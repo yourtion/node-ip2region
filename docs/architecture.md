@@ -1,6 +1,6 @@
 # Native query architecture
 
-The `main` branch implements the new architecture for 3.0.0, an unreleased
+The `main` branch implements the new architecture introduced in 3.0.0, a
 breaking major version. The `v2` branch retains the legacy implementation and
 2.x API. Setting the package version does not publish a release.
 

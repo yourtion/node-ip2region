@@ -3,7 +3,7 @@
 原生支持 Node、Bun、Deno 的 IP 查询库。内置 ip2region XDB 双栈数据可开箱即用，
 也可读取自备数据库，或接入查询函数、对象和类实例。
 
-**`main` 开发 3.0.0，目前尚未发布；`v2` 保留旧版实现。既有 2.x 接口不提供以下新 API，升级请参阅[迁移指南](docs/migration.md)。**
+**`main` 维护 3.x 新架构；`v2` 保留旧版实现。既有 2.x 接口不提供以下新 API，升级请参阅[迁移指南](docs/migration.md)。**
 
 维护者的 npm Trusted Publisher 配置、tag 发版与失败重跑方式见[发布说明](docs/releasing.md)。
 

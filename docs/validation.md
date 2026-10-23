@@ -38,8 +38,8 @@ temporary installed package; they are not shipped in the tarball.
 
 The CI workflow additionally runs Node on Windows/macOS/Linux, and minimum plus
 current Bun/Deno releases on Linux. Those remote runs are separate evidence from
-the local results above. The next version is 3.0.0; npm publication remains a
-separate decision. Performance observations are recorded in [performance.md](performance.md),
+the local results above. npm publication requires a separate release decision.
+Performance observations are recorded in [performance.md](performance.md),
 not used as geographic-accuracy results.
 
 Release automation additionally has network-free helper tests in `npm run test:release`
