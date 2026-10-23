@@ -12,8 +12,10 @@ on:
 jobs:
   build:
     strategy:
+      fail-fast: false
       matrix:
-        os: [windows-latest, ubuntu-latest, macos-latest]
+        # Node 14 has no native macOS arm64 build.
+        os: [windows-latest, ubuntu-latest, macos-15-intel]
         node-version: [14.x, 16.x, 18.x]
 
     runs-on: ${{ matrix.os }}
@@ -22,7 +24,9 @@ jobs:
     - uses: actions/checkout@v3
     - uses: pnpm/action-setup@v2
       with:
-        version: 7
+        version: 9.0.0
+        # Bundle pnpm's Node runtime; keep testing the library on Node 14/16/18.
+        standalone: true
         run_install: false
     - uses: actions/setup-node@v3
       with:
@@ -30,3 +34,4 @@ jobs:
         cache: 'pnpm'
     - run: pnpm install --frozen-lockfile
     - run: pnpm test
+    - run: npm run test:package
