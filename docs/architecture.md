@@ -1,8 +1,8 @@
 # Native query architecture
 
-This branch implements the new architecture in stages. The release version is
-deliberately undecided; `2.3.1` in package.json is the existing base version, not a
-release designation for these breaking changes.
+The `main` branch implements the new architecture for 3.0.0, an unreleased
+breaking major version. The `v2` branch retains the legacy implementation and
+2.x API. Setting the package version does not publish a release.
 
 ## Decisions
 

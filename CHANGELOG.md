@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased (native architecture)
+## 3.0.0 (Unreleased)
 
 - Add a runtime-independent lookup core, external function/instance protocols,
   explicit native Node/Bun/Deno loading, and separate sync/async lifecycles.

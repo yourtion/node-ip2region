@@ -1,6 +1,6 @@
 {
   "name": "ip2region",
-  "version": "2.3.1",
+  "version": "3.0.0",
   "description": "Extensible native Node, Bun and Deno IP lookup with bundled ip2region data",
   "type": "module",
   "main": "./dist/cjs/index.js",
