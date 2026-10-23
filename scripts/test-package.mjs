@@ -1,5 +1,15 @@
 import { execFileSync } from "node:child_process";
-import { chmodSync, cpSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import {
+  chmodSync,
+  cpSync,
+  mkdirSync,
+  mkdtempSync,
+  readdirSync,
+  readFileSync,
+  realpathSync,
+  rmSync,
+  writeFileSync,
+} from "node:fs";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import { createRequire } from "node:module";
@@ -7,7 +17,9 @@ import { createHash } from "node:crypto";
 
 const require = createRequire(import.meta.url);
 const root = resolve(import.meta.dirname, "..");
-const directory = mkdtempSync(join(tmpdir(), "ip2region-package-"));
+// macOS /var and Windows short-name temp paths can differ from their real paths.
+// Permission grants must name the same canonical paths used by the module loader.
+const directory = mkdtempSync(join(realpathSync(tmpdir()), "ip2region-package-"));
 const consumer = join(directory, "consumer");
 const installed = join(consumer, "node_modules/ip2region");
 const manifest = JSON.parse(readFileSync(join(root, "package.json"), "utf8"));
@@ -87,7 +99,10 @@ try {
   process.stdout.write(run(node, ["--test", join(installed, "tests/node.test.mjs")]));
   process.stdout.write(
     run(node, [
-      "--experimental-permission",
+      run(node, [
+        "-p",
+        "process.allowedNodeEnvironmentFlags.has('--permission') ? '--permission' : '--experimental-permission'",
+      ]).trim(),
       `--allow-fs-read=${join(installed, "dist")}`,
       `--allow-fs-read=${join(installed, "tests")}`,
       `--allow-fs-read=${join(installed, "package.json")}`,
