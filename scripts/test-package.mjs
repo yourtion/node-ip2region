@@ -49,7 +49,7 @@ try {
     JSON.stringify({ private: true, type: "module", dependencies: { ip2region: manifest.version } })
   );
 
-  const files = run("tar", ["-tzf", join(directory, archive)], root).split("\n");
+  const files = run("tar", ["-tzf", join(directory, archive)], root).split(/\r?\n/);
   if (files.some((file) => /node_modules|ipv6wry|src\/|dist\/lib|install\.sh|update_db\.sh/.test(file)))
     throw new Error("Tarball contains obsolete or development files");
   for (const [name, expected] of [
