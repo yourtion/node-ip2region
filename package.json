@@ -1,6 +1,6 @@
 {
   "name": "ip2region",
-  "version": "2.3.0",
+  "version": "2.3.1",
   "description": "Extensible native Node, Bun and Deno IP lookup with bundled ip2region data",
   "type": "module",
   "main": "./dist/cjs/index.js",
@@ -76,7 +76,8 @@
     "dist",
     "data/ip2region.db",
     "data/README.md",
-    "docs"
+    "docs",
+    "CHANGELOG.md"
   ],
   "engines": {
     "node": ">=22.12.0"
@@ -87,7 +88,7 @@
     "compile": "npm run build",
     "typecheck": "tsc --noEmit",
     "test": "npm run build && node --test tests/node.test.mjs tests/reference.test.mjs",
-    "format": "prettier --write src tests scripts docs data/README.md README.md package.json tsconfig.json .github/workflows/test.yml .prettierrc.cjs",
+    "format": "prettier --write src tests scripts docs data/README.md README.md CHANGELOG.md package.json tsconfig.json .github/workflows/test.yml .prettierrc.cjs",
     "prepublishOnly": "npm run test:package",
     "test:package": "npm test && node scripts/test-package.mjs",
     "benchmark": "npm run build && node --expose-gc scripts/benchmark.mjs"

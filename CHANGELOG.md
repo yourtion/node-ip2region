@@ -1,0 +1,17 @@
+# Changelog
+
+## Unreleased (native architecture)
+
+- Add a runtime-independent lookup core, external function/instance protocols,
+  explicit native Node/Bun/Deno loading, and separate sync/async lifecycles.
+- Keep the existing ip2region IPv4 snapshot with provenance; add shared-memory
+  IP2Location BIN and IPIP IPDB readers with complete IPv6 handling.
+- Replace the old constructor/search/searchRaw API and remove ZX IPv6wry
+  heuristics, install/update scripts and automatic Git publish hooks.
+- Add real-tarball, multi-runtime and independent-reference validation, migration
+  documentation and a fixed-snapshot performance baseline.
+
+## 2.3.1
+
+- Fix native ESM default imports while preserving CommonJS and the previous ESM `.default` workaround (#38).
+- Return `null` for addresses outside sparse custom IPv4 databases and document compatible custom database formats (#37).

@@ -17,6 +17,28 @@ a free-form place name. City ID and the original delimited value are retained
 as `{ extensions: { cityId, region } }`. Country codes are not invented. The old
 ZX IPv6wry binary and heuristic geographic parsing are not supported.
 
+To create a compatible custom IPv4 file, use the Java maker from upstream
+[v1.9.0](https://github.com/lionsoul2014/ip2region/tree/v1.9.0/maker/java).
+Start with that version's `data/ip.merge.txt` and maintain the format
+`startIPv4|endIPv4|country|region|subdivision|city|ISP`. Ranges must be sorted and
+non-overlapping; split existing ranges before inserting replacements. Unknown
+fields use `0`. Run from the upstream checkout with an existing output directory:
+
+```sh
+mkdir -p custom-data
+java -jar maker/java/dbMaker-1.2.2.jar \
+  -src ./my-ip.merge.txt \
+  -region ./data/global_region.csv \
+  -dst ./custom-data
+```
+
+Load the resulting file with
+`openDatabase("/absolute/path/custom-data/ip2region.db", createIP2Region)`.
+This replaces the selected source without fallback. Keep files in the
+application's own data directory so reinstalling the package cannot overwrite
+them. XDB, CSV, JSON and text files cannot be made compatible by changing their
+extension.
+
 ## IPIP IPDB
 
 `createIPIP(bytes, { language: "CN", metadata? })` supports the IPIP metadata and

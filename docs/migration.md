@@ -1,7 +1,7 @@
 # Migrating to the native query architecture
 
-This is a breaking development branch, not the API of the existing npm 2.3.0
-release. The release number will be chosen separately before publishing.
+This is a breaking development branch, distinct from the existing 2.3.x API.
+The release number will be chosen separately before publishing.
 
 ## Bundled data
 
@@ -40,6 +40,10 @@ format: the former `ipv6db` option does not imply IPIP IPDB, BIN or another
 reader. Replace `disableIpv6` with an appropriate data source or reject IPv6 in
 the application before querying.
 
+Relative local paths now follow the native file API and resolve against the
+application's working directory, instead of the old implementation-file
+directory. Prefer an absolute path or file URL when migrating existing options.
+
 Old flat `country`, `province` and `city` strings become optional place objects
 and a `subdivisions` array. Empty/unknown values are omitted, not guessed.
 Code/name, ISP, ASN and organization remain distinct. The raw `searchRaw` union
@@ -61,6 +65,7 @@ debug environment hooks, Node 14/16/18 baseline, install script and network data
 update script are removed. CJS now uses named exports, e.g.
 `require("ip2region/node").openDefault`; the old `.default` workaround is gone.
 
-No publish hook pushes Git refs or tags. This branch does not merge or replace
-the independent fixes in PRs #37 and #38. Their relevant boundary/packaging
-behavior is covered by the new tests, not by copying their branches wholesale.
+No publish hook pushes Git refs or tags. The legacy sparse-database and ESM
+fixes are part of the 2.3.1 baseline. Their useful boundary and packaging behavior
+is covered by the new tests; obsolete constructor aliases and deep imports are
+intentionally removed from the new API.

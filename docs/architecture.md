@@ -1,7 +1,7 @@
 # Native query architecture
 
 This branch implements the new architecture in stages. The release version is
-deliberately undecided; `2.3.0` in package.json is the existing version, not a
+deliberately undecided; `2.3.1` in package.json is the existing base version, not a
 release designation for these breaking changes.
 
 ## Decisions
