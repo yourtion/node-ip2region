@@ -1,26 +1,97 @@
 {
   "name": "ip2region",
   "version": "2.3.0",
-  "description": "ip/ipv6 to geo database, IP（支持IPv6）地址到区域运营商",
-  "keywords": [
-    "ip",
-    "ipaddress-to-address",
-    "ip-address",
-    "ip-location",
-    "ip-region",
-    "ip-lookup",
-    "ip-search",
-    "ip-geo",
-    "ipv6",
-    "ipv6address-to-address",
-    "ipv6-address",
-    "ipv6-location",
-    "ipv6-region",
-    "ipv6-lookup",
-    "ipv6-search",
-    "ipv6-geo"
+  "description": "Extensible native Node, Bun and Deno IP lookup with bundled ip2region data",
+  "type": "module",
+  "main": "./dist/cjs/index.js",
+  "module": "./dist/esm/index.js",
+  "types": "./dist/esm/index.d.ts",
+  "exports": {
+    ".": {
+      "import": {
+        "types": "./dist/esm/index.d.ts",
+        "default": "./dist/esm/index.js"
+      },
+      "require": {
+        "types": "./dist/cjs/index.d.ts",
+        "default": "./dist/cjs/index.js"
+      }
+    },
+    "./package.json": "./package.json",
+    "./formats/ip2region": {
+      "import": {
+        "types": "./dist/esm/formats/ip2region.d.ts",
+        "default": "./dist/esm/formats/ip2region.js"
+      },
+      "require": {
+        "types": "./dist/cjs/formats/ip2region.d.ts",
+        "default": "./dist/cjs/formats/ip2region.js"
+      }
+    },
+    "./node": {
+      "import": {
+        "types": "./dist/esm/loaders/node.d.ts",
+        "default": "./dist/esm/loaders/node.js"
+      },
+      "require": {
+        "types": "./dist/cjs/loaders/node.d.ts",
+        "default": "./dist/cjs/loaders/node.js"
+      }
+    },
+    "./bun": {
+      "import": {
+        "types": "./dist/esm/loaders/bun.d.ts",
+        "default": "./dist/esm/loaders/bun.js"
+      }
+    },
+    "./deno": {
+      "import": {
+        "types": "./dist/esm/loaders/deno.d.ts",
+        "default": "./dist/esm/loaders/deno.js"
+      }
+    },
+    "./formats/ipip-ipdb": {
+      "import": {
+        "types": "./dist/esm/formats/ipip-ipdb.d.ts",
+        "default": "./dist/esm/formats/ipip-ipdb.js"
+      },
+      "require": {
+        "types": "./dist/cjs/formats/ipip-ipdb.d.ts",
+        "default": "./dist/cjs/formats/ipip-ipdb.js"
+      }
+    },
+    "./formats/ip2location-bin": {
+      "import": {
+        "types": "./dist/esm/formats/ip2location-bin.d.ts",
+        "default": "./dist/esm/formats/ip2location-bin.js"
+      },
+      "require": {
+        "types": "./dist/cjs/formats/ip2location-bin.d.ts",
+        "default": "./dist/cjs/formats/ip2location-bin.js"
+      }
+    }
+  },
+  "sideEffects": false,
+  "files": [
+    "dist",
+    "data/ip2region.db",
+    "data/README.md",
+    "docs"
   ],
-  "main": "dist/lib/index.js",
+  "engines": {
+    "node": ">=22.12.0"
+  },
+  "packageManager": "pnpm@9.15.9",
+  "scripts": {
+    "build": "node scripts/build.mjs",
+    "compile": "npm run build",
+    "typecheck": "tsc --noEmit",
+    "test": "npm run build && node --test tests/node.test.mjs tests/reference.test.mjs",
+    "format": "prettier --write src tests scripts docs data/README.md README.md package.json tsconfig.json .github/workflows/test.yml .prettierrc.cjs",
+    "prepublishOnly": "npm run test:package",
+    "test:package": "npm test && node scripts/test-package.mjs",
+    "benchmark": "npm run build && node --expose-gc scripts/benchmark.mjs"
+  },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/yourtion/node-ip2region.git"
@@ -28,56 +99,23 @@
   "bugs": {
     "url": "https://github.com/yourtion/node-ip2region/issues"
   },
-  "files": [
-    "dist/lib",
-    "data/ip2region.db",
-    "data/ipv6wry.db"
-  ],
   "homepage": "https://github.com/yourtion/node-ip2region#readme",
-  "scripts": {
-    "dev": "export NODE_ENV=dev && jest --verbose --watch",
-    "test": "jest --coverage",
-    "tag": "git tag v`node -p 'require(\"./package\").version'`",
-    "format": "prettier --write \"src/**/*.ts\"",
-    "clean": "rm -rf dist",
-    "compile": "npm run clean && tsc",
-    "prepublishOnly": "npm run format && npm run compile && npm test && coveralls < coverage/lcov.info",
-    "postpublish": "npm run tag && git push && git push --tags"
-  },
+  "keywords": [
+    "ip",
+    "ipv4",
+    "ipv6",
+    "geoip",
+    "ip2region",
+    "bun",
+    "deno"
+  ],
   "author": "Yourtion <yourtion@gmail.com>",
   "license": "MIT",
-  "peerDependencies": {
-    "@types/node": "*"
-  },
   "devDependencies": {
-    "@types/jest": "^29.5.12",
-    "@types/node": "^22.5.0",
-    "coveralls": "^3.1.0",
-    "jest": "^29.7.0",
-    "prettier": "^3.3.3",
-    "ts-jest": "^29.2.5",
-    "typescript": "^5.5.4"
-  },
-  "jest": {
-    "transform": {
-      "^.+\\.tsx?$": "ts-jest"
-    },
-    "testRegex": "./src/test/test",
-    "collectCoverageFrom": [
-      "src/lib/**/*.ts"
-    ],
-    "coverageThreshold": {
-      "global": {
-        "branches": 80,
-        "functions": 95,
-        "lines": 80,
-        "statements": 80
-      }
-    },
-    "moduleFileExtensions": [
-      "ts",
-      "js",
-      "json"
-    ]
+    "@types/node": "22.5.0",
+    "ip2location-nodejs": "9.8.0",
+    "ipip-ipdb": "0.6.0",
+    "prettier": "3.3.3",
+    "typescript": "5.5.4"
   }
 }
