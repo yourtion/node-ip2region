@@ -52,20 +52,27 @@ try {
   const files = run("tar", ["-tzf", join(directory, archive)], root).split("\n");
   if (files.some((file) => /node_modules|ipv6wry|src\/|dist\/lib|install\.sh|update_db\.sh/.test(file)))
     throw new Error("Tarball contains obsolete or development files");
-  const hash = createHash("sha256")
-    .update(readFileSync(join(installed, "data/ip2region.db")))
-    .digest("hex");
-  if (hash !== "3a8baab4f2e536a1c4a9be683cc81d563b0d4f942b304202be6f0d4aecc7f5d4")
-    throw new Error("Bundled snapshot changed");
+  for (const [name, expected] of [
+    ["ip2region_v4.xdb", "27ecba8c9a6d5e3b280aedbe7ee15c65372b179fbd0dad3845d8c608f2fcace1"],
+    ["ip2region_v6.xdb", "939f6b46bd2b8bec3cf7c5ceb8ba782266ae9b1f35b5ba7916700dec0b7506ed"],
+  ]) {
+    const hash = createHash("sha256")
+      .update(readFileSync(join(installed, "data", name)))
+      .digest("hex");
+    if (hash !== expected) throw new Error("Bundled XDB snapshot changed");
+  }
+  if (files.some((file) => /data\/ip2region\.db|formats\/ip2region\.(js|d\.ts)$/.test(file)))
+    throw new Error("Legacy database shipped");
+  if (!files.includes("package/data/LICENSE.ip2region.md")) throw new Error("Upstream license missing");
 
   const esm = `import { createLookup, createAsyncLookup, IP2RegionError } from 'ip2region';
     import { openDefault, openDatabase } from 'ip2region/node';
     import { createBIN } from 'ip2region/formats/ip2location-bin';
     import { createIPIP } from 'ip2region/formats/ipip-ipdb';
-    import { createIP2Region } from 'ip2region/formats/ip2region';
-    import { binFixture, ipipFixture, legacyFixture } from './node_modules/ip2region/tests/fixtures.mjs';
+    import { createXDB } from 'ip2region/formats/ip2region-xdb';
+    import { binFixture, ipipFixture, xdbFixture } from './node_modules/ip2region/tests/fixtures.mjs';
     import { equal, throws } from './node_modules/ip2region/tests/assert.mjs';
-    for (const [factory, fixture] of [[createBIN, binFixture], [createIPIP, ipipFixture], [createIP2Region, legacyFixture]]) {
+    for (const [factory, fixture] of [[createBIN, binFixture], [createIPIP, ipipFixture], [createXDB, xdbFixture]]) {
       const query = createLookup(factory(fixture()), { ownership: 'owned' });
       equal(query.lookup('192.0.2.1').city.name, 'First'); query.close();
     }

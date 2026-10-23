@@ -18,16 +18,6 @@
       }
     },
     "./package.json": "./package.json",
-    "./formats/ip2region": {
-      "import": {
-        "types": "./dist/esm/formats/ip2region.d.ts",
-        "default": "./dist/esm/formats/ip2region.js"
-      },
-      "require": {
-        "types": "./dist/cjs/formats/ip2region.d.ts",
-        "default": "./dist/cjs/formats/ip2region.js"
-      }
-    },
     "./node": {
       "import": {
         "types": "./dist/esm/loaders/node.d.ts",
@@ -69,15 +59,27 @@
         "types": "./dist/cjs/formats/ip2location-bin.d.ts",
         "default": "./dist/cjs/formats/ip2location-bin.js"
       }
+    },
+    "./formats/ip2region-xdb": {
+      "import": {
+        "types": "./dist/esm/formats/ip2region-xdb.d.ts",
+        "default": "./dist/esm/formats/ip2region-xdb.js"
+      },
+      "require": {
+        "types": "./dist/cjs/formats/ip2region-xdb.d.ts",
+        "default": "./dist/cjs/formats/ip2region-xdb.js"
+      }
     }
   },
   "sideEffects": false,
   "files": [
     "dist",
-    "data/ip2region.db",
     "data/README.md",
     "docs",
-    "CHANGELOG.md"
+    "CHANGELOG.md",
+    "data/ip2region_v4.xdb",
+    "data/ip2region_v6.xdb",
+    "data/LICENSE.ip2region.md"
   ],
   "engines": {
     "node": ">=22.12.0"
@@ -115,6 +117,7 @@
   "devDependencies": {
     "@types/node": "22.5.0",
     "ip2location-nodejs": "9.8.0",
+    "ip2region.js": "3.1.8",
     "ipip-ipdb": "0.6.0",
     "prettier": "3.3.3",
     "typescript": "5.5.4"

@@ -20,10 +20,11 @@ try {
 }
 ```
 
-Bun uses `ip2region/bun`; Deno uses `npm:ip2region/deno`. The bundled snapshot
-supports IPv4 only. The previous ZX IPv6wry snapshot and its location-string
-heuristics are removed. Use a supported dual-stack BIN/IPIP IPDB or an external
-source for IPv6; unsupported families throw UNSUPPORTED_FAMILY.
+Bun uses `ip2region/bun`; Deno uses `npm:ip2region/deno`. The bundled XDB snapshots
+support IPv4 and IPv6 through the same API. The previous legacy `.db` and
+ZX IPv6wry readers and location-string heuristics are removed; no old data contract
+is retained. A self-supplied single-family reader rejects the other family with
+UNSUPPORTED_FAMILY.
 
 ## Custom data and results
 
@@ -31,9 +32,13 @@ Replace `ipv4db` with a format factory and a native loader:
 
 ```js
 import { openDatabase } from "ip2region/node";
-import { createIP2Region } from "ip2region/formats/ip2region";
-const query = await openDatabase("/data/custom.db", createIP2Region);
+import { createXDB } from "ip2region/formats/ip2region-xdb";
+const query = await openDatabase("/data/custom.xdb", createXDB);
 ```
+
+Convert old `.db` data with upstream tooling or obtain an actual XDB file; renaming
+the extension is insufficient. XDB region schemas must match the configured field
+list, independently of the container version; see [formats](formats.md).
 
 There is no implicit merge or fallback. IPv6 data must identify its actual
 format: the former `ipv6db` option does not imply IPIP IPDB, BIN or another

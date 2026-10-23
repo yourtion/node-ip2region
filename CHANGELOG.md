@@ -4,8 +4,9 @@
 
 - Add a runtime-independent lookup core, external function/instance protocols,
   explicit native Node/Bun/Deno loading, and separate sync/async lifecycles.
-- Keep the existing ip2region IPv4 snapshot with provenance; add shared-memory
-  IP2Location BIN and IPIP IPDB readers with complete IPv6 handling.
+- Replace legacy `.db` data and contracts with pinned upstream IPv4/IPv6 XDB
+  snapshots, an explicit field schema, provenance, licenses and per-file metadata.
+  Add shared-memory IP2Location BIN and IPIP IPDB readers with complete IPv6 handling.
 - Replace the old constructor/search/searchRaw API and remove ZX IPv6wry
   heuristics, install/update scripts and automatic Git publish hooks.
 - Add real-tarball, multi-runtime and independent-reference validation, migration

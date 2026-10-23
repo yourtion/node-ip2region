@@ -1,8 +1,8 @@
 import { createLookup } from "../dist/esm/index.js";
-import { createIP2Region } from "../dist/esm/formats/ip2region.js";
+import { createXDB } from "../dist/esm/formats/ip2region-xdb.js";
 import { createIPIP } from "../dist/esm/formats/ipip-ipdb.js";
 import { createBIN } from "../dist/esm/formats/ip2location-bin.js";
-import { legacyFixture, ipipFixture, rewriteIPIP, binFixture } from "./fixtures.mjs";
+import { xdbFixture, ipipFixture, rewriteIPIP, binFixture } from "./fixtures.mjs";
 import { assert, equal, throws } from "./assert.mjs";
 
 function view(input) {
@@ -27,20 +27,98 @@ export function formatSuite(test) {
       query.close();
     }
   });
-  test("legacy .db handles sparse ranges, both endpoints and misses after the final index", () => {
-    const query = createLookup(createIP2Region(legacyFixture(false)), { ownership: "owned" });
-    for (const ip of ["192.0.2.0", "192.0.2.1", "192.0.2.2"]) equal(query.lookup(ip).city, { name: "First" });
-    for (const ip of ["0.0.0.0", "192.0.1.255", "192.0.2.3", "255.255.255.255"]) equal(query.lookup(ip), null);
-    throws(() => query.lookup("::1"), "UNSUPPORTED_FAMILY");
+  test("XDB supports sparse IPv4 ranges, structure 2/3, endpoints, misses and close", () => {
+    for (const structure of [2, 3]) {
+      const query = createLookup(createXDB(xdbFixture({ structure, edges: false, exclusive: structure === 3 })), {
+        ownership: "owned",
+      });
+      for (const ip of ["192.0.2.0", "192.0.2.1", "192.0.2.2"]) {
+        equal(query.lookup(ip).country, { name: "Example", code: "EX" });
+        equal(query.lookup(ip).city, { name: "First" });
+      }
+      for (const ip of ["0.0.0.0", "192.0.1.255", "192.0.2.3", "192.1.0.0", "255.255.255.255"])
+        equal(query.lookup(ip), null);
+      throws(() => query.lookup("::1"), "UNSUPPORTED_FAMILY");
+      query.close();
+      throws(() => query.lookup("192.0.2.1"), "CLOSED");
+      const edges = createLookup(createXDB(xdbFixture({ structure })));
+      equal(edges.lookup("0.0.0.0").city.name, "First");
+      equal(edges.lookup("255.255.255.255").city.name, "First");
+      equal(edges.metadata.builtAt, "2024-01-01T00:00:00.000Z");
+      edges.close();
+    }
+  });
+  test("XDB IPv6 retains all 128 bits, including low-bit neighbors and the last address", () => {
+    const query = createLookup(createXDB(xdbFixture({ family: 6 })), { ownership: "owned" });
+    for (const ip of ["::", "::1", "2001:db8::1", "ffff:ffff:ffff:ffff:ffff:ffff:ffff:ffff"])
+      equal(query.lookup(ip).city.name, "First");
+    for (const ip of ["::2", "2001:db8::2"]) equal(query.lookup(ip).city.name, "Second");
+    for (const ip of ["::3", "2001:db8::3", "::ffff:192.0.2.1"]) equal(query.lookup(ip), null);
+    throws(() => query.lookup("192.0.2.1"), "UNSUPPORTED_FAMILY");
     query.close();
-    throws(() => query.lookup("192.0.2.1"), "CLOSED");
-    const edges = createLookup(createIP2Region(legacyFixture()));
-    equal(edges.lookup("0.0.0.0").extensions.cityId, 42);
-    equal(edges.lookup("255.255.255.255").extensions.cityId, 42);
+    const spanning = createLookup(
+      createXDB(xdbFixture({ edges: false, rows: [[0xc000ffffn, 0xc0020000n, "0|0|0|0|0"]] }))
+    );
+    equal(spanning.lookup("192.1.0.0").country, undefined);
+    equal(spanning.lookup("192.2.0.1"), null);
+    spanning.close();
+  });
+  test("XDB field layouts are explicit, preserve raw fields and never guess legacy schemas", () => {
+    const fields = ["country_name", "region_name", "city_name", "isp", "extra"];
+    const source = createXDB(xdbFixture({ region: "Example|0|First|0|kept" }), { fields });
+    fields[0] = "changed";
+    const query = createLookup(source);
+    equal(query.lookup("192.0.2.1").extensions.raw.extra, "kept");
+    equal(query.lookup("192.0.2.1").country, { name: "Example" });
+    equal(query.lookup("192.0.2.1").isp, undefined);
+    equal(query.lookup("192.0.2.1").subdivisions, undefined);
+    equal(query.capabilities.fields.includes("country.code"), false);
+    const raw = createLookup(createXDB(xdbFixture({ region: "arbitrary record" }), { fields: null }));
+    equal(raw.lookup("192.0.2.1").extensions, { region: "arbitrary record", raw: {} });
+    equal(raw.capabilities.fields, []);
+    const empty = createLookup(createXDB(xdbFixture({ region: "" })));
+    equal(empty.lookup("192.0.2.1"), null);
+    empty.close();
+    throws(
+      () => createLookup(createXDB(xdbFixture({ region: "short|record" }))).lookup("192.0.2.1"),
+      "INVALID_DATABASE"
+    );
+    for (const fields of [[], ["x", "x"], [""], ["__proto__"]])
+      throws(() => createXDB(xdbFixture(), { fields }), "INVALID_ARGUMENT");
+    query.close();
+    raw.close();
+  });
+  test("XDB rejects corrupt headers, index ranges, vector entries, pointers and UTF-8", () => {
+    for (const family of [4, 6]) {
+      for (const edit of [
+        (b, v) => v.setUint16(0, 4, true),
+        (b, v) => v.setUint16(2, 2, true),
+        (b, v) => v.setUint16(16, 5, true),
+        (b, v) => v.setUint16(18, 8, true),
+        (b, v) => v.setUint32(8, 10, true),
+        (b, v) => v.setUint32(12, b.length, true),
+        (b, v) => v.setUint32(256, 0xffffffff, true),
+        (b, v) => {
+          const first = v.getUint32(8, true);
+          b.fill(255, first, first + (family === 4 ? 4 : 16));
+        },
+        (b, v) => {
+          const first = v.getUint32(8, true);
+          v.setUint32(first + (family === 4 ? 10 : 34), 256, true);
+        },
+      ]) {
+        const bytes = xdbFixture({ family });
+        edit(bytes, new DataView(bytes.buffer));
+        throws(() => createXDB(bytes), "INVALID_DATABASE");
+      }
+      const bytes = xdbFixture({ family });
+      bytes[256 + 65536 * 8] = 255;
+      throws(() => createLookup(createXDB(bytes)).lookup(family === 4 ? "0.0.0.0" : "::"), "INVALID_DATABASE");
+    }
   });
 
   for (const [name, fixture, factory] of [
-    ["ip2region", legacyFixture, createIP2Region],
+    ["XDB", xdbFixture, createXDB],
     ["IPIP", ipipFixture, createIPIP],
     ["BIN", binFixture, createBIN],
   ]) {

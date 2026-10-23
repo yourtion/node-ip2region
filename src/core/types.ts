@@ -35,6 +35,8 @@ export interface Capabilities {
 }
 
 export interface SourceMetadata {
+  /** Per-file provenance for a source composed of multiple databases. */
+  readonly datasets?: readonly SourceMetadata[];
   readonly id: string;
   readonly format?: string;
   readonly dataVersion?: string;

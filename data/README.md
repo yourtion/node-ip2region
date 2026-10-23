@@ -1,24 +1,30 @@
-# Bundled database provenance
+# Bundled ip2region XDB snapshots
 
-`ip2region.db` is the existing legacy IPv4 database already distributed by
-yourtion/node-ip2region. The original update script identifies its source as
-[lionsoul2014/ip2region](https://github.com/lionsoul2014/ip2region), formerly at
-`data/ip2region.db` on that project's master branch.
+Both unmodified files come from [lionsoul2014/ip2region](https://github.com/lionsoul2014/ip2region/tree/f8b0792b0cd729f5b2593f690aeed225e49c1967/data),
+pinned upstream revision `f8b0792b0cd729f5b2593f690aeed225e49c1967`, retrieved
+2026-10-23. `openDefault()` explicitly loads both and routes by address family.
+The old `ip2region.db` and ZX IPv6wry files are removed.
 
-- Format: legacy ip2region `.db`, IPv4 only; **not** XDB or IPIP IPDB.
-- Size: 8,733,094 bytes.
-- SHA-256: `3a8baab4f2e536a1c4a9be683cc81d563b0d4f942b304202be6f0d4aecc7f5d4`.
-- Repository baseline: `41d91ef8996fe3e8d3aa3c1a0a62601c2af5b8ab`.
-- Upstream data revision and build time: unknown; neither package version nor
-  loading/downloading time is presented as its data build time.
+| File             |      Bytes | Header build time (UTC) | SHA-256                                                            |
+| ---------------- | ---------: | ----------------------- | ------------------------------------------------------------------ |
+| ip2region_v4.xdb | 11,122,642 | 2026-10-14T02:11:07Z    | `27ecba8c9a6d5e3b280aedbe7ee15c65372b179fbd0dad3845d8c608f2fcace1` |
+| ip2region_v6.xdb | 37,277,813 | 2026-08-14T05:38:41Z    | `939f6b46bd2b8bec3cf7c5ceb8ba782266ae9b1f35b5ba7916700dec0b7506ed` |
 
-The upstream project publishes its own license and data notices. The MIT
-license at this package's root covers this project's reader code; it is not a
-new license grant for third-party database content. See the upstream
-[license](https://github.com/lionsoul2014/ip2region/blob/master/LICENSE.md) and
-data documentation for the relevant terms. No new vendor database was added,
-downloaded or updated for this implementation.
+Both use XDB structure 3, vector indexes and 4-byte pointers. The documented
+upstream schema at this revision is `国家|省份|城市|ISP|iso-alpha2-code`, mapped
+as `country_name|region_name|city_name|isp|country_code`. This is unrelated to the
+old five-field `.db` schema. Custom XDB records require their own field layout.
 
-`openDefault()` loads this snapshot only when called. It does not download,
-refresh, merge, or fall back to other sources. Replace it with an explicitly
-provided, appropriately licensed database when different coverage is needed.
+Upstream copyright and license text is retained verbatim in
+[LICENSE.ip2region.md](LICENSE.ip2region.md): **Apache-2.0 OR MIT**. These are the
+public files distributed in that upstream repository; no commercial database or
+service data is included. Licenses for independently supplied data remain the
+user's responsibility and are separate from reader code licensing.
+
+A header build timestamp describes the binary's build, not the freshness of every
+underlying range. File hashes identify the exact snapshots. Runtime `loadedAt`
+is separate; loading/downloading the same file does not create a new data version.
+No automatic downloading or updating occurs at import, installation or lookup.
+No geographic-accuracy guarantee is implied by upstream attribution or passing
+reader tests. Updating these files requires checking upstream provenance/license,
+recording new digests and rerunning reference and native-runtime validation.

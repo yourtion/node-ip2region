@@ -1,6 +1,6 @@
 # ip2region
 
-原生支持 Node、Bun、Deno 的 IP 查询库。内置 ip2region IPv4 数据可开箱即用，
+原生支持 Node、Bun、Deno 的 IP 查询库。内置 ip2region XDB 双栈数据可开箱即用，
 也可读取自备数据库，或接入查询函数、对象和类实例。
 
 **当前是未发布的新架构分支。既有 2.3.x 接口不提供以下新 API；破坏性版本号在发布前另定。**
@@ -14,12 +14,12 @@ const query = await openDefault();
 try {
   console.log(query.lookup("120.24.78.68"));
   // {
-  //   country: { name: "中国" },
+  //   country: { name: "中国", code: "CN" },
   //   subdivisions: [{ name: "广东省" }],
   //   city: { name: "深圳市" },
-  //   isp: "阿里云",
+  //   isp: "阿里",
   //   source: "bundled-ip2region",
-  //   extensions: { cityId: 2163, region: "中国|0|广东省|深圳市|阿里云" }
+  //   extensions: { region: "中国|广东省|深圳市|阿里|CN", raw: { /* 按列命名的原始字段 */ } }
   // }
 } finally {
   query.close();
@@ -30,10 +30,12 @@ Bun 将入口改为 `ip2region/bun`；Deno 使用 `npm:ip2region/deno`，读取�
 `--allow-read`。三个入口分别使用 `node:fs/promises`、`Bun.file`、`Deno.readFile`，
 共享格式读取器和查询引擎。
 
-内置数据是已有的 **legacy ip2region `.db` IPv4 快照**，来源为
-[lionsoul2014/ip2region](https://github.com/lionsoul2014/ip2region)。构建日期与上游
-数据版本未知，不声称是最新数据；具体哈希与说明见 [数据来源](data/README.md)。
-查询 IPv6 请显式使用支持 IPv6 的 BIN、IPIP IPDB 或外部数据源。
+内置 IPv4、IPv6 XDB 快照来自
+[lionsoul2014/ip2region](https://github.com/lionsoul2014/ip2region)，固定到上游提交，
+附原始许可、SHA-256 和各文件构建时间，见 [数据来源](data/README.md)。两个文件合计
+约 48.4 MB（未压缩）；`openDefault()` 显式加载两份到内存，按地址族路由。
+需要只加载一份时使用 `openDatabase`。不承诺快照的定位准确率或更新频率。
+`metadata.datasets` 分别记录文件版本、构建和加载时间。
 
 任何模块的导入都不会读取数据库、联网或安装依赖；只有调用加载函数才会读文件。
 
@@ -41,15 +43,18 @@ Bun 将入口改为 `ip2region/bun`；Deno 使用 `npm:ip2region/deno`，读取�
 
 ```js
 import { openDatabase } from "ip2region/node";
+import { createXDB } from "ip2region/formats/ip2region-xdb";
 import { createBIN } from "ip2region/formats/ip2location-bin";
 import { createIPIP } from "ip2region/formats/ipip-ipdb";
 
+const xdb = await openDatabase("/data/ip2region_v6.xdb", createXDB);
 const bin = await openDatabase("/data/IP2LOCATION.BIN", createBIN);
 const ipdb = await openDatabase("/data/qqwry.ipdb", (bytes) => createIPIP(bytes, { language: "CN" }));
 try {
   console.log(bin.lookup("2001:db8::1"));
   console.log(ipdb.lookup("2001:db8::2"));
 } finally {
+  xdb.close();
   bin.close();
   ipdb.close();
 }
@@ -69,14 +74,14 @@ query.close();
 
 | 格式入口                                          | 地址族                     | 标准字段                                             |
 | ------------------------------------------------- | -------------------------- | ---------------------------------------------------- |
-| `ip2region/formats/ip2region` → `createIP2Region` | IPv4                       | 国家名称、行政区域、城市、ISP                        |
+| `ip2region/formats/ip2region-xdb` → `createXDB`   | 每份文件 IPv4 或 IPv6      | 默认映射国家代码/名称、行政区域、城市、ISP           |
 | `ip2region/formats/ip2location-bin` → `createBIN` | 按文件头声明 IPv4/IPv6     | 国家代码/名称、区域、城市、ISP；DB26 可提供 ASN/组织 |
 | `ip2region/formats/ipip-ipdb` → `createIPIP`      | 按 metadata 声明 IPv4/IPv6 | 按字段名和选定语言映射，未知字段保留在扩展记录       |
 
 BIN 的 LITE 与商业包字段不同；DB26 是数据产品，不是另一种文件格式，也不代表
 本库提供在线 DB26 的数据质量。此处 IPIP IPDB 包括
 [nmgliangwei/qqwry.ipdb](https://github.com/nmgliangwei/qqwry.ipdb) 的转换格式，
-不包括 CZDB、QQWry DAT、ZX IPv6wry 或 XDB。详细边界见 [格式说明](docs/formats.md)。
+IPDB 读取器不处理 XDB、CZDB、QQWry DAT 或 ZX IPv6wry。详细边界见 [格式说明](docs/formats.md)。
 
 ## 外部扩展
 
@@ -136,7 +141,7 @@ const { openDefault } = require("ip2region/node");
 ## 迁移和开发
 
 新接口替换旧构造器、`search`、`searchRaw`、`disableIpv6` 和未受约束的深层导入。
-旧的 IPv6 高 64 位分派、地名字符串拆分、安装脚本及自动数据更新脚本已移除。
+旧 `.db`、ZX IPv6wry 数据及其读取器、IPv6 高 64 位分派、地名字符串拆分、安装脚本和自动数据更新脚本已移除。
 迁移示例见 [迁移说明](docs/migration.md)。数据的下载、更新和授权由使用者管理。
 
 ```sh
@@ -148,7 +153,7 @@ npm run benchmark
 
 `test:package` 会打包到临时目录，检查 ESM/CJS、类型声明、导出隔离和 Node 权限。
 设置 `IP2REGION_BUN=bun`、`IP2REGION_DENO=deno` 可同时验证原生运行时；
-`IP2REGION_NODE` 可指定 Node 消费者版本。共享测试使用合成 fixture，BIN/IPDB 另与
+`IP2REGION_NODE` 可指定 Node 消费者版本。共享测试使用合成 fixture，XDB（含固定真实快照）、BIN/IPDB 另与
 官方参考读取器交叉验证，无需下载真实商业数据。
 
 性能记录加载时间、内存和查询延迟，与定位质量分开；见 [性能基线](docs/performance.md)。

@@ -5,12 +5,12 @@ import { cpus, totalmem } from "node:os";
 import { openDatabase, openDefault } from "../dist/esm/loaders/node.js";
 import { createBIN } from "../dist/esm/formats/ip2location-bin.js";
 import { createIPIP } from "../dist/esm/formats/ipip-ipdb.js";
-import { createIP2Region } from "../dist/esm/formats/ip2region.js";
+import { createXDB } from "../dist/esm/formats/ip2region-xdb.js";
 
-const factories = { bin: createBIN, ipip: createIPIP, ip2region: createIP2Region };
-const [format = "ip2region", path] = process.argv.slice(2);
-if (!Object.hasOwn(factories, format)) throw new Error("Format must be ip2region, ipip or bin");
-if (!path && format !== "ip2region") throw new Error("Supply the local database path for bin or ipip");
+const factories = { bin: createBIN, ipip: createIPIP, xdb: createXDB };
+const [format = "xdb", path] = process.argv.slice(2);
+if (!Object.hasOwn(factories, format)) throw new Error("Format must be xdb, ipip or bin");
+if (!path && format !== "xdb") throw new Error("Supply the local database path for bin or ipip");
 globalThis.gc?.();
 const before = process.memoryUsage();
 const start = performance.now();
@@ -31,7 +31,17 @@ for (let i = 0; i < 10000; i++) {
   latencies.push((performance.now() - time) * 1000);
 }
 latencies.sort((a, b) => a - b);
-const bytes = await readFile(path ?? new URL("../data/ip2region.db", import.meta.url));
+const datasets = [];
+for (const local of path
+  ? [path]
+  : [new URL("../data/ip2region_v4.xdb", import.meta.url), new URL("../data/ip2region_v6.xdb", import.meta.url)]) {
+  const bytes = await readFile(local);
+  datasets.push({
+    file: String(local).split(/[\\/]/).at(-1),
+    sha256: createHash("sha256").update(bytes).digest("hex"),
+    bytes: bytes.length,
+  });
+}
 const result = {
   runtime: process.version,
   platform: process.platform,
@@ -40,8 +50,8 @@ const result = {
   logicalCPUs: cpus().length,
   hostMemoryBytes: totalmem(),
   format: query.metadata.format,
-  sha256: createHash("sha256").update(bytes).digest("hex"),
-  bytes: bytes.length,
+  datasets,
+  bytes: datasets.reduce((sum, data) => sum + data.bytes, 0),
   loadMs,
   memoryDelta: Object.fromEntries(
     ["rss", "heapUsed", "external", "arrayBuffers"].map((key) => [key, after[key] - before[key]])

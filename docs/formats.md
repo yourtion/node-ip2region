@@ -4,40 +4,57 @@ All built-in readers use the same Uint8Array/DataView/TextDecoder implementation
 on Node, Bun and Deno. They copy the effective input view, including a non-zero
 byteOffset. They do not download data or depend on vendor runtime packages.
 
-## Legacy ip2region .db
+## ip2region XDB
 
-`createIP2Region(bytes, options?)` reads the legacy IPv4 ip2region database,
-including the existing bundled snapshot. It validates the header, sorted,
-non-overlapping index ranges, packed record lengths and pointers. Sparse ranges
-return null; a query after the final index never reads beyond the index.
+`createXDB(bytes, options?)` supports structure 2 (IPv4) and structure 3
+(IPv4 or IPv6), vector indexes and 4-byte pointers. Unsupported structure,
+index policy or pointer width raises INVALID_DATABASE. Files declare a single
+address family; the default loader owns two readers and routes by family.
+IPv4 range endpoints use little endian; IPv6 endpoints retain all 128 bits in
+network order. The reader validates sorted non-overlapping ranges, segment/data
+bounds and every vector entry. Inclusive and exclusive vector end pointers from
+upstream makers are normalized; queries never read past the final segment.
+Missing vectors, sparse gaps and zero-length records return null.
 
-The format explicitly separates country, region, subdivision, city and ISP with
-`|`; mapping those defined columns does not infer administrative boundaries from
-a free-form place name. City ID and the original delimited value are retained
-as `{ extensions: { cityId, region } }`. Country codes are not invented. The old
-ZX IPv6wry binary and heuristic geographic parsing are not supported.
+XDB contains a UTF-8 region string, **not a field schema**. The default column
+configuration matches the pinned current upstream snapshots:
+`country_name|region_name|city_name|isp|country_code`, documented upstream as
+`国家|省份|城市|ISP|iso-alpha2-code`. It is distinct from the old
+`country|region|province|city|ISP` layout. The adapter maps actual named columns,
+retains `{ extensions: { region, raw } }`, and advertises configured capabilities.
+Unknown markers are omitted from standard fields; `Reserved` place markers
+remain only in raw data. It never translates names or infers a country code.
+A record with an unexpected column count raises INVALID_DATABASE when queried;
+UTF-8 and column validation happen on record access.
 
-To create a compatible custom IPv4 file, use the Java maker from upstream
-[v1.9.0](https://github.com/lionsoul2014/ip2region/tree/v1.9.0/maker/java).
-Start with that version's `data/ip.merge.txt` and maintain the format
-`startIPv4|endIPv4|country|region|subdivision|city|ISP`. Ranges must be sorted and
-non-overlapping; split existing ranges before inserting replacements. Unknown
-fields use `0`. Run from the upstream checkout with an existing output directory:
+For self-supplied data, explicitly match the documented schema of that file:
 
-```sh
-mkdir -p custom-data
-java -jar maker/java/dbMaker-1.2.2.jar \
-  -src ./my-ip.merge.txt \
-  -region ./data/global_region.csv \
-  -dst ./custom-data
+```js
+import { createXDB } from "ip2region/formats/ip2region-xdb";
+const source = createXDB(bytes, {
+  fields: ["country_name", "region_name", "city_name", "isp", "country_code", "custom"],
+});
+// Uninterpreted/custom records need no geographic columns:
+const rawSource = createXDB(bytes, { fields: null });
 ```
 
-Load the resulting file with
-`openDatabase("/absolute/path/custom-data/ip2region.db", createIP2Region)`.
-This replaces the selected source without fallback. Keep files in the
-application's own data directory so reinstalling the package cannot overwrite
-them. XDB, CSV, JSON and text files cannot be made compatible by changing their
-extension.
+Column names must be distinct nonempty strings (prototype-reserved names are
+rejected). Extra names are preserved in `extensions.raw`; `fields: null`
+preserves the entire region string and advertises no standard geographic fields.
+There is no heuristic detection of legacy field layouts. Container structure
+version does not identify a data schema, language or geographic-data quality.
+
+The header timestamp supplies `builtAt`, not a promise that records were updated
+at that time. `loadedAt` is recorded separately. The bundled composite metadata
+uses the pinned upstream revision; `metadata.datasets` retains each file digest,
+build time and load time. See [data provenance](../data/README.md).
+
+To make custom files, use the upstream
+[XDB maker](https://github.com/lionsoul2014/ip2region/tree/f8b0792b0cd729f5b2593f690aeed225e49c1967/maker)
+for the actual address family and chosen region schema. Load with
+`openDatabase("/absolute/path/custom.xdb", createXDB)` or an explicitly configured
+factory. The old `.db` reader, city ID, ZX IPv6wry and Java v1.9 maker instructions
+are removed. Changing a file extension does not convert its format.
 
 ## IPIP IPDB
 
@@ -85,18 +102,19 @@ policy, not an assumption about data accuracy.
 
 LITE and commercial BIN packages share a format but have different licenses,
 coverage and fields. DB26 is a data product, not a separate format or a promise
-of online-service accuracy. Supply a file you have rights to use. No commercial
-or other newly acquired database is distributed here.
+of online-service accuracy. Supply a file you have rights to use. Only the attributed upstream XDB snapshots are bundled; commercial BIN/IPDB
+data must be supplied separately.
 
 ## Independent verification and limits
 
-Synthetic fixtures are checked against `ip2location-nodejs@9.8.0` and the
-official `ipip-ipdb@0.6.0` reader as development-only dependencies. Reference
+XDB synthetic fixtures and pinned real snapshots are checked against official
+`ip2region.js@3.1.8`. BIN/IPIP synthetic fixtures are checked against
+`ip2location-nodejs@9.8.0` and the official `ipip-ipdb@0.6.0` reader as development-only dependencies. Reference
 comparisons cover fields/languages, all product types DB1–DB26 and full
 IPv6 values with differing low 64 bits. Corrupt-file tests use the shared suite
 across all three runtimes. No claim is made that every real vendor edition
 or release has been exercised. New data files should be verified against their
 own format metadata and reference reader before deployment.
 
-Reader tests verify decoding, not geographic accuracy. MMDB, XDB, CZDB and other
+Reader tests verify decoding, not geographic accuracy. MMDB, CZDB and other
 formats are future work; add an external adapter without waiting for a release.

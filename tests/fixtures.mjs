@@ -14,26 +14,62 @@ function u32(bytes, offset, value, little = false) {
   new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength).setUint32(offset, value, little);
 }
 
-export function legacyFixture(edges = true) {
-  const rows = edges
-    ? [
-        [0, 0],
-        [0xc0000200, 0xc0000202],
-        [0xffffffff, 0xffffffff],
-      ]
-    : [[0xc0000200, 0xc0000202]];
-  const raw = encoder.encode("Example|0|Region|First|Example ISP");
-  const start = 8 + rows.length * 12;
-  const data = new Uint8Array(start + 4 + raw.length);
-  u32(data, 0, 8, true);
-  u32(data, 4, 8 + (rows.length - 1) * 12, true);
-  rows.forEach(([from, to], i) => {
-    u32(data, 8 + i * 12, from, true);
-    u32(data, 12 + i * 12, to, true);
-    u32(data, 16 + i * 12, (raw.length + 4) * 0x1000000 + start, true);
+export function xdbFixture({
+  family = 4,
+  structure = 3,
+  edges = true,
+  exclusive = true,
+  region = "Example|Region|First|Example ISP|EX",
+  rows,
+} = {}) {
+  const width = family === 4 ? 4 : 16,
+    stride = width * 2 + 6;
+  const maximum = (1n << BigInt(width * 8)) - 1n;
+  rows ??=
+    family === 4
+      ? [[0xc0000200n, 0xc0000202n, region]]
+      : [
+          [1n, 1n, region],
+          [2n, 2n, region.replace("First", "Second")],
+          [(0x20010db8n << 96n) | 1n, (0x20010db8n << 96n) | 1n, region],
+          [(0x20010db8n << 96n) | 2n, (0x20010db8n << 96n) | 2n, region.replace("First", "Second")],
+        ];
+  if (edges) rows = [[0n, 0n, region], ...rows, [maximum, maximum, region]];
+  const records = rows.map((row) => encoder.encode(row[2]));
+  const floor = 256 + 65536 * 8;
+  const first = floor + records.reduce((sum, b) => sum + b.length, 0);
+  const data = new Uint8Array(first + rows.length * stride);
+  const dv = new DataView(data.buffer);
+  dv.setUint16(0, structure, true);
+  dv.setUint16(2, 1, true);
+  u32(data, 4, 1704067200, true);
+  u32(data, 8, first, true);
+  u32(data, 12, first + (rows.length - 1) * stride, true);
+  if (structure === 3) {
+    dv.setUint16(16, family, true);
+    dv.setUint16(18, 4, true);
+  }
+  let pointer = floor;
+  rows.forEach(([start, end], n) => {
+    const at = first + n * stride;
+    for (const [offset, value] of [
+      [at, start],
+      [at + width, end],
+    ]) {
+      for (let i = 0; i < width; i++)
+        data[offset + (family === 4 ? i : width - i - 1)] = Number((value >> BigInt(i * 8)) & 255n);
+    }
+    dv.setUint16(at + width * 2, records[n].length, true);
+    u32(data, at + width * 2 + 2, pointer, true);
+    data.set(records[n], pointer);
+    pointer += records[n].length;
+    const shift = BigInt(width * 8 - 16);
+    for (let bucket = Number(start >> shift); bucket <= Number(end >> shift); bucket++) {
+      const vector = 256 + bucket * 8;
+      if (dv.getUint32(vector, true) === 0) u32(data, vector, at, true);
+      u32(data, vector + 4, at + (exclusive ? stride : 0), true);
+    }
   });
-  u32(data, start, 42, true);
-  data.set(raw, start + 4);
   return data;
 }
 

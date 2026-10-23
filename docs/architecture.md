@@ -6,9 +6,10 @@ release designation for these breaking changes.
 
 ## Decisions
 
-- Keep the existing ip2region IPv4 database for an explicit, zero-configuration
-  `openDefault()` entry. Include provenance and a digest; do not invent a data
-  build date or apply the code's MIT license to third-party data.
+- Bundle pinned upstream ip2region IPv4/IPv6 XDB files for explicit, zero-configuration
+  `openDefault()`. Replace legacy `.db` data and contracts outright. Include upstream
+  revision, original license, file digests and separate per-file build/load times;
+  the code license does not relicense unrelated third-party databases.
 - The root entry is a runtime-independent core. Importing any entry does not
   read files, access the network, or install anything.
 - Use `createLookup(source)` and `createAsyncLookup(source)` with separate return
@@ -40,7 +41,7 @@ release designation for these breaking changes.
 
 1. Pure core and extension contract: strict IP parsing, synchronous/asynchronous
    functions and instances, errors, batches, ownership and close behavior.
-2. Native loading and existing ip2region data, then IPIP IPDB and IP2Location BIN.
+2. Native loading and ip2region XDB dual-stack data, IPIP IPDB and IP2Location BIN.
    Validate each format with synthetic fixtures and an independent reader.
 3. Remove obsolete interfaces; document migration, data provenance and actual
    format/field/runtime capabilities.

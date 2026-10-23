@@ -14,6 +14,9 @@ importers:
       ip2location-nodejs:
         specifier: 9.8.0
         version: 9.8.0
+      ip2region.js:
+        specifier: 3.1.8
+        version: 3.1.8
       ipip-ipdb:
         specifier: 0.6.0
         version: 0.6.0
@@ -36,6 +39,9 @@ packages:
 
   ip2location-nodejs@9.8.0:
     resolution: {integrity: sha512-3O7S1A+eevRkwQwHYdK7ex2PuXAc3EMNJDHT4dkBIUlqE3hB/i5BNbmQImJw4kAj/rslPQHa5In4oTV/N04vRw==}
+
+  ip2region.js@3.1.8:
+    resolution: {integrity: sha512-USvUDme5Gyh0qs21Xpjb7QAXN5eRFDe5ZNtPVk3Ns2wYOc5eLIC57zPXZYBbN9kvA2yK0dBpJImArf1ekobSNA==}
 
   ipaddr.js@1.9.1:
     resolution: {integrity: sha512-0KI/607xoxSToH7GjN1FfSbLoU0+btTicjsQSWQlh/hZykN8KpmMf7uYwPW3R+akZ6R/w18ZlXSHBYXiYUPO3g==}
@@ -68,6 +74,8 @@ snapshots:
   ip2location-nodejs@9.8.0:
     dependencies:
       csv-parser: 3.2.1
+
+  ip2region.js@3.1.8: {}
 
   ipaddr.js@1.9.1: {}
 
