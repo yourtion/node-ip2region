@@ -40,6 +40,8 @@ The core preserves `this` for object/class methods.
 For asynchronous sources use AsyncAdapter/createAsyncLookup. Both lookup and
 an optional close method return Promises. Async close rejects new work, waits
 for active queries (including failures), then closes an owned source once.
+Queries are registered before invoking adapter code, including code that
+synchronously triggers a close through a callback.
 The same close Promise is returned on repeated calls. A source must not await
 its own wrapper's close from inside an active lookup.
 

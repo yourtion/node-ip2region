@@ -52,6 +52,7 @@ export function createBIN(input: Uint8Array, options: ReaderOptions = {}): Adapt
   };
   if (Math.max(...Object.values(positions)) > columns) reader.fail("database columns do not match product type");
   const tables: Table[] = [];
+  const occupied: [number, number][] = [[0, 64]];
   for (const family of [4, 6] as const) {
     const offset = family === 4 ? 5 : 13;
     const count = reader.u32(offset, true);
@@ -61,6 +62,7 @@ export function createBIN(input: Uint8Array, options: ReaderOptions = {}): Adapt
     const stride = width + (columns - 1) * 4;
     if (base < 64) reader.fail("invalid table base", offset + 4);
     reader.check(base, count * stride + width);
+    occupied.push([base, base + count * stride + width]);
     let previous = -1n;
     for (let i = 0; i <= count; i++) {
       const value = reader.unsigned(base + i * stride, width, true);
@@ -70,6 +72,7 @@ export function createBIN(input: Uint8Array, options: ReaderOptions = {}): Adapt
     const index = reader.u32(family === 4 ? 21 : 25, true);
     if (index) {
       reader.check(index - 1, 65536 * 8);
+      occupied.push([index - 1, index - 1 + 65536 * 8]);
       for (let i = 0; i < 65536; i++) {
         const low = reader.u32(index - 1 + i * 8, true);
         const high = reader.u32(index - 1 + i * 8 + 4, true);
@@ -89,9 +92,16 @@ export function createBIN(input: Uint8Array, options: ReaderOptions = {}): Adapt
   if (positions.region) commonFields.push("subdivisions.name", "city.name");
   if (positions.isp) commonFields.push("isp");
   if (positions.asn) commonFields.push("asn", "organization");
+  const dataRange = (pointer: number, size: number) => {
+    reader.check(pointer, size);
+    if (occupied.some(([start, end]) => pointer < end && pointer + size > start))
+      reader.fail("string overlaps header, address table or prefix index", pointer);
+  };
   const stringAt = (pointer: number): string => {
-    if (pointer < 64) reader.fail("invalid string pointer", pointer);
-    const text = reader.text(pointer + 1, reader.u8(pointer));
+    dataRange(pointer, 1);
+    const size = reader.u8(pointer);
+    dataRange(pointer, size + 1);
+    const text = reader.text(pointer + 1, size);
     if (["MISSING_FILE", "INVALID_IP_ADDRESS", "IPV6_NOT_SUPPORTED"].includes(text))
       reader.fail("reader error sentinel in a data field", pointer);
     return text;

@@ -24,7 +24,8 @@ Bun uses `ip2region/bun`; Deno uses `npm:ip2region/deno`. The bundled XDB snapsh
 support IPv4 and IPv6 through the same API. The previous legacy `.db` and
 ZX IPv6wry readers and location-string heuristics are removed; no old data contract
 is retained. A self-supplied single-family reader rejects the other family with
-UNSUPPORTED_FAMILY.
+UNSUPPORTED_FAMILY. Use `openDefault({ families: [4] })` or `[6]` to load only
+one bundled file.
 
 ## Custom data and results
 
@@ -32,13 +33,16 @@ Replace `ipv4db` with a format factory and a native loader:
 
 ```js
 import { openDatabase } from "ip2region/node";
-import { createXDB } from "ip2region/formats/ip2region-xdb";
-const query = await openDatabase("/data/custom.xdb", createXDB);
+import { createXDB, IP2REGION_FIELDS } from "ip2region/formats/ip2region-xdb";
+// Only use this preset when the file has the matching documented schema.
+const query = await openDatabase("/data/custom.xdb", (bytes) => createXDB(bytes, { fields: IP2REGION_FIELDS }));
 ```
 
 Convert old `.db` data with upstream tooling or obtain an actual XDB file; renaming
 the extension is insufficient. XDB region schemas must match the configured field
 list, independently of the container version; see [formats](formats.md).
+Without a field list, `createXDB` returns raw text without interpreting it as
+locations. The bundled loader configures its known schema explicitly.
 
 There is no implicit merge or fallback. IPv6 data must identify its actual
 format: the former `ipv6db` option does not imply IPIP IPDB, BIN or another

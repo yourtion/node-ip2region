@@ -69,10 +69,10 @@ try {
     import { openDefault, openDatabase } from 'ip2region/node';
     import { createBIN } from 'ip2region/formats/ip2location-bin';
     import { createIPIP } from 'ip2region/formats/ipip-ipdb';
-    import { createXDB } from 'ip2region/formats/ip2region-xdb';
+    import { createXDB, IP2REGION_FIELDS } from 'ip2region/formats/ip2region-xdb';
     import { binFixture, ipipFixture, xdbFixture } from './node_modules/ip2region/tests/fixtures.mjs';
     import { equal, throws } from './node_modules/ip2region/tests/assert.mjs';
-    for (const [factory, fixture] of [[createBIN, binFixture], [createIPIP, ipipFixture], [createXDB, xdbFixture]]) {
+    for (const [factory, fixture] of [[createBIN, binFixture], [createIPIP, ipipFixture], [(bytes) => createXDB(bytes, { fields: IP2REGION_FIELDS }), xdbFixture]]) {
       const query = createLookup(factory(fixture()), { ownership: 'owned' });
       equal(query.lookup('192.0.2.1').city.name, 'First'); query.close();
     }
@@ -124,7 +124,10 @@ try {
     const name: string | undefined = query.lookup('::1')?.country?.name;
     const raw = createLookup(createIPIP(new Uint8Array()));
     const record: string | undefined = raw.lookup('::1')?.extensions.raw.country_name;
-    void name; void record; void openDefault;
+    void name; void record;
+    openDefault({ families: [4] });
+    // @ts-expect-error only IPv4 and IPv6 may be selected
+    openDefault({ families: [5] });
     createAsyncLookup(async () => null);
     // @ts-expect-error async sources require the asynchronous factory
     createLookup(async () => null);

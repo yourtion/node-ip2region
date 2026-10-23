@@ -123,7 +123,19 @@ export function createAsyncLookup<R extends LookupResult>(
   let closing: Promise<void> | undefined;
   const lookup = (ip: string): Promise<R | null> => {
     if (isClosed) return Promise.reject(closed());
-    const task = (async () => {
+    // Register before invoking user code: a lookup can synchronously trigger close.
+    let resolveTask!: (value: R | null) => void;
+    let rejectTask!: (cause: unknown) => void;
+    const task = new Promise<R | null>((resolve, reject) => {
+      resolveTask = resolve;
+      rejectTask = reject;
+    });
+    active.add(task);
+    void task.then(
+      () => active.delete(task),
+      () => active.delete(task)
+    );
+    void (async () => {
       const parsed = prepare(ip, adapter, config);
       try {
         const pending = adapter.lookup(parsed.address, parsed);
@@ -133,12 +145,7 @@ export function createAsyncLookup<R extends LookupResult>(
       } catch (cause) {
         throw adapterError(cause);
       }
-    })();
-    active.add(task);
-    void task.then(
-      () => active.delete(task),
-      () => active.delete(task)
-    );
+    })().then(resolveTask, rejectTask);
     return task;
   };
   return {

@@ -62,7 +62,13 @@ export function createIPIP(input: Uint8Array, options: IPIPOptions = {}): Adapte
   const body = metaSize + 4;
   const nodes = header.node_count;
   const fields = header.fields;
-  const requiredFields = Math.max(...Object.values(header.languages).map((offset) => offset + fields.length));
+  let requiredFields = 0;
+  for (const offset of Object.values(header.languages)) {
+    const end = offset + fields.length;
+    // A record has a uint16 byte length: at most 65535 separators / 65536 fields.
+    if (!Number.isSafeInteger(end) || end > 65536) reader.fail("language fields exceed record capacity", 4);
+    requiredFields = Math.max(requiredFields, end);
+  }
   const recordAt = (node: number) => body + nodes * 8 + node - nodes;
   for (let i = 0; i < nodes * 2; i++) {
     const child = reader.u32(body + i * 4);

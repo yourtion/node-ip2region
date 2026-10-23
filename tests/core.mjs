@@ -258,4 +258,35 @@ export function coreSuite(test) {
     equal(closes, 1);
     await rejects(() => query.lookup("::1"), "CLOSED");
   });
+
+  test("reentrant async close waits for the lookup that triggered it, including rejection", async () => {
+    for (const fail of [false, true]) {
+      let finish, closing;
+      const events = [];
+      const query = createAsyncLookup(
+        {
+          lookup() {
+            events.push("lookup");
+            closing = query.close();
+            return new Promise((resolve, reject) => {
+              finish = fail ? reject : resolve;
+            });
+          },
+          async close() {
+            events.push("close");
+          },
+        },
+        { ownership: "owned" }
+      );
+      const pending = query.lookup("::1");
+      assert(closing === query.close());
+      await rejects(() => query.lookup("::2"), "CLOSED");
+      equal(events, ["lookup"]);
+      finish(fail ? new Error("lookup failed") : null);
+      if (fail) await rejects(() => pending, "ADAPTER_ERROR");
+      else equal(await pending, null);
+      await closing;
+      equal(events, ["lookup", "close"]);
+    }
+  });
 }

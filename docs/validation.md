@@ -4,10 +4,10 @@ Local validation on the Linux x64 cloud worker, 2026-10-23:
 
 | Consumer / check                                                                   | Result          |
 | ---------------------------------------------------------------------------------- | --------------- |
-| Node 24.19.0 unit and independent-reader checks                                    | 34 tests passed |
-| Node 22.12.0 real-tarball shared suite                                             | 31 tests passed |
-| Bun 1.2.0 real-tarball shared suite, native loader                                 | 29 tests passed |
-| Deno 2.0.0 real-tarball shared suite, native loader                                | 29 tests passed |
+| Node 24.19.0 unit and independent-reader checks                                    | 40 tests passed |
+| Node 22.12.0 real-tarball shared suite                                             | 37 tests passed |
+| Bun 1.2.0 real-tarball shared suite, native loader                                 | 35 tests passed |
+| Deno 2.0.0 real-tarball shared suite, native loader                                | 35 tests passed |
 | ESM, CJS, mixed-module error propagation                                           | Passed          |
 | NodeNext `.mts` / `.cts` consumer declarations                                     | Passed          |
 | Pure core/format declarations without Node or DOM types                            | Passed          |
@@ -20,7 +20,12 @@ The same byte fixtures and expected results are used across the runtimes.
 Checks cover complete 128-bit IPv6 values, mapped-address policy, first/last
 addresses, malformed literals, sparse XDB ranges and vector indexes, metadata language/family
 restrictions, truncated/corrupt files, fields/capabilities for DB1–DB26,
-ownership, this binding, error propagation and close lifecycle.
+ownership, this binding, error propagation and close lifecycle. Regression cases
+include close triggered synchronously inside an active async lookup (success and
+failure), BIN strings inside or crossing structural regions, 150,001 IPDB language
+entries and impossible offsets, raw XDB records with misleading five-column
+layouts, and native single-family loading. An instrumented loader verifies that
+unselected bundled files are never read and invalid family lists fail before I/O.
 
 The independent Node reference tests use official ip2region.js 3.1.8,
 ip2location-nodejs 9.8.0 and official ipip-ipdb 0.6.0. XDB comparisons include

@@ -34,7 +34,8 @@ Bun 将入口改为 `ip2region/bun`；Deno 使用 `npm:ip2region/deno`，读取�
 [lionsoul2014/ip2region](https://github.com/lionsoul2014/ip2region)，固定到上游提交，
 附原始许可、SHA-256 和各文件构建时间，见 [数据来源](data/README.md)。两个文件合计
 约 48.4 MB（未压缩）；`openDefault()` 显式加载两份到内存，按地址族路由。
-需要只加载一份时使用 `openDatabase`。不承诺快照的定位准确率或更新频率。
+只使用 IPv4 时调用 `openDefault({ families: [4] })`，只使用 IPv6 时传入 `[6]`；
+未选择的文件不会读取或分配到内存，查询未加载的地址族会报 `UNSUPPORTED_FAMILY`。不承诺快照的定位准确率或更新频率。
 `metadata.datasets` 分别记录文件版本、构建和加载时间。
 
 任何模块的导入都不会读取数据库、联网或安装依赖；只有调用加载函数才会读文件。
@@ -43,11 +44,12 @@ Bun 将入口改为 `ip2region/bun`；Deno 使用 `npm:ip2region/deno`，读取�
 
 ```js
 import { openDatabase } from "ip2region/node";
-import { createXDB } from "ip2region/formats/ip2region-xdb";
+import { createXDB, IP2REGION_FIELDS } from "ip2region/formats/ip2region-xdb";
 import { createBIN } from "ip2region/formats/ip2location-bin";
 import { createIPIP } from "ip2region/formats/ipip-ipdb";
 
-const xdb = await openDatabase("/data/ip2region_v6.xdb", createXDB);
+// 仅在确认自备文件采用上游这套字段布局时使用该预设。
+const xdb = await openDatabase("/data/ip2region_v6.xdb", (bytes) => createXDB(bytes, { fields: IP2REGION_FIELDS }));
 const bin = await openDatabase("/data/IP2LOCATION.BIN", createBIN);
 const ipdb = await openDatabase("/data/qqwry.ipdb", (bytes) => createIPIP(bytes, { language: "CN" }));
 try {
@@ -74,9 +76,13 @@ query.close();
 
 | 格式入口                                          | 地址族                     | 标准字段                                             |
 | ------------------------------------------------- | -------------------------- | ---------------------------------------------------- |
-| `ip2region/formats/ip2region-xdb` → `createXDB`   | 每份文件 IPv4 或 IPv6      | 默认映射国家代码/名称、行政区域、城市、ISP           |
+| `ip2region/formats/ip2region-xdb` → `createXDB`   | 每份文件 IPv4 或 IPv6      | 显式配置列名后映射国家代码/名称、区域、城市、ISP     |
 | `ip2region/formats/ip2location-bin` → `createBIN` | 按文件头声明 IPv4/IPv6     | 国家代码/名称、区域、城市、ISP；DB26 可提供 ASN/组织 |
 | `ip2region/formats/ipip-ipdb` → `createIPIP`      | 按 metadata 声明 IPv4/IPv6 | 按字段名和选定语言映射，未知字段保留在扩展记录       |
+
+`createXDB(bytes)` 默认只返回 `extensions.region` 原始文本，`extensions.raw` 为空，
+不声明地理字段能力。需要标准字段时显式传入 `fields`；`openDefault()` 已为内置快照
+配置已知布局，开箱即用的结果不受影响。
 
 BIN 的 LITE 与商业包字段不同；DB26 是数据产品，不是另一种文件格式，也不代表
 本库提供在线 DB26 的数据质量。此处 IPIP IPDB 包括

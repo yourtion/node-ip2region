@@ -1,9 +1,11 @@
 import { createLookup } from "../dist/esm/index.js";
-import { createXDB } from "../dist/esm/formats/ip2region-xdb.js";
+import { createXDB as createRawXDB, IP2REGION_FIELDS } from "../dist/esm/formats/ip2region-xdb.js";
 import { createIPIP } from "../dist/esm/formats/ipip-ipdb.js";
 import { createBIN } from "../dist/esm/formats/ip2location-bin.js";
 import { xdbFixture, ipipFixture, rewriteIPIP, binFixture } from "./fixtures.mjs";
 import { assert, equal, throws } from "./assert.mjs";
+
+const createXDB = (bytes, options = {}) => createRawXDB(bytes, { fields: IP2REGION_FIELDS, ...options });
 
 function view(input) {
   const bytes = new Uint8Array(input.length + 13);
@@ -12,6 +14,57 @@ function view(input) {
 }
 
 export function formatSuite(test) {
+  test("unconfigured XDB preserves arbitrary and legacy five-column records without geographic guesses", () => {
+    for (const region of ["中国|0|广东省|深圳市|电信", "arbitrary text", "a|b"]) {
+      const query = createLookup(createRawXDB(xdbFixture({ region })), { ownership: "owned" });
+      equal(query.lookup("192.0.2.1"), { source: "ip2region-xdb", extensions: { region, raw: {} } });
+      equal(query.capabilities.fields, []);
+      query.close();
+    }
+  });
+
+  test("BIN rejects strings inside or crossing structural regions", () => {
+    for (const location of ["header", "v4", "v6", "index", "crossing"]) {
+      const bytes = binFixture({ indexed: true });
+      const view = new DataView(bytes.buffer);
+      const base = view.getUint32(9, true) - 1;
+      const index = view.getUint32(21, true) - 1;
+      const pointer =
+        location === "header"
+          ? 10
+          : location === "v4"
+            ? base
+            : location === "v6"
+              ? view.getUint32(17, true) - 1
+              : location === "index"
+                ? index
+                : index - 2;
+      // The unused trailing sentinel columns are outside the address table's
+      // required bytes; a string beginning there must still not span an index.
+      if (location === "crossing") bytes[pointer] = 4;
+      view.setUint32(base + bytes[1] * 4 + 8, pointer, true);
+      const query = createLookup(createBIN(bytes), { ownership: "owned" });
+      throws(() => query.lookup("192.0.2.1"), "INVALID_DATABASE");
+      query.close();
+    }
+  });
+
+  test("IPIP handles large language maps and rejects impossible record layouts with stable errors", () => {
+    const input = rewriteIPIP(ipipFixture(), (header) => {
+      header.languages = { CN: 0 };
+      for (let i = 0; i < 150000; i++) header.languages[`L${i}`] = 0;
+    });
+    const query = createLookup(createIPIP(input), { ownership: "owned" });
+    equal(query.lookup("192.0.2.1").city.name, "First");
+    equal(query.capabilities.languages.length, 150001);
+    query.close();
+    for (const offset of [65536, Number.MAX_SAFE_INTEGER]) {
+      const bytes = rewriteIPIP(ipipFixture(), (header) => {
+        header.languages.EN = offset;
+      });
+      throws(() => createIPIP(bytes), "INVALID_DATABASE");
+    }
+  });
   test("all BIN product types expose only their declared standard fields", () => {
     for (let type = 1; type <= 26; type++) {
       const query = createLookup(createBIN(binFixture({ type })), { ownership: "owned" });

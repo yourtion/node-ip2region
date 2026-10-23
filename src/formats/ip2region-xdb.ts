@@ -4,10 +4,16 @@ import { parseIP } from "../core/ip.js";
 import { Bytes, field, metadata, type ReaderOptions } from "./bytes.js";
 
 /** The current upstream bundled-data schema, not a property of the XDB container. */
-export const IP2REGION_FIELDS = ["country_name", "region_name", "city_name", "isp", "country_code"] as const;
+export const IP2REGION_FIELDS = Object.freeze([
+  "country_name",
+  "region_name",
+  "city_name",
+  "isp",
+  "country_code",
+] as const);
 
 export interface XDBOptions extends ReaderOptions {
-  /** Ordered pipe-delimited columns; null selects an uninterpreted raw record. */
+  /** Ordered pipe-delimited columns; omitted or null returns an uninterpreted raw record. */
   fields?: readonly string[] | null;
 }
 
@@ -18,12 +24,12 @@ export interface XDBResult extends LookupResult {
 /** XDB structure 2 (IPv4) and 3 (IPv4/IPv6), vector indexes and 32-bit pointers. */
 export function createXDB(input: Uint8Array, options: XDBOptions = {}): Adapter<XDBResult> {
   const reader = new Bytes(input, "ip2region-xdb");
-  const fields = options.fields === undefined ? IP2REGION_FIELDS : options.fields;
+  const fields = options.fields ?? null;
   if (
     fields !== null &&
     (!Array.isArray(fields) ||
       fields.length === 0 ||
-      fields.some(
+      Array.from(fields).some(
         (name) => typeof name !== "string" || !name || ["__proto__", "constructor", "prototype"].includes(name)
       ) ||
       new Set(fields).size !== fields.length)

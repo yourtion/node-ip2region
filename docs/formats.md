@@ -9,22 +9,27 @@ byteOffset. They do not download data or depend on vendor runtime packages.
 `createXDB(bytes, options?)` supports structure 2 (IPv4) and structure 3
 (IPv4 or IPv6), vector indexes and 4-byte pointers. Unsupported structure,
 index policy or pointer width raises INVALID_DATABASE. Files declare a single
-address family; the default loader owns two readers and routes by family.
+address family; the default loader owns the selected readers and routes by family.
+`openDefault()` loads both; `openDefault({ families: [4] })` or `[6]` loads only
+the requested file. Families must be nonempty and distinct; capabilities and
+per-file metadata contain only the loaded families.
 IPv4 range endpoints use little endian; IPv6 endpoints retain all 128 bits in
 network order. The reader validates sorted non-overlapping ranges, segment/data
 bounds and every vector entry. Inclusive and exclusive vector end pointers from
 upstream makers are normalized; queries never read past the final segment.
 Missing vectors, sparse gaps and zero-length records return null.
 
-XDB contains a UTF-8 region string, **not a field schema**. The default column
-configuration matches the pinned current upstream snapshots:
+XDB contains a UTF-8 region string, **not a field schema**. `createXDB(bytes)`
+defaults to uninterpreted raw records and advertises no geographic fields.
+`openDefault()` explicitly passes the frozen `IP2REGION_FIELDS` preset for the
+pinned current upstream snapshots:
 `country_name|region_name|city_name|isp|country_code`, documented upstream as
 `国家|省份|城市|ISP|iso-alpha2-code`. It is distinct from the old
 `country|region|province|city|ISP` layout. The adapter maps actual named columns,
 retains `{ extensions: { region, raw } }`, and advertises configured capabilities.
 Unknown markers are omitted from standard fields; `Reserved` place markers
 remain only in raw data. It never translates names or infers a country code.
-A record with an unexpected column count raises INVALID_DATABASE when queried;
+When fields are configured, an unexpected column count raises INVALID_DATABASE when queried;
 UTF-8 and column validation happen on record access.
 
 For self-supplied data, explicitly match the documented schema of that file:
@@ -35,11 +40,11 @@ const source = createXDB(bytes, {
   fields: ["country_name", "region_name", "city_name", "isp", "country_code", "custom"],
 });
 // Uninterpreted/custom records need no geographic columns:
-const rawSource = createXDB(bytes, { fields: null });
+const rawSource = createXDB(bytes); // fields: null has the same behavior
 ```
 
 Column names must be distinct nonempty strings (prototype-reserved names are
-rejected). Extra names are preserved in `extensions.raw`; `fields: null`
+rejected). Extra names are preserved in `extensions.raw`; omitted fields or `fields: null`
 preserves the entire region string and advertises no standard geographic fields.
 There is no heuristic detection of legacy field layouts. Container structure
 version does not identify a data schema, language or geographic-data quality.
@@ -53,7 +58,8 @@ To make custom files, use the upstream
 [XDB maker](https://github.com/lionsoul2014/ip2region/tree/f8b0792b0cd729f5b2593f690aeed225e49c1967/maker)
 for the actual address family and chosen region schema. Load with
 `openDatabase("/absolute/path/custom.xdb", createXDB)` or an explicitly configured
-factory. The old `.db` reader, city ID, ZX IPv6wry and Java v1.9 maker instructions
+factory to map standard fields. Passing `createXDB` directly returns raw records.
+The old `.db` reader, city ID, ZX IPv6wry and Java v1.9 maker instructions
 are removed. Changing a file extension does not convert its format.
 
 ## IPIP IPDB
@@ -71,6 +77,8 @@ fields exist. Every selected-language field is retained in `extensions.raw`;
 the selected language is retained in `extensions.language`. Metadata build time
 is distinct from load time. A missing trie leaf is null; a short record, invalid
 pointer, invalid UTF-8 or a cyclic/excessively deep trie is INVALID_DATABASE.
+Language maps are processed iteratively; offsets exceeding the uint16 record
+length capacity are rejected with INVALID_DATABASE.
 
 IPv4 traverses the defined mapped /96 subtree. IPv6 traverses the entire 128-bit
 address. Standard field mappings include `country_name`, `country_code`,
@@ -83,7 +91,9 @@ organization is never used as ISP.
 `createBIN(bytes, options?)` supports product types DB1–DB26, IPv4-only,
 IPv6-only and dual-table headers, with or without optional prefix indexes.
 It validates file size, date/product header, table bounds, sorted ranges,
-optional index bounds, and queried string pointers/UTF-8. The shared memory
+optional index bounds, and queried string pointers/UTF-8. Strings cannot begin
+in or span the header, address tables or prefix indexes; such corrupt pointers
+raise INVALID_DATABASE rather than becoming missing geographic fields. The shared memory
 engine searches the range tables directly; optional indexes are validated but
 not required. The all-ones terminal sentinel includes the final address.
 

@@ -5,7 +5,9 @@ Run `npm run benchmark` for both bundled XDB snapshots, or
 `npm run benchmark -- bin /path/to/file.BIN` /
 `npm run benchmark -- ipip /path/to/file.ipdb` for an explicitly supplied file.
 The tool reports file hash/size, runtime/host, loading duration, memory counters,
-and p50/p95/p99 query latency. No database is downloaded.
+and p50/p95/p99 query latency. No database is downloaded. Self-supplied XDB files
+use the generic reader's raw-record mode; the bundled loader maps its known
+geographic columns. Compare runs using the same mapping mode.
 
 ## Initial observation, 2026-10-23
 
@@ -29,6 +31,10 @@ and p50/p95/p99 query latency. No database is downloaded.
 | Query p50                       |          2.41 µs |
 | Query p95                       |          4.75 µs |
 | Query p99                       |         17.55 µs |
+
+This dual-stack baseline predates the optional family selector. Applications
+can now use `openDefault({ families: [4] })` or `[6]` to avoid loading the other
+file. No single-family timing or memory guarantee is inferred from this table.
 
 These are one environment's baseline observations, not universal performance
 guarantees or thresholds for shared CI workers. Memory counters include loading

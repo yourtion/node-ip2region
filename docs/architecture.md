@@ -9,7 +9,10 @@ release designation for these breaking changes.
 - Bundle pinned upstream ip2region IPv4/IPv6 XDB files for explicit, zero-configuration
   `openDefault()`. Replace legacy `.db` data and contracts outright. Include upstream
   revision, original license, file digests and separate per-file build/load times;
-  the code license does not relicense unrelated third-party databases.
+  the code license does not relicense unrelated third-party databases. Select
+  `families: [4]` or `[6]` to load only one file; the default remains dual-stack.
+- Generic XDB reading defaults to raw records. Geography mapping requires an
+  explicit column layout; the bundled loader supplies its known upstream preset.
 - The root entry is a runtime-independent core. Importing any entry does not
   read files, access the network, or install anything.
 - Use `createLookup(source)` and `createAsyncLookup(source)` with separate return

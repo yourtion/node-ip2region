@@ -12,6 +12,12 @@
 - Add real-tarball, multi-runtime and independent-reference validation, migration
   documentation and a fixed-snapshot performance baseline.
 
+- Register asynchronous work before adapter callbacks, reject BIN strings that
+  overlap structural regions, and handle large IPDB language maps without
+  argument-spread limits. Add regression coverage across all native runtimes.
+- Default generic XDB input to raw records with explicit geographic column
+  mapping, and add selective IPv4/IPv6 bundled loading via `families`.
+
 ## 2.3.1
 
 - Fix native ESM default imports while preserving CommonJS and the previous ESM `.default` workaround (#38).
