@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- Reduce IP parsing allocations and BigInt operations while preserving strict
+  literal validation, canonical addresses and complete unsigned 128-bit values.
+
 - Add a reproducible XDB benchmark for this repository, with optional built
   revisions as a baseline, complete corpus checks and raw measurement reports.
 
