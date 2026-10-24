@@ -1,17 +1,30 @@
 # Changelog
 
+## Unreleased
+
+- Add a reproducible XDB benchmark for this repository, with optional built
+  revisions as a baseline, complete corpus checks and raw measurement reports.
+
+- Unify native initialization as `new IP2Region(options)` / `IP2Region.open(options)`,
+  with explicit database configuration and custom source ownership.
+- Separate `AsyncIP2Region` with Async-suffixed query and close methods.
+- Publish typed, runnable custom adapter examples and reusable contracts tested
+  through the public package API on Node, Bun and Deno.
+
+- Replace Prettier with oxlint and oxfmt, enforced alongside type checks in CI and releases.
+- Remove obsolete migration material and rewrite the README around installation and integration.
+- Benchmark native Node, Bun and Deno loading, single-family memory, latency and throughput.
+
 ## 3.0.0 — 2026-10-23
 
 - Add tag-triggered npm Trusted Publishing, validated-tarball consumer checks,
   stable/prerelease channels and resumable GitHub Release completion.
 - Add a runtime-independent lookup core, external function/instance protocols,
   explicit native Node/Bun/Deno loading, and separate sync/async lifecycles.
-- Replace legacy `.db` data and contracts with pinned upstream IPv4/IPv6 XDB
+- Bundle pinned upstream IPv4/IPv6 XDB
   snapshots, an explicit field schema, provenance, licenses and per-file metadata.
   Add shared-memory IP2Location BIN and IPIP IPDB readers with complete IPv6 handling.
-- Replace the old constructor/search/searchRaw API and remove ZX IPv6wry
-  heuristics, install/update scripts and automatic Git publish hooks.
-- Add real-tarball, multi-runtime and independent-reference validation, migration
+- Add real-tarball, multi-runtime and independent-reference validation, format
   documentation and a fixed-snapshot performance baseline.
 
 - Register asynchronous work before adapter callbacks, reject BIN strings that
@@ -19,8 +32,3 @@
   argument-spread limits. Add regression coverage across all native runtimes.
 - Default generic XDB input to raw records with explicit geographic column
   mapping, and add selective IPv4/IPv6 bundled loading via `families`.
-
-## 2.3.1
-
-- Fix native ESM default imports while preserving CommonJS and the previous ESM `.default` workaround (#38).
-- Return `null` for addresses outside sparse custom IPv4 databases and document compatible custom database formats (#37).

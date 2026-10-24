@@ -55,7 +55,7 @@ jobs:
         with:
           deno-version: v2.0.0
       - run: pnpm install --frozen-lockfile --ignore-scripts
-      - run: npm run typecheck
+      - run: npm run check
       # Builds, then runs core/reference and mocked release-helper tests.
       - run: npm test
       - name: Pack and validate public entry points

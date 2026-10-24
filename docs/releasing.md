@@ -3,7 +3,6 @@
 `main` 使用 `.github/workflows/release.yml`，只在推送 `v*` tag 时触发发布。
 普通 `main` 提交、PR 和 GitHub Release 页面操作都不会触发发包。
 版本由 `package.json` 指定；仅提交 workflow 不会发布 npm 版本。
-旧 `v2` 分支不使用这套流程。
 
 ## 首次发布前配置 npm
 
@@ -34,7 +33,7 @@ Node 版本仍为 22.12.0。pnpm 固定为 9.15.9，只负责冻结锁文件安�
 
 1. 安装项目依赖前校验严格的 `v<SemVer>`、`package.json` 版本和 tag 实际提交。
    tag 提交必须属于远端 `main` 历史；轻量 tag 与 annotated tag 均支持。不接受 `+build`。
-2. 运行类型检查、构建、核心/参考测试和无网络发布 helper 测试。
+2. 运行 lint、格式与类型检查、构建、核心/参考测试和无网络发布 helper 测试。
 3. 用 `npm pack --ignore-scripts` 生成 `.tgz`，核对名称、版本、所有公开入口和类型文件。
 4. 对同一个 `.tgz` 运行 Node、Bun 1.2.0、Deno 2.0.0 消费者测试，包括 ESM/CJS、原生加载、
    权限失败、纯内存模式、双栈数据库 SHA-256 和来源许可，并确认压缩包未被测试修改。
@@ -50,7 +49,7 @@ npm 成功后 GitHub 失败及重跑，不调用真实发布 API。这些测试�
 
 ```sh
 pnpm install --frozen-lockfile --ignore-scripts
-npm run typecheck
+npm run check
 npm test
 node scripts/npm-release.mjs pack v3.0.0 /tmp/ip2region-release
 IP2REGION_BUN=bun IP2REGION_DENO=deno npm run test:packed -- /tmp/ip2region-release/ip2region-3.0.0.tgz

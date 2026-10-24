@@ -1,0 +1,6 @@
+{
+  "$schema": "./node_modules/oxfmt/configuration_schema.json",
+  "printWidth": 120,
+  "trailingComma": "es5",
+  "ignorePatterns": ["dist/**", "coverage/**", "pnpm-lock.yaml", "data/LICENSE.ip2region.md"]
+}

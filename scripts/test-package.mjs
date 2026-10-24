@@ -62,8 +62,10 @@ try {
   );
 
   const files = run("tar", ["-tzf", archive], root).split(/\r?\n/);
-  if (files.some((file) => /node_modules|ipv6wry|src\/|dist\/lib|install\.sh|update_db\.sh/.test(file)))
-    throw new Error("Tarball contains obsolete or development files");
+  const allowedFiles =
+    /^package\/(?:dist\/|docs\/|examples\/custom\/|data\/(?:README\.md|LICENSE\.ip2region\.md|ip2region_v[46]\.xdb)$|(?:package\.json|README\.md|LICENSE|CHANGELOG\.md)$)/;
+  if (files.some((file) => file && !allowedFiles.test(file)))
+    throw new Error("Tarball contains files outside the distribution allowlist");
   for (const [name, expected] of [
     ["ip2region_v4.xdb", "27ecba8c9a6d5e3b280aedbe7ee15c65372b179fbd0dad3845d8c608f2fcace1"],
     ["ip2region_v6.xdb", "939f6b46bd2b8bec3cf7c5ceb8ba782266ae9b1f35b5ba7916700dec0b7506ed"],
@@ -73,27 +75,30 @@ try {
       .digest("hex");
     if (hash !== expected) throw new Error("Bundled XDB snapshot changed");
   }
-  if (files.some((file) => /data\/ip2region\.db|formats\/ip2region\.(js|d\.ts)$/.test(file)))
-    throw new Error("Legacy database shipped");
   if (!files.includes("package/data/LICENSE.ip2region.md")) throw new Error("Upstream license missing");
 
-  const esm = `import { createLookup, createAsyncLookup, IP2RegionError } from 'ip2region';
-    import { openDefault, openDatabase } from 'ip2region/node';
+  const esm = `import { IP2Region as MemoryIP2Region, AsyncIP2Region, IP2RegionError } from 'ip2region';
+    import { IP2Region } from 'ip2region/node';
     import { createBIN } from 'ip2region/formats/ip2location-bin';
     import { createIPIP } from 'ip2region/formats/ipip-ipdb';
     import { createXDB, IP2REGION_FIELDS } from 'ip2region/formats/ip2region-xdb';
     import { binFixture, ipipFixture, xdbFixture } from './node_modules/ip2region/tests/fixtures.mjs';
     import { equal, throws } from './node_modules/ip2region/tests/assert.mjs';
     for (const [factory, fixture] of [[createBIN, binFixture], [createIPIP, ipipFixture], [(bytes) => createXDB(bytes, { fields: IP2REGION_FIELDS }), xdbFixture]]) {
-      const query = createLookup(factory(fixture()), { ownership: 'owned' });
+      const query = new MemoryIP2Region({ source: factory(fixture()), ownership: 'owned' });
       equal(query.lookup('192.0.2.1').city.name, 'First'); query.close();
     }
-    const defaults = await openDefault(); equal(defaults.lookup('120.24.78.68').city.name, '深圳市'); defaults.close();
-    const external = createAsyncLookup(async () => null); equal(await external.lookup('::1'), null); await external.close();
-    equal(typeof openDatabase, 'function');
+    for (const query of [new IP2Region({ families: [4] }), await IP2Region.open({ families: [4] })]) {
+      equal(query instanceof IP2Region, true);
+      equal(query instanceof MemoryIP2Region, true);
+      equal(query.lookup('120.24.78.68').city.name, '深圳市');
+      equal(typeof query.lookupAsync, 'undefined'); query.close();
+    }
+    const external = new AsyncIP2Region({ source: async () => null });
+    equal(typeof external.lookup, 'undefined'); equal(await external.lookupAsync('::1'), null); await external.closeAsync();
     equal(new IP2RegionError('CLOSED', 'closed').code, 'CLOSED');
-    throws(() => createLookup(() => null).lookup('bad'), 'INVALID_IP');
-    console.log('Packed ESM exports and native default loading passed');`;
+    throws(() => new MemoryIP2Region({ source: () => null }).lookup('bad'), 'INVALID_IP');
+    console.log('Packed ESM classes, sync construction and async opening passed');`;
   // Inject only the independent test harness; all library files come from the tarball.
   cpSync(join(root, "tests"), join(installed, "tests"), { recursive: true });
   writeFileSync(join(consumer, "consumer.mjs"), esm);
@@ -101,21 +106,24 @@ try {
     join(consumer, "consumer.cjs"),
     `const assert = require('node:assert/strict');
     const api = require('ip2region');
-    assert.equal(api.default, undefined); assert.equal(api.searchRaw, undefined);
-    assert.deepEqual(api.createLookup(() => ({})).lookup('::1'), {});
+    assert.deepEqual(Object.keys(api).sort(), ['AsyncIP2Region', 'IP2Region', 'IP2RegionError', 'parseIP']);
+    assert.deepEqual(new api.IP2Region({ source: () => ({}) }).lookup('::1'), {});
     assert(!Object.keys(require.cache).some(path => path.includes('ip2region') && /[\\\\/]formats[\\\\/]|[\\\\/]loaders[\\\\/]/.test(path)));
-    assert.throws(() => require('ip2region/dist/lib'), { code: 'ERR_PACKAGE_PATH_NOT_EXPORTED' });
-    const { openDefault } = require('ip2region/node');
-    openDefault().then(query => { assert.equal(query.lookup('120.24.78.68').city.name, '深圳市'); query.close(); console.log('Packed CJS exports passed'); });`
+    assert.throws(() => require('ip2region/dist/esm/index.js'), { code: 'ERR_PACKAGE_PATH_NOT_EXPORTED' });
+    const { IP2Region } = require('ip2region/node');
+    const query = new IP2Region({ families: [4] }); assert.equal(query.lookup('120.24.78.68').city.name, '深圳市'); query.close(); console.log('Packed CJS class exports passed');`
   );
   process.stdout.write(run(node, ["consumer.mjs"]));
   process.stdout.write(run(node, ["consumer.cjs"]));
   writeFileSync(
     join(consumer, "mixed.mjs"),
-    `import { createLookup } from 'ip2region'; import { createRequire } from 'node:module'; import { throws } from './node_modules/ip2region/tests/assert.mjs'; const { IP2RegionError } = createRequire(import.meta.url)('ip2region'); const error = new IP2RegionError('INVALID_DATABASE', 'corrupt record'); const caught = throws(() => createLookup(() => { throw error; }).lookup('::1'), 'INVALID_DATABASE'); if (caught !== error) throw new Error('Original cross-module error was lost');`
+    `import { IP2Region } from 'ip2region'; import { createRequire } from 'node:module'; import { throws } from './node_modules/ip2region/tests/assert.mjs'; const { IP2RegionError } = createRequire(import.meta.url)('ip2region'); const error = new IP2RegionError('INVALID_DATABASE', 'corrupt record'); const caught = throws(() => new IP2Region({ source: () => { throw error; } }).lookup('::1'), 'INVALID_DATABASE'); if (caught !== error) throw new Error('Original cross-module error was lost');`
   );
   run(node, ["mixed.mjs"]);
   process.stdout.write(run(node, ["--test", join(installed, "tests/node.test.mjs")]));
+  if (!files.includes("package/examples/custom/custom.test.mjs"))
+    throw new Error("Runnable custom adapter examples missing");
+  process.stdout.write(run(node, ["--test", join(installed, "examples/custom/custom.test.mjs")]));
   process.stdout.write(
     run(node, [
       run(node, [
@@ -129,28 +137,44 @@ try {
     ])
   );
 
-  const typed = `import { createLookup, createAsyncLookup, type LookupResult } from 'ip2region';
-    import { openDefault } from 'ip2region/node';
+  const typed = `import { IP2Region as MemoryIP2Region, AsyncIP2Region, type LookupResult, type Adapter, type AsyncAdapter } from 'ip2region';
+    import { IP2Region } from 'ip2region/node';
     import { createIPIP } from 'ip2region/formats/ipip-ipdb';
-    const query = createLookup<LookupResult>(() => ({ country: { name: 'Example' } }));
+    const query = new MemoryIP2Region<LookupResult>({ source: () => ({ country: { name: 'Example' } }) });
     const name: string | undefined = query.lookup('::1')?.country?.name;
-    const raw = createLookup(createIPIP(new Uint8Array()));
+    const raw = new MemoryIP2Region({ source: createIPIP(new Uint8Array()) });
     const record: string | undefined = raw.lookup('::1')?.extensions.raw.country_name;
     void name; void record;
-    openDefault({ families: [4] });
+    const adapter: Adapter = { lookup: () => null };
+    const asyncAdapter: AsyncAdapter = { lookupAsync: async () => null, closeAsync: async () => {} };
+    new MemoryIP2Region({ source: adapter });
+    const remote = new AsyncIP2Region({ source: asyncAdapter });
+    const promised: Promise<LookupResult | null> = remote.lookupAsync('::1'); void promised;
+    const native: IP2Region = new IP2Region({ families: [4] }); void native;
+    const loading: Promise<IP2Region> = IP2Region.open({ database: { format: 'ipip', path: '/data/custom.ipdb', language: 'EN' } }); void loading;
     // @ts-expect-error only IPv4 and IPv6 may be selected
-    openDefault({ families: [5] });
-    createAsyncLookup(async () => null);
-    // @ts-expect-error async sources require the asynchronous factory
-    createLookup(async () => null);
-    // @ts-expect-error sync sources require the synchronous factory
-    createAsyncLookup(() => null);
-    // @ts-expect-error removed obsolete public interface
-    query.searchRaw('::1');`;
+    new IP2Region({ families: [5] });
+    // @ts-expect-error custom bytes and path are mutually exclusive
+    new IP2Region({ database: { format: 'bin', path: '/data/custom.bin', data: new Uint8Array() } });
+    // @ts-expect-error source and database are mutually exclusive
+    new IP2Region({ source: adapter, database: { format: 'bin', path: '/data/custom.bin' } });
+    // @ts-expect-error language belongs to IPIP, not BIN
+    new IP2Region({ database: { format: 'bin', path: '/data/custom.bin', language: 'EN' } });
+    // @ts-expect-error async sources require the async class
+    new MemoryIP2Region({ source: async () => null });
+    // @ts-expect-error sync sources require the sync class
+    new AsyncIP2Region({ source: () => null });
+    // @ts-expect-error async adapters use explicit method names
+    new AsyncIP2Region({ source: { lookup: async () => null } });
+    // @ts-expect-error sync instances have no async query method
+    query.lookupAsync('::1');
+    // @ts-expect-error async instances have no sync query method
+    remote.lookup('::1');
+    // @ts-expect-error result fields retain their declared types
+    const invalid: number = query.lookup('::1')?.country?.name; void invalid;`;
   for (const extension of ["mts", "cts"]) writeFileSync(join(consumer, `consumer.${extension}`), typed);
   const compiler = require.resolve("typescript/bin/tsc");
-  run(node, [
-    compiler,
+  const typecheckOptions = [
     "--noEmit",
     "--strict",
     "--target",
@@ -163,12 +187,21 @@ try {
     "node",
     "--typeRoots",
     join(root, "node_modules/@types"),
-    "consumer.mts",
-    "consumer.cts",
+  ];
+  run(node, [compiler, ...typecheckOptions, "consumer.mts", "consumer.cts"]);
+  run(node, [
+    compiler,
+    ...typecheckOptions,
+    "--allowJs",
+    "--checkJs",
+    ...readdirSync(join(installed, "examples/custom"))
+      .filter((name) => name.endsWith(".mjs"))
+      .map((name) => join(installed, "examples/custom", name)),
   ]);
+  console.log("Packed custom adapter examples pass their public declaration contracts");
   writeFileSync(
     join(consumer, "pure.mts"),
-    `import { createLookup } from 'ip2region'; import { createBIN } from 'ip2region/formats/ip2location-bin'; const db = createLookup(createBIN(new Uint8Array())); const code: string | undefined = db.lookup('::1')?.country?.code; void code;`
+    `import { IP2Region } from 'ip2region'; import { createBIN } from 'ip2region/formats/ip2location-bin'; const db = new IP2Region({ source: createBIN(new Uint8Array()) }); const code: string | undefined = db.lookup('::1')?.country?.code; void code;`
   );
   writeFileSync(
     join(consumer, "tsconfig.json"),
@@ -198,7 +231,7 @@ try {
       chmodSync(denied, 0);
       writeFileSync(
         join(consumer, "bun-permissions.mjs"),
-        `import { readBytes } from 'ip2region/bun'; import { rejects } from './node_modules/ip2region/tests/assert.mjs'; await rejects(() => readBytes(new URL('./denied.db', import.meta.url)), 'PERMISSION_DENIED'); console.log('Bun native permission failure passed');`
+        `import { readBytes, readBytesSync, IP2Region } from 'ip2region/bun'; import { throws, rejects } from './node_modules/ip2region/tests/assert.mjs'; const path = new URL('./denied.db', import.meta.url); throws(() => readBytesSync(path), 'PERMISSION_DENIED'); throws(() => new IP2Region({ database: { format: 'bin', path } }), 'PERMISSION_DENIED'); await rejects(() => readBytes(path), 'PERMISSION_DENIED'); console.log('Bun native permission failure passed');`
       );
       try {
         process.stdout.write(run(process.env.IP2REGION_BUN, ["bun-permissions.mjs"]));

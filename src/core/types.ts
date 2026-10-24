@@ -60,8 +60,8 @@ export interface Adapter<R extends LookupResult = LookupResult> {
 }
 
 export interface AsyncAdapter<R extends LookupResult = LookupResult> {
-  lookup: AsyncLookupFunction<R>;
-  close?(): Promise<void>;
+  lookupAsync: AsyncLookupFunction<R>;
+  closeAsync?(): Promise<void>;
   readonly capabilities?: Capabilities;
   readonly metadata?: SourceMetadata;
 }
@@ -90,9 +90,18 @@ export interface Lookup<R extends LookupResult = LookupResult> {
 export interface AsyncLookup<R extends LookupResult = LookupResult> {
   readonly capabilities?: Capabilities;
   readonly metadata?: SourceMetadata;
-  lookup(ip: string): Promise<R | null>;
-  lookupMany(ips: Iterable<string>): Promise<(R | null)[]>;
-  lookupManySettled(ips: Iterable<string>): Promise<BatchItem<R>[]>;
+  lookupAsync(ip: string): Promise<R | null>;
+  lookupManyAsync(ips: Iterable<string>): Promise<(R | null)[]>;
+  lookupManySettledAsync(ips: Iterable<string>): Promise<BatchItem<R>[]>;
   /** Reject new work immediately, finish active work, then close the owned source. */
-  close(): Promise<void>;
+  closeAsync(): Promise<void>;
+}
+
+/** A custom source is borrowed unless ownership is explicitly transferred. */
+export interface IP2RegionOptions<R extends LookupResult = LookupResult> extends LookupOptions {
+  source: Source<R>;
+}
+
+export interface AsyncIP2RegionOptions<R extends LookupResult = LookupResult> extends LookupOptions {
+  source: AsyncSource<R>;
 }

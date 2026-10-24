@@ -1,6 +1,5 @@
-import { createLookup, createAsyncLookup, parseIP, IP2RegionError } from "../dist/esm/index.js";
+import { IP2Region, AsyncIP2Region, parseIP, IP2RegionError } from "../dist/esm/index.js";
 import { assert, equal, throws, rejects } from "./assert.mjs";
-
 export const validIPs = [
   ["0.0.0.0", "0.0.0.0", 4, 0n],
   ["255.255.255.255", "255.255.255.255", 4, 4294967295n],
@@ -20,7 +19,6 @@ export const validIPs = [
   ["2001:0:0:1:0:0:1:1", "2001::1:0:0:1:1", 6],
   ["2001:db8:0:1:2:3:4:5", "2001:db8:0:1:2:3:4:5", 6],
 ];
-
 export const invalidIPs = [
   null,
   undefined,
@@ -51,7 +49,6 @@ export const invalidIPs = [
   ":::1",
   "::ffff:1.2.3.4:5",
 ];
-
 export function coreSuite(test) {
   test("IP literals retain all 128 bits and canonicalize deterministically", () => {
     for (const [input, address, family, value] of validIPs) {
@@ -65,24 +62,29 @@ export function coreSuite(test) {
     equal(parseIP("::ffff:192.0.2.1").mappedIPv4, "192.0.2.1");
     equal(parseIP("::192.0.2.1").mappedIPv4, undefined);
   });
-
   test("invalid inputs, scopes and port syntax have a stable error", () => {
     for (const input of invalidIPs) throws(() => parseIP(input), "INVALID_IP");
   });
-
   test("functions receive canonical addresses and parsed context", () => {
-    const query = createLookup((ip, parsed) => ({
-      extensions: { ip, family: parsed.family, lowByte: parsed.bytes.at(-1) },
-    }));
+    const query = new IP2Region({
+      source: (ip, parsed) => ({
+        extensions: { ip, family: parsed.family, lowByte: parsed.bytes.at(-1) },
+      }),
+    });
     equal(query.lookup("2001:0db8::2"), { extensions: { ip: "2001:db8::2", family: 6, lowByte: 2 } });
-    const mapped = createLookup((ip, parsed) => ({ extensions: { ip, family: parsed.family } }), {
+    const mapped = new IP2Region({
+      source: (ip, parsed) => ({
+        extensions: {
+          ip,
+          family: parsed.family,
+        },
+      }),
       mappedIPv6: "ipv4",
     });
     equal(mapped.lookup("::ffff:192.0.2.1"), { extensions: { ip: "192.0.2.1", family: 4 } });
     equal(mapped.lookup("::192.0.2.1").extensions.family, 6);
     equal(mapped.lookup("2002:c000:201::1").extensions.family, 6);
   });
-
   test("objects and class instances retain this; shared instances are borrowed", () => {
     class Provider {
       name = "Example";
@@ -97,8 +99,12 @@ export function coreSuite(test) {
       }
     }
     const source = new Provider();
-    const first = createLookup(source);
-    const second = createLookup(source);
+    const first = new IP2Region({
+      source: source,
+    });
+    const second = new IP2Region({
+      source: source,
+    });
     equal(first.metadata.id, "external");
     equal(first.lookup("192.0.2.1"), { country: { name: "Example" } });
     throws(() => first.lookup("::1"), "UNSUPPORTED_FAMILY");
@@ -107,14 +113,18 @@ export function coreSuite(test) {
     equal(source.closes, 0);
     throws(() => first.lookup("invalid"), "CLOSED");
     assert(second.lookup("192.0.2.1"));
-    const owner = createLookup(source, { ownership: "owned" });
+    const owner = new IP2Region({
+      source,
+      ownership: "owned",
+    });
     owner.close();
     owner.close();
     equal(source.closes, 1);
   });
-
   test("only null denotes a miss; batches retain order and define error policy", () => {
-    const query = createLookup((ip) => (ip === "192.0.2.1" ? null : {}));
+    const query = new IP2Region({
+      source: (ip) => (ip === "192.0.2.1" ? null : {}),
+    });
     equal(query.lookupMany(["192.0.2.2", "192.0.2.1"]), [{}, null]);
     throws(() => query.lookupMany(["bad", "192.0.2.1"]), "INVALID_IP");
     const settled = query.lookupManySettled(["192.0.2.1", "bad", "192.0.2.2"]);
@@ -123,12 +133,11 @@ export function coreSuite(test) {
       [null, "INVALID_IP", {}]
     );
   });
-
   test("adapter failures preserve their cause; owned close is attempted once", () => {
     const cause = new Error("external error");
     let closes = 0;
-    const query = createLookup(
-      {
+    const query = new IP2Region({
+      source: {
         lookup() {
           throw cause;
         },
@@ -137,8 +146,8 @@ export function coreSuite(test) {
           throw cause;
         },
       },
-      { ownership: "owned" }
-    );
+      ownership: "owned",
+    });
     assert(throws(() => query.lookup("::1"), "ADAPTER_ERROR").cause === cause);
     assert(throws(() => query.close(), "ADAPTER_ERROR").cause === cause);
     query.close();
@@ -147,17 +156,31 @@ export function coreSuite(test) {
     const stable = new IP2RegionError("INVALID_DATABASE", "bad record");
     assert(
       throws(() =>
-        createLookup(() => {
-          throw stable;
+        new IP2Region({
+          source: () => {
+            throw stable;
+          },
         }).lookup("::1")
       ) === stable
     );
   });
-
   test("malformed sources and mixed synchronous contracts fail explicitly", () => {
     for (const value of [null, {}, { lookup: 1 }, { lookup() {}, close: 1 }])
-      throws(() => createLookup(value), "CONTRACT_ERROR");
-    throws(() => createLookup(() => null, { mappedIPv6: "guess" }), "INVALID_ARGUMENT");
+      throws(
+        () =>
+          new IP2Region({
+            source: value,
+          }),
+        "CONTRACT_ERROR"
+      );
+    throws(
+      () =>
+        new IP2Region({
+          source: () => null,
+          mappedIPv6: "guess",
+        }),
+      "INVALID_ARGUMENT"
+    );
     for (const value of [
       undefined,
       false,
@@ -166,121 +189,165 @@ export function coreSuite(test) {
       Promise.resolve(null),
       Promise.reject(new Error("bad async")),
     ]) {
-      throws(() => createLookup(() => value).lookup("::1"), "CONTRACT_ERROR");
+      throws(
+        () =>
+          new IP2Region({
+            source: () => value,
+          }).lookup("::1"),
+        "CONTRACT_ERROR"
+      );
     }
-    const query = createLookup({ lookup: () => null, close: async () => {} }, { ownership: "owned" });
+    const query = new IP2Region({
+      source: {
+        lookup: () => null,
+        close: async () => {},
+      },
+      ownership: "owned",
+    });
     throws(() => query.close(), "CONTRACT_ERROR");
     query.close();
   });
-
+  test("custom source declarations and instance options are checked before queries", () => {
+    for (const options of [null, [], 1, { source: () => null, families: [4] }, { source: () => null, database: {} }]) {
+      throws(() => new IP2Region(options), "INVALID_ARGUMENT");
+      throws(() => new AsyncIP2Region(options), "INVALID_ARGUMENT");
+    }
+    for (const capabilities of [
+      null,
+      [],
+      { families: [] },
+      { families: [5] },
+      { families: [4, 4] },
+      { fields: [""] },
+      { fields: ["city", "city"] },
+      { languages: "CN" },
+    ]) {
+      throws(() => new IP2Region({ source: { capabilities, lookup: () => null } }), "CONTRACT_ERROR");
+      throws(() => new AsyncIP2Region({ source: { capabilities, lookupAsync: async () => null } }), "CONTRACT_ERROR");
+    }
+    for (const metadata of [null, "source", {}, { id: "" }]) {
+      throws(() => new IP2Region({ source: { metadata, lookup: () => null } }), "CONTRACT_ERROR");
+      throws(() => new AsyncIP2Region({ source: { metadata, lookupAsync: async () => null } }), "CONTRACT_ERROR");
+    }
+    throws(() => new AsyncIP2Region({ source: { lookup: async () => null } }), "CONTRACT_ERROR");
+    throws(() => new IP2Region({ source: { lookupAsync: async () => null } }), "CONTRACT_ERROR");
+  });
   test("async functions and classes use a distinct Promise contract", async () => {
     class Provider {
       name = "Async";
-      async lookup() {
+      async lookupAsync() {
         return { organization: this.name };
       }
-      async close() {
+      async closeAsync() {
         this.name = "closed";
       }
     }
     const source = new Provider();
-    const query = createAsyncLookup(source, { ownership: "owned" });
-    equal(await query.lookupMany(["::1", "192.0.2.1"]), [{ organization: "Async" }, { organization: "Async" }]);
-    const settled = await query.lookupManySettled(["::1", "bad", "192.0.2.1"]);
+    const query = new AsyncIP2Region({
+      source,
+      ownership: "owned",
+    });
+    equal(await query.lookupManyAsync(["::1", "192.0.2.1"]), [{ organization: "Async" }, { organization: "Async" }]);
+    const settled = await query.lookupManySettledAsync(["::1", "bad", "192.0.2.1"]);
     equal(
       settled.map((r) => r.ok),
       [true, false, true]
     );
     equal(settled[1].error.code, "INVALID_IP");
-    await query.close();
+    await query.closeAsync();
     equal(source.name, "closed");
-    const pending = query.lookup("::1");
+    const pending = query.lookupAsync("::1");
     assert(pending instanceof Promise);
     await rejects(() => pending, "CLOSED");
-    await rejects(() => createAsyncLookup(() => null).lookup("::1"), "CONTRACT_ERROR");
+    await rejects(
+      () =>
+        new AsyncIP2Region({
+          source: () => null,
+        }).lookupAsync("::1"),
+      "CONTRACT_ERROR"
+    );
   });
-
   test("async close waits for active work, rejects new work, and returns the same promise", async () => {
     let release;
     let closes = 0;
-    const query = createAsyncLookup(
-      {
-        lookup: () =>
+    const query = new AsyncIP2Region({
+      source: {
+        lookupAsync: () =>
           new Promise((resolve) => {
             release = resolve;
           }),
-        close: async () => {
+        closeAsync: async () => {
           closes++;
         },
       },
-      { ownership: "owned" }
-    );
-    const active = query.lookup("::1");
-    const closing = query.close();
-    assert(closing === query.close());
+      ownership: "owned",
+    });
+    const active = query.lookupAsync("::1");
+    const closing = query.closeAsync();
+    assert(closing === query.closeAsync());
     equal(closes, 0);
-    await rejects(() => query.lookup("::2"), "CLOSED");
+    await rejects(() => query.lookupAsync("::2"), "CLOSED");
     release({ isp: "Example" });
     equal(await active, { isp: "Example" });
     await closing;
     equal(closes, 1);
     let borrowed = 0;
-    const shared = createAsyncLookup({
-      lookup: async () => null,
-      close: async () => {
-        borrowed++;
+    const shared = new AsyncIP2Region({
+      source: {
+        lookupAsync: async () => null,
+        closeAsync: async () => {
+          borrowed++;
+        },
       },
     });
-    await shared.close();
+    await shared.closeAsync();
     equal(borrowed, 0);
   });
-
   test("async rejection does not block cleanup and close failures remain closed", async () => {
     const failure = new Error("failure");
     let closes = 0;
-    const query = createAsyncLookup(
-      {
-        lookup: async () => {
+    const query = new AsyncIP2Region({
+      source: {
+        lookupAsync: async () => {
           throw failure;
         },
-        close: async () => {
+        closeAsync: async () => {
           closes++;
           throw failure;
         },
       },
-      { ownership: "owned" }
-    );
-    const active = query.lookup("::1");
-    const closing = query.close();
+      ownership: "owned",
+    });
+    const active = query.lookupAsync("::1");
+    const closing = query.closeAsync();
     assert((await rejects(() => active, "ADAPTER_ERROR")).cause === failure);
     await rejects(() => closing, "ADAPTER_ERROR");
-    await rejects(() => query.close(), "ADAPTER_ERROR");
+    await rejects(() => query.closeAsync(), "ADAPTER_ERROR");
     equal(closes, 1);
-    await rejects(() => query.lookup("::1"), "CLOSED");
+    await rejects(() => query.lookupAsync("::1"), "CLOSED");
   });
-
   test("reentrant async close waits for the lookup that triggered it, including rejection", async () => {
     for (const fail of [false, true]) {
       let finish, closing;
       const events = [];
-      const query = createAsyncLookup(
-        {
-          lookup() {
+      const query = new AsyncIP2Region({
+        source: {
+          lookupAsync() {
             events.push("lookup");
-            closing = query.close();
+            closing = query.closeAsync();
             return new Promise((resolve, reject) => {
               finish = fail ? reject : resolve;
             });
           },
-          async close() {
+          async closeAsync() {
             events.push("close");
           },
         },
-        { ownership: "owned" }
-      );
-      const pending = query.lookup("::1");
-      assert(closing === query.close());
-      await rejects(() => query.lookup("::2"), "CLOSED");
+        ownership: "owned",
+      });
+      const pending = query.lookupAsync("::1");
+      assert(closing === query.closeAsync());
+      await rejects(() => query.lookupAsync("::2"), "CLOSED");
       equal(events, ["lookup"]);
       finish(fail ? new Error("lookup failed") : null);
       if (fail) await rejects(() => pending, "ADAPTER_ERROR");

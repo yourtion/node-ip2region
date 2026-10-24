@@ -1,11 +1,13 @@
-import { createLookup } from "../dist/esm/index.js";
+import { IP2Region } from "../dist/esm/index.js";
 import { createIPIP } from "../dist/esm/formats/ipip-ipdb.js";
-import { openDefault } from "../dist/esm/loaders/node.js";
+import { IP2Region as NativeIP2Region } from "../dist/esm/loaders/node.js";
 import { ipipFixture } from "./fixtures.mjs";
-import { equal, rejects } from "./assert.mjs";
-
-const memory = createLookup(createIPIP(ipipFixture()));
+import { equal, throws, rejects } from "./assert.mjs";
+const memory = new IP2Region({
+  source: createIPIP(ipipFixture()),
+});
 equal(memory.lookup("2001:db8::2").city.name, "Second");
 memory.close();
-await rejects(() => openDefault(), "PERMISSION_DENIED");
+throws(() => new NativeIP2Region(), "PERMISSION_DENIED");
+await rejects(() => NativeIP2Region.open(), "PERMISSION_DENIED");
 console.log("Node memory lookup works without database read permission");

@@ -25,7 +25,7 @@ function valueOf(bytes: Uint8Array): bigint {
 function canonical(words: number[]): string {
   let start = -1;
   let length = 1;
-  for (let i = 0; i < words.length; ) {
+  for (let i = 0; i < words.length;) {
     if (words[i] !== 0) {
       i++;
       continue;
