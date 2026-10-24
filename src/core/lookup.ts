@@ -12,7 +12,9 @@ import type {
   Source,
 } from "./types.js";
 
-function optionsOf(options: LookupOptions): Required<LookupOptions> {
+export function normalizeLookupOptions(options: LookupOptions): Required<LookupOptions> {
+  if (!options || typeof options !== "object" || Array.isArray(options))
+    throw new IP2RegionError("INVALID_ARGUMENT", "Expected a lookup options object");
   const ownership = options.ownership ?? "borrowed";
   const mappedIPv6 = options.mappedIPv6 ?? "preserve";
   if (!["borrowed", "owned"].includes(ownership) || !["preserve", "ipv4"].includes(mappedIPv6)) {
@@ -21,18 +23,69 @@ function optionsOf(options: LookupOptions): Required<LookupOptions> {
   return { ownership, mappedIPv6 };
 }
 
-function sourceOf<R extends LookupResult, A extends Adapter<R> | AsyncAdapter<R>>(
-  source: Source<R> | AsyncSource<R>
-): A {
-  const adapter = (typeof source === "function" ? { lookup: source } : source) as Adapter<R> | AsyncAdapter<R>;
+function sourceOf<R extends LookupResult>(source: Source<R>): Adapter<R> {
+  const adapter = typeof source === "function" ? { lookup: source } : source;
   if (
     !adapter ||
     typeof adapter.lookup !== "function" ||
     (adapter.close !== undefined && typeof adapter.close !== "function")
   ) {
-    throw new IP2RegionError("CONTRACT_ERROR", "A source must be a query function or an object with a lookup method");
+    throw new IP2RegionError("CONTRACT_ERROR", "A synchronous source needs lookup and an optional close method");
   }
-  return adapter as A;
+  validateSource(adapter);
+  return adapter;
+}
+
+function asyncSourceOf<R extends LookupResult>(source: AsyncSource<R>): AsyncAdapter<R> {
+  const adapter = typeof source === "function" ? { lookupAsync: source } : source;
+  if (
+    !adapter ||
+    typeof adapter.lookupAsync !== "function" ||
+    (adapter.closeAsync !== undefined && typeof adapter.closeAsync !== "function")
+  ) {
+    throw new IP2RegionError(
+      "CONTRACT_ERROR",
+      "An asynchronous source needs lookupAsync and an optional closeAsync method"
+    );
+  }
+  validateSource(adapter);
+  return adapter;
+}
+
+function validateSource(adapter: Adapter | AsyncAdapter) {
+  const capabilities = adapter.capabilities;
+  if (capabilities !== undefined) {
+    if (!capabilities || typeof capabilities !== "object" || Array.isArray(capabilities))
+      throw new IP2RegionError("CONTRACT_ERROR", "capabilities must be an object");
+    const families = capabilities.families;
+    if (
+      families !== undefined &&
+      (!Array.isArray(families) ||
+        families.length === 0 ||
+        Array.from(families).some((family) => family !== 4 && family !== 6) ||
+        new Set(families).size !== families.length)
+    )
+      throw new IP2RegionError("CONTRACT_ERROR", "capabilities.families must contain distinct address families");
+    for (const values of [capabilities.fields, capabilities.languages]) {
+      if (
+        values !== undefined &&
+        (!Array.isArray(values) ||
+          Array.from(values).some((value) => typeof value !== "string" || value.length === 0) ||
+          new Set(values).size !== values.length)
+      )
+        throw new IP2RegionError("CONTRACT_ERROR", "Capability fields and languages must be distinct strings");
+    }
+  }
+  const metadata = adapter.metadata;
+  if (
+    metadata !== undefined &&
+    (!metadata ||
+      typeof metadata !== "object" ||
+      Array.isArray(metadata) ||
+      typeof metadata.id !== "string" ||
+      metadata.id.length === 0)
+  )
+    throw new IP2RegionError("CONTRACT_ERROR", "metadata requires a nonempty id");
 }
 
 function prepare(ip: string, adapter: Adapter | AsyncAdapter, options: Required<LookupOptions>) {
@@ -69,8 +122,8 @@ function closed(): IP2RegionError {
 }
 
 export function createLookup<R extends LookupResult>(source: Source<R>, options: LookupOptions = {}): Lookup<R> {
-  const config = optionsOf(options);
-  const adapter = sourceOf<R, Adapter<R>>(source);
+  const config = normalizeLookupOptions(options);
+  const adapter = sourceOf(source);
   let isClosed = false;
   const lookup = (ip: string): R | null => {
     if (isClosed) throw closed();
@@ -116,8 +169,8 @@ export function createAsyncLookup<R extends LookupResult>(
   source: AsyncSource<R>,
   options: LookupOptions = {}
 ): AsyncLookup<R> {
-  const config = optionsOf(options);
-  const adapter = sourceOf<R, AsyncAdapter<R>>(source);
+  const config = normalizeLookupOptions(options);
+  const adapter = asyncSourceOf(source);
   const active = new Set<Promise<R | null>>();
   let isClosed = false;
   let closing: Promise<void> | undefined;
@@ -138,7 +191,7 @@ export function createAsyncLookup<R extends LookupResult>(
     void (async () => {
       const parsed = prepare(ip, adapter, config);
       try {
-        const pending = adapter.lookup(parsed.address, parsed);
+        const pending = adapter.lookupAsync(parsed.address, parsed);
         if (!promiseLike(pending))
           throw new IP2RegionError("CONTRACT_ERROR", "An asynchronous adapter must return a Promise");
         return resultOf(await pending);
@@ -151,13 +204,13 @@ export function createAsyncLookup<R extends LookupResult>(
   return {
     capabilities: adapter.capabilities,
     metadata: adapter.metadata,
-    lookup,
-    async lookupMany(ips) {
+    lookupAsync: lookup,
+    async lookupManyAsync(ips) {
       const results: (R | null)[] = [];
       for (const ip of ips) results.push(await lookup(ip));
       return results;
     },
-    async lookupManySettled(ips) {
+    async lookupManySettledAsync(ips) {
       const results: BatchItem<R>[] = [];
       for (const ip of ips) {
         try {
@@ -168,13 +221,13 @@ export function createAsyncLookup<R extends LookupResult>(
       }
       return results;
     },
-    close() {
+    closeAsync() {
       if (closing) return closing;
       isClosed = true;
-      closing = Promise.allSettled([...active]).then(async () => {
-        if (config.ownership === "owned" && adapter.close) {
+      closing = Promise.allSettled(active).then(async () => {
+        if (config.ownership === "owned" && adapter.closeAsync) {
           try {
-            const pending = adapter.close();
+            const pending = adapter.closeAsync();
             if (!promiseLike(pending))
               throw new IP2RegionError("CONTRACT_ERROR", "An asynchronous close method must return a Promise");
             await pending;

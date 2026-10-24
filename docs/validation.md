@@ -1,20 +1,26 @@
 # Implementation validation
 
-Local validation on the Linux x64 cloud worker, 2026-10-23:
+Local validation on the Linux x64 cloud worker, 2026-10-24:
 
-| Consumer / check                                                                   | Result          |
-| ---------------------------------------------------------------------------------- | --------------- |
-| Node 24.19.0 unit and independent-reader checks                                    | 40 tests passed |
-| Node 22.12.0 real-tarball shared suite                                             | 37 tests passed |
-| Bun 1.2.0 real-tarball shared suite, native loader                                 | 35 tests passed |
-| Deno 2.0.0 real-tarball shared suite, native loader                                | 35 tests passed |
-| ESM, CJS, mixed-module error propagation                                           | Passed          |
-| NodeNext `.mts` / `.cts` consumer declarations                                     | Passed          |
-| Pure core/format declarations without Node or DOM types                            | Passed          |
-| Native file permission failures: Node, Bun and Deno                                | Passed          |
-| Memory-only operation without database read permission: Node and Deno              | Passed          |
-| Frozen pnpm 9.15.9 lockfile, installation scripts disabled                         | Passed          |
-| Pinned XDB hashes and upstream license checked, obsolete files absent from tarball | Passed          |
+| Consumer / check                                                      | Result                  |
+| --------------------------------------------------------------------- | ----------------------- |
+| Node 24.19.0 core, independent-reader and release-helper tests        | 71 tests passed         |
+| Node 22.12.0 / 24.19.0 real-tarball shared suite                      | 57 tests passed on each |
+| Bun 1.2.0 / 1.4.4 real-tarball shared suite, native loader            | 55 tests passed on each |
+| Deno 2.0.0 / 2.9.6 real-tarball shared suite, native loader           | 55 tests passed on each |
+| Public custom adapter examples, shipped in the tarball                | 17 tests per runtime    |
+| Packaged examples checked against actual public declarations          | Passed                  |
+| ESM, CJS, mixed-module error propagation                              | Passed                  |
+| NodeNext `.mts` / `.cts` consumer declarations                        | Passed                  |
+| Pure core/format declarations without Node or DOM types               | Passed                  |
+| Native file permission failures: Node, Bun and Deno                   | Passed                  |
+| Memory-only operation without database read permission: Node and Deno | Passed                  |
+| oxlint, oxfmt and TypeScript on Node 22.12.0 / 24.19.0                | Passed                  |
+| Frozen pnpm 9.15.9 lockfile, installation scripts disabled            | Passed                  |
+| Pinned XDB hashes, upstream license and distribution allowlist        | Passed                  |
+| CI and release workflows checked with actionlint 1.7.7                | Passed                  |
+| Recorded 2026-10-23 benchmark matrix, before the constructor API      | 54 runs passed          |
+| Repository-only XDB matrix, Node/Bun/Deno, 2026-10-24                 | 60 runs verified        |
 
 The same byte fixtures and expected results are used across the runtimes.
 Checks cover complete 128-bit IPv6 values, mapped-address policy, first/last
@@ -24,7 +30,10 @@ ownership, this binding, error propagation and close lifecycle. Regression cases
 include close triggered synchronously inside an active async lookup (success and
 failure), BIN strings inside or crossing structural regions, 150,001 IPDB language
 entries and impossible offsets, raw XDB records with misleading five-column
-layouts, and native single-family loading. An instrumented loader verifies that
+layouts, and native single-family loading. Constructors and asynchronous `open` share
+configuration and both return synchronous queries; async source clients expose
+only Async-suffixed methods. Runtime and type tests reject mixed sources, file
+configuration conflicts, malformed capabilities and invalid metadata. An instrumented loader verifies that
 unselected bundled files are never read and invalid family lists fail before I/O.
 
 The independent Node reference tests use official ip2region.js 3.1.8,
@@ -34,13 +43,17 @@ addresses of 128 real segments per file. BIN/IPIP use synthetic records and
 require no commercial data. Real tarball checks run from an isolated consumer
 directory, exercising exports and copied library files without a source-tree or
 workspace dependency fallback. Test helpers are injected separately into the
-temporary installed package; they are not shipped in the tarball.
+temporary installed package; they are not shipped in the tarball. The public
+custom examples are shipped separately, imported through package exports, and
+executed in the shared suites plus their standalone Node entry. JSDoc interfaces
+are checked both against source types and against the packed declarations.
 
 The CI workflow additionally runs Node on Windows/macOS/Linux, and minimum plus
 current Bun/Deno releases on Linux. Those remote runs are separate evidence from
 the local results above. npm publication requires a separate release decision.
 Performance observations are recorded in [performance.md](performance.md),
-not used as geographic-accuracy results.
+not used as geographic-accuracy results. Reproduction commands and toolchain
+configuration are described in [development.md](development.md).
 
 Release automation additionally has network-free helper tests in `npm run test:release`
 and workflow validation with actionlint. `npm run test:packed -- /path/to/package.tgz`

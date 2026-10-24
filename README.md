@@ -1,18 +1,22 @@
 # ip2region
 
-原生支持 Node、Bun、Deno 的 IP 查询库。内置 ip2region XDB 双栈数据可开箱即用，
-也可读取自备数据库，或接入查询函数、对象和类实例。
+离线查询 IPv4 / IPv6 的国家、地区、城市和运营商，支持 Node.js、Bun、Deno，零运行时依赖。
+内置双栈 XDB 数据，也可使用自己的 XDB、IP2Location BIN、IPIP IPDB 文件，或接入自定义数据源。
 
-**`main` 维护 3.x 新架构；`v2` 保留旧版实现。既有 2.x 接口不提供以下新 API，升级请参阅[迁移指南](docs/migration.md)。**
+## 安装
 
-维护者的 npm Trusted Publisher 配置、tag 发版与失败重跑方式见[发布说明](docs/releasing.md)。
+| 运行时  | 最低版本 | 安装                          |
+| ------- | -------- | ----------------------------- |
+| Node.js | 22.12.0  | `npm install ip2region`       |
+| Bun     | 1.2.0    | `bun add ip2region`           |
+| Deno    | 2.0.0    | 直接导入 `npm:ip2region/deno` |
 
-## 开箱即用
+## 快速开始
 
 ```js
-import { openDefault } from "ip2region/node";
+import { IP2Region } from "ip2region/node";
 
-const query = await openDefault();
+const query = new IP2Region();
 try {
   console.log(query.lookup("120.24.78.68"));
   // {
@@ -21,147 +25,114 @@ try {
   //   city: { name: "深圳市" },
   //   isp: "阿里",
   //   source: "bundled-ip2region",
-  //   extensions: { region: "中国|广东省|深圳市|阿里|CN", raw: { /* 按列命名的原始字段 */ } }
+  //   extensions: { region: "中国|广东省|深圳市|阿里|CN", raw: { ... } }
   // }
+  console.log(query.lookup("2001:4860:4860::8888")?.country);
 } finally {
   query.close();
 }
 ```
 
-Bun 将入口改为 `ip2region/bun`；Deno 使用 `npm:ip2region/deno`，读取本地文件需要
-`--allow-read`。三个入口分别使用 `node:fs/promises`、`Bun.file`、`Deno.readFile`，
-共享格式读取器和查询引擎。
+Bun 将导入改为 `ip2region/bun`，运行 `bun app.mjs`；Deno 使用
+`npm:ip2region/deno`，运行 `deno run --allow-read app.mjs`。
+CommonJS 使用 `const { IP2Region } = require("ip2region/node")`。
+核心、格式和 Node 入口提供 ESM/CJS 与 TypeScript 类型；Bun、Deno 入口提供 ESM。
 
-内置 IPv4、IPv6 XDB 快照来自
-[lionsoul2014/ip2region](https://github.com/lionsoul2014/ip2region)，固定到上游提交，
-附原始许可、SHA-256 和各文件构建时间，见 [数据来源](data/README.md)。两个文件合计
-约 48.4 MB（未压缩）；`openDefault()` 显式加载两份到内存，按地址族路由。
-只使用 IPv4 时调用 `openDefault({ families: [4] })`，只使用 IPv6 时传入 `[6]`；
-未选择的文件不会读取或分配到内存，查询未加载的地址族会报 `UNSUPPORTED_FAMILY`。不承诺快照的定位准确率或更新频率。
-`metadata.datasets` 分别记录文件版本、构建和加载时间。
-
-任何模块的导入都不会读取数据库、联网或安装依赖；只有调用加载函数才会读文件。
-
-## 自备数据库
+构造器同步读取并校验数据库，返回后即可查询；失败直接抛出错误。
+希望异步读取文件时，使用同一套配置：
 
 ```js
-import { openDatabase } from "ip2region/node";
-import { createXDB, IP2REGION_FIELDS } from "ip2region/formats/ip2region-xdb";
-import { createBIN } from "ip2region/formats/ip2location-bin";
-import { createIPIP } from "ip2region/formats/ipip-ipdb";
+const query = await IP2Region.open({ families: [4] });
+const result = query.lookup("120.24.78.68"); // 加载完成后仍然同步查询
+query.close();
+```
 
-// 仅在确认自备文件采用上游这套字段布局时使用该预设。
-const xdb = await openDatabase("/data/ip2region_v6.xdb", (bytes) => createXDB(bytes, { fields: IP2REGION_FIELDS }));
-const bin = await openDatabase("/data/IP2LOCATION.BIN", createBIN);
-const ipdb = await openDatabase("/data/qqwry.ipdb", (bytes) => createIPIP(bytes, { language: "CN" }));
+默认加载合计约 **48.4 MB** 的内置数据库文件；读取和复制还会产生额外内存开销。
+建议在应用启动时创建一次并复用，同步构造会阻塞当前线程，异步打开仍需执行解析和校验。
+只查询 IPv4 时配置 `families: [4]`（文件约 11.1 MB），只查询 IPv6 时配置 `[6]`（约 37.3 MB）。
+查询未加载的地址族会抛出 `UNSUPPORTED_FAMILY`。
+模块导入不会读取数据库，查询无需联网，数据不会自动更新。
+内置快照的版本、构建时间、许可与 SHA-256 见[数据来源](data/README.md)。
+
+## 查询与结果
+
+| 方法                     | 行为                                                       |
+| ------------------------ | ---------------------------------------------------------- |
+| `lookup(ip)`             | 命中返回记录，未命中返回 `null`，无效输入抛出错误          |
+| `lookupMany(ips)`        | 按输入顺序返回结果，遇到首个错误抛出                       |
+| `lookupManySettled(ips)` | 按顺序返回 `{ ok: true, value }` 或 `{ ok: false, error }` |
+| `close()`                | 释放实例；重复调用安全，关闭后查询抛出 `CLOSED`            |
+
+结果字段均可缺省，取决于数据库。`country`、`city` 为 `{ code?: string; name?: string }`，
+`subdivisions` 为同结构的地区数组；`isp`、`organization`、`source` 为字符串，`asn` 为数字，
+`extensions` 保留格式专属的 JSON 兼容原始数据。TypeScript 可从 `ip2region` 导入 `LookupResult` 等类型。
+未知字段省略，不填空字符串，也不从地名或组织名推断其他字段。
+
+仅接受完整 IP 字面量，不接受空白、端口、URL、IPv4 前导零或 IPv6 作用域标识。
+IPv4-mapped IPv6 默认作为 IPv6 查询；接收映射形式的 IPv4 地址时显式配置：
+
+```js
+const query = new IP2Region({ families: [4], mappedIPv6: "ipv4" });
+query.lookup("::ffff:120.24.78.68");
+query.close();
+```
+
+错误可通过 `error.code` 区分，例如 `INVALID_IP`、`UNSUPPORTED_FAMILY`、
+`INVALID_DATABASE`、`FILE_NOT_FOUND`、`PERMISSION_DENIED` 和 `CLOSED`；底层异常保存在 `cause`。
+定位结果与覆盖范围取决于数据源，测试通过不代表地理位置准确。
+
+## 使用自己的数据库
+
+`database` 配置接受文件路径、`file:` URL 或 `Uint8Array`，构造器和 `IP2Region.open()` 参数一致：
+
+```js
+import { IP2Region } from "ip2region/node";
+
+const query = new IP2Region({
+  database: { format: "bin", path: "/data/IP2LOCATION.BIN" },
+});
 try {
-  console.log(bin.lookup("2001:db8::1"));
-  console.log(ipdb.lookup("2001:db8::2"));
+  console.log(query.lookup("120.24.78.68"));
 } finally {
-  xdb.close();
-  bin.close();
-  ipdb.close();
+  query.close();
 }
 ```
 
-不依赖文件系统时，可直接传入字节：
+| `database.format` | 其他选项与行为                                                   |
+| ----------------- | ---------------------------------------------------------------- |
+| `"xdb"`           | `fields` 显式指定列名；省略时只返回 `extensions.region` 原始文本 |
+| `"bin"`           | 按产品类型读取字段，DB26 可提供 ASN 和组织                       |
+| `"ipip"`          | `language` 选择文件内的语言，默认 `"CN"`                         |
+
+XDB 示例：`database: { format: "xdb", path, fields: ["country_name", "region_name", "city_name", "isp", "country_code"] }`。
+列顺序必须与文件实际布局一致。已有字节时将 `path` 换为 `data: bytes`，二者互斥。
+每份文件支持的地址族由文件头决定；自备数据不会与内置数据自动合并或回退。
+相对路径从应用工作目录解析。读取器复制输入字节，自备数据的获取、更新和授权由应用管理。
+格式读取器也可单独从 `ip2region/formats/*` 导入，详细支持范围见[格式说明](docs/formats.md)。
+
+## 自定义接入
+
+函数、对象或类实例均通过 `source` 传入。同步来源使用 `IP2Region`，异步来源使用
+`AsyncIP2Region`，两类实例具有明确不同的方法名和固定的返回类型：
 
 ```js
-import { createLookup } from "ip2region";
-import { createBIN } from "ip2region/formats/ip2location-bin";
+import { IP2Region } from "ip2region";
 
-// bytes 是应用提供的 Uint8Array；读取器复制有效视图，不受后续修改影响。
-const query = createLookup(createBIN(bytes), { ownership: "owned" });
+const records = new Map([["192.0.2.1", { country: { code: "CN" } }]]);
+const query = new IP2Region({ source: (ip) => records.get(ip) ?? null });
 console.log(query.lookup("192.0.2.1"));
 query.close();
 ```
 
-| 格式入口                                          | 地址族                     | 标准字段                                             |
-| ------------------------------------------------- | -------------------------- | ---------------------------------------------------- |
-| `ip2region/formats/ip2region-xdb` → `createXDB`   | 每份文件 IPv4 或 IPv6      | 显式配置列名后映射国家代码/名称、区域、城市、ISP     |
-| `ip2region/formats/ip2location-bin` → `createBIN` | 按文件头声明 IPv4/IPv6     | 国家代码/名称、区域、城市、ISP；DB26 可提供 ASN/组织 |
-| `ip2region/formats/ipip-ipdb` → `createIPIP`      | 按 metadata 声明 IPv4/IPv6 | 按字段名和选定语言映射，未知字段保留在扩展记录       |
+根入口只处理传入的来源，不依赖文件系统。原生运行时入口也接受相同的同步 `source` 配置。
+同步对象实现 `lookup(ip, parsed)` 和可选 `close()`；异步对象实现 `lookupAsync(ip, parsed)` 和
+可选 `closeAsync()`。对象方法保留 `this`，无需继承或注册。
+异步客户端只暴露 `lookupAsync`、`lookupManyAsync`、`lookupManySettledAsync`、`closeAsync`，均返回 Promise。
 
-`createXDB(bytes)` 默认只返回 `extensions.region` 原始文本，`extensions.raw` 为空，
-不声明地理字段能力。需要标准字段时显式传入 `fields`；`openDefault()` 已为内置快照
-配置已知布局，开箱即用的结果不受影响。
+外部来源默认借用；需要转交关闭责任时配置 `ownership: "owned"`。
+数据库配置创建的读取器由实例自动拥有。`source`、`database` 与内置 `families` 配置互斥。
+完整输入、返回值、错误、批量和生命周期规则见[自定义接入契约](docs/adapters.md)。
+[可运行测试示例](examples/custom/) 包括同步函数、类实例、异步服务和自定义 JSON 字节格式，
+使用公开接口并在三个运行时验证，可直接复制到自己的适配器项目。
 
-BIN 的 LITE 与商业包字段不同；DB26 是数据产品，不是另一种文件格式，也不代表
-本库提供在线 DB26 的数据质量。此处 IPIP IPDB 包括
-[nmgliangwei/qqwry.ipdb](https://github.com/nmgliangwei/qqwry.ipdb) 的转换格式，
-IPDB 读取器不处理 XDB、CZDB、QQWry DAT 或 ZX IPv6wry。详细边界见 [格式说明](docs/formats.md)。
-
-## 外部扩展
-
-```js
-import { createLookup, createAsyncLookup } from "ip2region";
-
-const local = createLookup((ip) => localRecords.get(ip) ?? null);
-const remote = createAsyncLookup(async (ip) => await myLookupService(ip));
-
-// 对象或类实例也可直接传入，不要求继承或注册。
-const shared = createLookup(new MyReader());
-```
-
-最小协议只有查询函数。复杂实现可选提供 `capabilities`、`metadata`、`close`。
-查询函数收到规范化地址字符串，以及包含地址族、网络序字节和完整数值的第二参数。
-调用对象方法时保留 `this`。第三方实现自行声明支持的运行时；核心跨平台不代表外部
-读取器跨平台。见 [适配器协议与契约测试示例](docs/adapters.md)。
-
-## 结果、错误与生命周期
-
-标准结果包含可选的 `country: { code?, name? }`、`subdivisions: [{ code?, name? }]`、
-`city: { code?, name? }`、`isp`、`asn`、`organization`、`source` 和类型化 `extensions`。
-缺失字段省略，不补空字符串、不翻译或拆分地名、不用组织名代替 ISP，也不推断置信度。
-各格式的原始记录结构不同，标准结果及扩展值须保持 JSON 兼容。
-
-- `lookup(ip)`：命中返回记录，未命中返回 `null`；字段全空仍可是一条命中记录。
-- `lookupMany(ips)`：保留顺序，遇到首个错误抛出。
-- `lookupManySettled(ips)`：逐项返回 `{ ok: true, value }` 或 `{ ok: false, error }`。
-- 异步实例的这些方法始终返回 Promise；异步批量查询先按顺序执行。
-- 同步实例 `close()` 返回 void；异步实例 `close()` 返回 Promise，并等待已开始的查询。
-
-外部传入的实例默认借用，关闭查询包装器不会关闭共享来源。需要接管时显式传入
-`{ ownership: "owned" }`；`openDefault` 和 `openDatabase` 自动拥有其创建的读取器。
-关闭幂等，关闭后查询抛出 `CLOSED`；释放失败也不会恢复为可用状态。
-
-错误具有稳定 `code`：`INVALID_IP`、`INVALID_ARGUMENT`、`UNSUPPORTED_FAMILY`、
-`UNSUPPORTED_LANGUAGE`、`INVALID_DATABASE`、`FILE_NOT_FOUND`、`PERMISSION_DENIED`、
-`IO_ERROR`、`CLOSED`、`CONTRACT_ERROR`、`ADAPTER_ERROR`。底层异常保存在 `cause`，
-数据库错误还包含格式和偏移信息，不会作为国家或城市返回。
-
-仅接受完整裸 IP 字面量，不接受空值、空白、前导零 IPv4、作用域标识或带端口包装。
-IPv6 保留全部 128 位；默认保留 IPv4-mapped IPv6 的 IPv6 身份。需要查询对应 IPv4 时
-使用 `{ mappedIPv6: "ipv4" }`，仅转换精确的 `::ffff:0:0/96` 前缀；不转换 6to4、
-Teredo、ISATAP 或 `::/96` 兼容地址。
-
-## 运行时和打包
-
-目标最低版本为 Node 22.12.0、Bun 1.2.0、Deno 2.0.0，均以真实 tarball 验证。
-核心、格式入口和 Node 入口提供 ESM/CJS；Bun/Deno 原生加载入口仅提供 ESM。
-生产依赖为零；官方 Node 读取器仅作为开发时的独立参考验证，不会装入生产包。
-
-```js
-const { createLookup } = require("ip2region");
-const { openDefault } = require("ip2region/node");
-```
-
-## 迁移和开发
-
-新接口替换旧构造器、`search`、`searchRaw`、`disableIpv6` 和未受约束的深层导入。
-旧 `.db`、ZX IPv6wry 数据及其读取器、IPv6 高 64 位分派、地名字符串拆分、安装脚本和自动数据更新脚本已移除。
-迁移示例见 [迁移说明](docs/migration.md)。数据的下载、更新和授权由使用者管理。
-
-```sh
-pnpm install --frozen-lockfile --ignore-scripts
-npm test
-npm run test:package
-npm run benchmark
-```
-
-`test:package` 会打包到临时目录，检查 ESM/CJS、类型声明、导出隔离和 Node 权限。
-设置 `IP2REGION_BUN=bun`、`IP2REGION_DENO=deno` 可同时验证原生运行时；
-`IP2REGION_NODE` 可指定 Node 消费者版本。共享测试使用合成 fixture，XDB（含固定真实快照）、BIN/IPDB 另与
-官方参考读取器交叉验证，无需下载真实商业数据。
-
-性能记录加载时间、内存和查询延迟，与定位质量分开；见 [性能基线](docs/performance.md)。
+代码采用 [MIT](LICENSE) 许可；内置数据许可见[数据来源](data/README.md)。

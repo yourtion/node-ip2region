@@ -2,7 +2,37 @@
   "name": "ip2region",
   "version": "3.0.0",
   "description": "Extensible native Node, Bun and Deno IP lookup with bundled ip2region data",
+  "keywords": [
+    "bun",
+    "deno",
+    "geoip",
+    "ip",
+    "ip2region",
+    "ipv4",
+    "ipv6"
+  ],
+  "homepage": "https://github.com/yourtion/node-ip2region#readme",
+  "bugs": {
+    "url": "https://github.com/yourtion/node-ip2region/issues"
+  },
+  "license": "MIT",
+  "author": "Yourtion <yourtion@gmail.com>",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/yourtion/node-ip2region.git"
+  },
+  "files": [
+    "dist",
+    "data/README.md",
+    "docs",
+    "CHANGELOG.md",
+    "data/ip2region_v4.xdb",
+    "data/ip2region_v6.xdb",
+    "data/LICENSE.ip2region.md",
+    "examples/custom"
+  ],
   "type": "module",
+  "sideEffects": false,
   "main": "./dist/cjs/index.js",
   "module": "./dist/esm/index.js",
   "types": "./dist/esm/index.d.ts",
@@ -71,57 +101,36 @@
       }
     }
   },
-  "sideEffects": false,
-  "files": [
-    "dist",
-    "data/README.md",
-    "docs",
-    "CHANGELOG.md",
-    "data/ip2region_v4.xdb",
-    "data/ip2region_v6.xdb",
-    "data/LICENSE.ip2region.md"
-  ],
-  "engines": {
-    "node": ">=22.12.0"
-  },
-  "packageManager": "pnpm@9.15.9",
   "scripts": {
     "build": "node scripts/build.mjs",
-    "compile": "npm run build",
-    "typecheck": "tsc --noEmit",
+    "lint": "oxlint --deny-warnings",
+    "lint:fix": "oxlint --fix --deny-warnings",
+    "format": "oxfmt --write .",
+    "format:check": "oxfmt --check .",
+    "check": "npm run lint && npm run format:check && npm run typecheck",
+    "typecheck": "tsc --noEmit && tsc -p examples/tsconfig.json",
     "test": "npm run build && node --test tests/node.test.mjs tests/reference.test.mjs scripts/npm-release.test.mjs",
-    "format": "prettier --write src tests scripts docs data/README.md README.md CHANGELOG.md package.json tsconfig.json .github/workflows/*.yml .prettierrc.cjs",
-    "prepublishOnly": "npm run test:package",
+    "prepublishOnly": "npm run check && npm run test:package",
     "test:package": "npm test && node scripts/test-package.mjs",
     "test:packed": "node scripts/test-package.mjs",
     "test:release": "node --test scripts/npm-release.test.mjs",
-    "benchmark": "npm run build && node --expose-gc scripts/benchmark.mjs"
+    "benchmark": "npm run build && node --expose-gc scripts/benchmark.mjs",
+    "benchmark:bun": "npm run build && bun scripts/benchmark.mjs",
+    "benchmark:deno": "npm run build && deno run --allow-read --allow-sys --v8-flags=--expose-gc scripts/benchmark.mjs",
+    "test:examples": "npm run build && node --test examples/custom/custom.test.mjs",
+    "benchmark:matrix": "npm run build && node scripts/benchmark-matrix.mjs"
   },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/yourtion/node-ip2region.git"
-  },
-  "bugs": {
-    "url": "https://github.com/yourtion/node-ip2region/issues"
-  },
-  "homepage": "https://github.com/yourtion/node-ip2region#readme",
-  "keywords": [
-    "ip",
-    "ipv4",
-    "ipv6",
-    "geoip",
-    "ip2region",
-    "bun",
-    "deno"
-  ],
-  "author": "Yourtion <yourtion@gmail.com>",
-  "license": "MIT",
   "devDependencies": {
     "@types/node": "22.5.0",
     "ip2location-nodejs": "9.8.0",
     "ip2region.js": "3.1.8",
     "ipip-ipdb": "0.6.0",
-    "prettier": "3.3.3",
+    "oxfmt": "0.74.0",
+    "oxlint": "1.89.0",
     "typescript": "5.5.4"
-  }
+  },
+  "engines": {
+    "node": ">=22.12.0"
+  },
+  "packageManager": "pnpm@9.15.9"
 }

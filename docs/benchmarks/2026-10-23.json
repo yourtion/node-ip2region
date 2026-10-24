@@ -1,0 +1,1532 @@
+{
+  "recordedAt": "2026-10-23T19:30:43.483009+00:00",
+  "repetitions": 3,
+  "cases": [
+    {
+      "runtime": "node",
+      "version": "22.12.0",
+      "loader": "ip2region/node",
+      "families": [4, 6],
+      "bytes": 48400455,
+      "workload": {
+        "addresses": [
+          "120.24.78.68",
+          "8.8.8.8",
+          "1.1.1.1",
+          "192.0.2.1",
+          "0.0.0.0",
+          "255.255.255.255",
+          "2001:4860:4860::8888",
+          "2606:4700:4700::1111",
+          "2001:db8::1",
+          "2001:db8::2"
+        ],
+        "warmup": 1000,
+        "samples": 10000
+      },
+      "runs": [
+        {
+          "loadMs": 223.711025,
+          "memoryDelta": {
+            "rss": 97091584,
+            "heapUsed": 58008,
+            "external": 86690887,
+            "arrayBuffers": 49428136
+          },
+          "gcRequested": true,
+          "hits": 10000,
+          "latencyMicroseconds": {
+            "p50": 4.238999999984117,
+            "p95": 9.285999999974592,
+            "p99": 67.16199999999617
+          },
+          "throughput": {
+            "samples": 100000,
+            "hits": 100000,
+            "durationMs": 480.12387699999994,
+            "queriesPerSecond": 208279.58114651317
+          }
+        },
+        {
+          "loadMs": 262.326425,
+          "memoryDelta": {
+            "rss": 98828288,
+            "heapUsed": 58008,
+            "external": 86690887,
+            "arrayBuffers": 49449031
+          },
+          "gcRequested": true,
+          "hits": 10000,
+          "latencyMicroseconds": {
+            "p50": 4.516000000023723,
+            "p95": 10.475999999982832,
+            "p99": 72.21400000003086
+          },
+          "throughput": {
+            "samples": 100000,
+            "hits": 100000,
+            "durationMs": 781.2713039999999,
+            "queriesPerSecond": 127996.50964781885
+          }
+        },
+        {
+          "loadMs": 255.01244000000003,
+          "memoryDelta": {
+            "rss": 97693696,
+            "heapUsed": 58248,
+            "external": 86689996,
+            "arrayBuffers": 49449031
+          },
+          "gcRequested": true,
+          "hits": 10000,
+          "latencyMicroseconds": {
+            "p50": 3.7999999999556167,
+            "p95": 8.156999999982872,
+            "p99": 49.9889999999823
+          },
+          "throughput": {
+            "samples": 100000,
+            "hits": 100000,
+            "durationMs": 513.297151,
+            "queriesPerSecond": 194818.9266298889
+          }
+        }
+      ]
+    },
+    {
+      "runtime": "node",
+      "version": "22.12.0",
+      "loader": "ip2region/node",
+      "families": [4],
+      "bytes": 11122642,
+      "workload": {
+        "addresses": ["120.24.78.68", "8.8.8.8", "1.1.1.1", "192.0.2.1", "0.0.0.0", "255.255.255.255"],
+        "warmup": 1000,
+        "samples": 10000
+      },
+      "runs": [
+        {
+          "loadMs": 93.90470200000001,
+          "memoryDelta": {
+            "rss": 29327360,
+            "heapUsed": 52200,
+            "external": 22752717,
+            "arrayBuffers": 11651330
+          },
+          "gcRequested": true,
+          "hits": 10000,
+          "latencyMicroseconds": {
+            "p50": 2.6809999999954925,
+            "p95": 6.4749999999946795,
+            "p99": 74.40599999995356
+          },
+          "throughput": {
+            "samples": 100000,
+            "hits": 100000,
+            "durationMs": 374.629691,
+            "queriesPerSecond": 266930.25780489994
+          }
+        },
+        {
+          "loadMs": 60.47484,
+          "memoryDelta": {
+            "rss": 26464256,
+            "heapUsed": 52232,
+            "external": 22738415,
+            "arrayBuffers": 11651330
+          },
+          "gcRequested": true,
+          "hits": 10000,
+          "latencyMicroseconds": {
+            "p50": 2.6119999999991705,
+            "p95": 6.429999999994607,
+            "p99": 82.98900000002618
+          },
+          "throughput": {
+            "samples": 100000,
+            "hits": 100000,
+            "durationMs": 609.671793,
+            "queriesPerSecond": 164022.67769012565
+          }
+        },
+        {
+          "loadMs": 71.079777,
+          "memoryDelta": {
+            "rss": 30408704,
+            "heapUsed": 52232,
+            "external": 22745197,
+            "arrayBuffers": 11651330
+          },
+          "gcRequested": true,
+          "hits": 10000,
+          "latencyMicroseconds": {
+            "p50": 2.824000000032356,
+            "p95": 7.069000000001324,
+            "p99": 79.25000000000182
+          },
+          "throughput": {
+            "samples": 100000,
+            "hits": 100000,
+            "durationMs": 333.51111299999997,
+            "queriesPerSecond": 299840.08358965843
+          }
+        }
+      ]
+    },
+    {
+      "runtime": "node",
+      "version": "22.12.0",
+      "loader": "ip2region/node",
+      "families": [6],
+      "bytes": 37277813,
+      "workload": {
+        "addresses": ["2001:4860:4860::8888", "2606:4700:4700::1111", "2001:db8::1", "2001:db8::2"],
+        "warmup": 1000,
+        "samples": 10000
+      },
+      "runs": [
+        {
+          "loadMs": 411.011282,
+          "memoryDelta": {
+            "rss": 83623936,
+            "heapUsed": 52184,
+            "external": 75043613,
+            "arrayBuffers": 75079914
+          },
+          "gcRequested": true,
+          "hits": 10000,
+          "latencyMicroseconds": {
+            "p50": 5.106999999952677,
+            "p95": 8.912000000009357,
+            "p99": 93.42399999991358
+          },
+          "throughput": {
+            "samples": 100000,
+            "hits": 100000,
+            "durationMs": 803.694834,
+            "queriesPerSecond": 124425.33629623902
+          }
+        },
+        {
+          "loadMs": 224.89707199999998,
+          "memoryDelta": {
+            "rss": 82096128,
+            "heapUsed": 52184,
+            "external": 75043957,
+            "arrayBuffers": 37802101
+          },
+          "gcRequested": true,
+          "hits": 10000,
+          "latencyMicroseconds": {
+            "p50": 5.055999999967753,
+            "p95": 10.953000000029078,
+            "p99": 75.73899999999867
+          },
+          "throughput": {
+            "samples": 100000,
+            "hits": 100000,
+            "durationMs": 565.101083,
+            "queriesPerSecond": 176959.49098012966
+          }
+        },
+        {
+          "loadMs": 111.173284,
+          "memoryDelta": {
+            "rss": 82001920,
+            "heapUsed": 52184,
+            "external": 75050739,
+            "arrayBuffers": 37802101
+          },
+          "gcRequested": true,
+          "hits": 10000,
+          "latencyMicroseconds": {
+            "p50": 5.000999999992928,
+            "p95": 7.85799999999881,
+            "p99": 39.297999999973854
+          },
+          "throughput": {
+            "samples": 100000,
+            "hits": 100000,
+            "durationMs": 553.5094509999999,
+            "queriesPerSecond": 180665.38849397175
+          }
+        }
+      ]
+    },
+    {
+      "runtime": "node",
+      "version": "24.19.0",
+      "loader": "ip2region/node",
+      "families": [4, 6],
+      "bytes": 48400455,
+      "workload": {
+        "addresses": [
+          "120.24.78.68",
+          "8.8.8.8",
+          "1.1.1.1",
+          "192.0.2.1",
+          "0.0.0.0",
+          "255.255.255.255",
+          "2001:4860:4860::8888",
+          "2606:4700:4700::1111",
+          "2001:db8::1",
+          "2001:db8::2"
+        ],
+        "warmup": 1000,
+        "samples": 10000
+      },
+      "runs": [
+        {
+          "loadMs": 272.990104,
+          "memoryDelta": {
+            "rss": 97148928,
+            "heapUsed": 73432,
+            "external": 86726848,
+            "arrayBuffers": 49449031
+          },
+          "gcRequested": true,
+          "hits": 10000,
+          "latencyMicroseconds": {
+            "p50": 2.9559999999833053,
+            "p95": 5.699999999990268,
+            "p99": 31.636999999989257
+          },
+          "throughput": {
+            "samples": 100000,
+            "hits": 100000,
+            "durationMs": 409.54585000000003,
+            "queriesPerSecond": 244172.90518265535
+          }
+        },
+        {
+          "loadMs": 200.273538,
+          "memoryDelta": {
+            "rss": 94593024,
+            "heapUsed": 71640,
+            "external": 86726848,
+            "arrayBuffers": 49449031
+          },
+          "gcRequested": true,
+          "hits": 10000,
+          "latencyMicroseconds": {
+            "p50": 4.0209999999660795,
+            "p95": 8.165000000019518,
+            "p99": 48.49300000000767
+          },
+          "throughput": {
+            "samples": 100000,
+            "hits": 100000,
+            "durationMs": 451.30792600000007,
+            "queriesPerSecond": 221578.20467792978
+          }
+        },
+        {
+          "loadMs": 365.790864,
+          "memoryDelta": {
+            "rss": 93401088,
+            "heapUsed": 71864,
+            "external": 86726848,
+            "arrayBuffers": 49449031
+          },
+          "gcRequested": true,
+          "hits": 10000,
+          "latencyMicroseconds": {
+            "p50": 2.977999999984604,
+            "p95": 6.077000000004773,
+            "p99": 35.66000000000713
+          },
+          "throughput": {
+            "samples": 100000,
+            "hits": 100000,
+            "durationMs": 414.04307800000004,
+            "queriesPerSecond": 241520.76272604655
+          }
+        }
+      ]
+    },
+    {
+      "runtime": "node",
+      "version": "24.19.0",
+      "loader": "ip2region/node",
+      "families": [4],
+      "bytes": 11122642,
+      "workload": {
+        "addresses": ["120.24.78.68", "8.8.8.8", "1.1.1.1", "192.0.2.1", "0.0.0.0", "255.255.255.255"],
+        "warmup": 1000,
+        "samples": 10000
+      },
+      "runs": [
+        {
+          "loadMs": 52.511404,
+          "memoryDelta": {
+            "rss": 25600000,
+            "heapUsed": 64776,
+            "external": 22774568,
+            "arrayBuffers": 11651506
+          },
+          "gcRequested": true,
+          "hits": 10000,
+          "latencyMicroseconds": {
+            "p50": 2.7169999999614447,
+            "p95": 4.318000000012034,
+            "p99": 9.42400000002408
+          },
+          "throughput": {
+            "samples": 100000,
+            "hits": 100000,
+            "durationMs": 291.574645,
+            "queriesPerSecond": 342965.34940478107
+          }
+        },
+        {
+          "loadMs": 74.426958,
+          "memoryDelta": {
+            "rss": 18014208,
+            "heapUsed": 66968,
+            "external": 22769576,
+            "arrayBuffers": 11646930
+          },
+          "gcRequested": true,
+          "hits": 10000,
+          "latencyMicroseconds": {
+            "p50": 2.6310000000080436,
+            "p95": 5.6489999999769225,
+            "p99": 35.390000000006694
+          },
+          "throughput": {
+            "samples": 100000,
+            "hits": 100000,
+            "durationMs": 310.47287800000004,
+            "queriesPerSecond": 322089.32594749867
+          }
+        },
+        {
+          "loadMs": 111.56360400000001,
+          "memoryDelta": {
+            "rss": 27443200,
+            "heapUsed": 64776,
+            "external": 22774568,
+            "arrayBuffers": 11651506
+          },
+          "gcRequested": true,
+          "hits": 10000,
+          "latencyMicroseconds": {
+            "p50": 3.008000000022548,
+            "p95": 4.95499999999538,
+            "p99": 30.79600000000937
+          },
+          "throughput": {
+            "samples": 100000,
+            "hits": 100000,
+            "durationMs": 331.21782699999994,
+            "queriesPerSecond": 301916.11636894173
+          }
+        }
+      ]
+    },
+    {
+      "runtime": "node",
+      "version": "24.19.0",
+      "loader": "ip2region/node",
+      "families": [6],
+      "bytes": 37277813,
+      "workload": {
+        "addresses": ["2001:4860:4860::8888", "2606:4700:4700::1111", "2001:db8::1", "2001:db8::2"],
+        "warmup": 1000,
+        "samples": 10000
+      },
+      "runs": [
+        {
+          "loadMs": 176.993401,
+          "memoryDelta": {
+            "rss": 79151104,
+            "heapUsed": -185920,
+            "external": 75079918,
+            "arrayBuffers": 37802101
+          },
+          "gcRequested": true,
+          "hits": 10000,
+          "latencyMicroseconds": {
+            "p50": 4.362000000014632,
+            "p95": 10.096000000032745,
+            "p99": 81.4820000000509
+          },
+          "throughput": {
+            "samples": 100000,
+            "hits": 100000,
+            "durationMs": 666.8869070000001,
+            "queriesPerSecond": 149950.46229030253
+          }
+        },
+        {
+          "loadMs": 129.12145700000002,
+          "memoryDelta": {
+            "rss": 76627968,
+            "heapUsed": 64832,
+            "external": 75079918,
+            "arrayBuffers": 37802101
+          },
+          "gcRequested": true,
+          "hits": 10000,
+          "latencyMicroseconds": {
+            "p50": 4.273000000011962,
+            "p95": 8.555999999998676,
+            "p99": 84.86100000004626
+          },
+          "throughput": {
+            "samples": 100000,
+            "hits": 100000,
+            "durationMs": 599.445883,
+            "queriesPerSecond": 166820.73033772092
+          }
+        },
+        {
+          "loadMs": 136.03418999999997,
+          "memoryDelta": {
+            "rss": 78868480,
+            "heapUsed": 64888,
+            "external": 75079918,
+            "arrayBuffers": 37802101
+          },
+          "gcRequested": true,
+          "hits": 10000,
+          "latencyMicroseconds": {
+            "p50": 4.457000000002154,
+            "p95": 8.823000000006687,
+            "p99": 82.66900000000987
+          },
+          "throughput": {
+            "samples": 100000,
+            "hits": 100000,
+            "durationMs": 546.484518,
+            "queriesPerSecond": 182987.80058029018
+          }
+        }
+      ]
+    },
+    {
+      "runtime": "bun",
+      "version": "1.2.0",
+      "loader": "ip2region/bun",
+      "families": [4, 6],
+      "bytes": 48400455,
+      "workload": {
+        "addresses": [
+          "120.24.78.68",
+          "8.8.8.8",
+          "1.1.1.1",
+          "192.0.2.1",
+          "0.0.0.0",
+          "255.255.255.255",
+          "2001:4860:4860::8888",
+          "2606:4700:4700::1111",
+          "2001:db8::1",
+          "2001:db8::2"
+        ],
+        "warmup": 1000,
+        "samples": 10000
+      },
+      "runs": [
+        {
+          "loadMs": 396.98449300000004,
+          "memoryDelta": {
+            "rss": 116211712,
+            "heapUsed": 22421054,
+            "external": 49595910,
+            "arrayBuffers": 48400647
+          },
+          "gcRequested": true,
+          "hits": 10000,
+          "latencyMicroseconds": {
+            "p50": 5.534999999952106,
+            "p95": 11.737000000039188,
+            "p99": 44.9729999999704
+          },
+          "throughput": {
+            "samples": 100000,
+            "hits": 100000,
+            "durationMs": 554.855791,
+            "queriesPerSecond": 180227.00965195478
+          }
+        },
+        {
+          "loadMs": 678.851933,
+          "memoryDelta": {
+            "rss": 116047872,
+            "heapUsed": 22358836,
+            "external": 49595897,
+            "arrayBuffers": 48400647
+          },
+          "gcRequested": true,
+          "hits": 10000,
+          "latencyMicroseconds": {
+            "p50": 5.47099999994316,
+            "p95": 11.383000000023458,
+            "p99": 33.36300000000847
+          },
+          "throughput": {
+            "samples": 100000,
+            "hits": 100000,
+            "durationMs": 487.72651399999995,
+            "queriesPerSecond": 205032.93778283297
+          }
+        },
+        {
+          "loadMs": 466.1215900000001,
+          "memoryDelta": {
+            "rss": 115605504,
+            "heapUsed": 22419711,
+            "external": 49595221,
+            "arrayBuffers": 48400647
+          },
+          "gcRequested": true,
+          "hits": 10000,
+          "latencyMicroseconds": {
+            "p50": 6.435000000010405,
+            "p95": 16.038999999977932,
+            "p99": 96.98100000002796
+          },
+          "throughput": {
+            "samples": 100000,
+            "hits": 100000,
+            "durationMs": 551.9433079999999,
+            "queriesPerSecond": 181178.0277984637
+          }
+        }
+      ]
+    },
+    {
+      "runtime": "bun",
+      "version": "1.2.0",
+      "loader": "ip2region/bun",
+      "families": [4],
+      "bytes": 11122642,
+      "workload": {
+        "addresses": ["120.24.78.68", "8.8.8.8", "1.1.1.1", "192.0.2.1", "0.0.0.0", "255.255.255.255"],
+        "warmup": 1000,
+        "samples": 10000
+      },
+      "runs": [
+        {
+          "loadMs": 164.264634,
+          "memoryDelta": {
+            "rss": 37638144,
+            "heapUsed": 22361951,
+            "external": 22876940,
+            "arrayBuffers": 22245476
+          },
+          "gcRequested": true,
+          "hits": 10000,
+          "latencyMicroseconds": {
+            "p50": 4.255000000000564,
+            "p95": 9.937000000036278,
+            "p99": 68.13900000003059
+          },
+          "throughput": {
+            "samples": 100000,
+            "hits": 100000,
+            "durationMs": 366.269424,
+            "queriesPerSecond": 273023.06293522334
+          }
+        },
+        {
+          "loadMs": 161.240435,
+          "memoryDelta": {
+            "rss": 36675584,
+            "heapUsed": 22358770,
+            "external": 22877612,
+            "arrayBuffers": 22245476
+          },
+          "gcRequested": true,
+          "hits": 10000,
+          "latencyMicroseconds": {
+            "p50": 3.9970000000266737,
+            "p95": 9.198999999966873,
+            "p99": 59.56100000003062
+          },
+          "throughput": {
+            "samples": 100000,
+            "hits": 100000,
+            "durationMs": 323.25571199999996,
+            "queriesPerSecond": 309352.6155540912
+          }
+        },
+        {
+          "loadMs": 144.217531,
+          "memoryDelta": {
+            "rss": 37240832,
+            "heapUsed": 22355953,
+            "external": 22877617,
+            "arrayBuffers": 22245476
+          },
+          "gcRequested": true,
+          "hits": 10000,
+          "latencyMicroseconds": {
+            "p50": 3.7780000000111613,
+            "p95": 7.453999999995631,
+            "p99": 22.81000000002109
+          },
+          "throughput": {
+            "samples": 100000,
+            "hits": 100000,
+            "durationMs": 295.60947500000003,
+            "queriesPerSecond": 338284.1500598044
+          }
+        }
+      ]
+    },
+    {
+      "runtime": "bun",
+      "version": "1.2.0",
+      "loader": "ip2region/bun",
+      "families": [6],
+      "bytes": 37277813,
+      "workload": {
+        "addresses": ["2001:4860:4860::8888", "2606:4700:4700::1111", "2001:db8::1", "2001:db8::2"],
+        "warmup": 1000,
+        "samples": 10000
+      },
+      "runs": [
+        {
+          "loadMs": 249.747388,
+          "memoryDelta": {
+            "rss": 88514560,
+            "heapUsed": 74667815,
+            "external": 37921149,
+            "arrayBuffers": 37277909
+          },
+          "gcRequested": true,
+          "hits": 10000,
+          "latencyMicroseconds": {
+            "p50": 7.790999999997439,
+            "p95": 13.1579999999758,
+            "p99": 62.15900000000829
+          },
+          "throughput": {
+            "samples": 100000,
+            "hits": 100000,
+            "durationMs": 661.2158080000002,
+            "queriesPerSecond": 151236.55361851238
+          }
+        },
+        {
+          "loadMs": 240.740618,
+          "memoryDelta": {
+            "rss": 88748032,
+            "heapUsed": 74679388,
+            "external": 37921150,
+            "arrayBuffers": 37277909
+          },
+          "gcRequested": true,
+          "hits": 10000,
+          "latencyMicroseconds": {
+            "p50": 7.799000000034084,
+            "p95": 12.982999999962885,
+            "p99": 40.53299999998217
+          },
+          "throughput": {
+            "samples": 100000,
+            "hits": 100000,
+            "durationMs": 625.0512070000001,
+            "queriesPerSecond": 159986.89208194744
+          }
+        },
+        {
+          "loadMs": 256.784367,
+          "memoryDelta": {
+            "rss": 88928256,
+            "heapUsed": 74670616,
+            "external": 37921149,
+            "arrayBuffers": 37277909
+          },
+          "gcRequested": true,
+          "hits": 10000,
+          "latencyMicroseconds": {
+            "p50": 8.092000000033295,
+            "p95": 15.28000000001839,
+            "p99": 96.58300000000963
+          },
+          "throughput": {
+            "samples": 100000,
+            "hits": 100000,
+            "durationMs": 737.9218440000001,
+            "queriesPerSecond": 135515.70645739007
+          }
+        }
+      ]
+    },
+    {
+      "runtime": "bun",
+      "version": "1.4.4",
+      "loader": "ip2region/bun",
+      "families": [4, 6],
+      "bytes": 48400455,
+      "workload": {
+        "addresses": [
+          "120.24.78.68",
+          "8.8.8.8",
+          "1.1.1.1",
+          "192.0.2.1",
+          "0.0.0.0",
+          "255.255.255.255",
+          "2001:4860:4860::8888",
+          "2606:4700:4700::1111",
+          "2001:db8::1",
+          "2001:db8::2"
+        ],
+        "warmup": 1000,
+        "samples": 10000
+      },
+      "runs": [
+        {
+          "loadMs": 228.04825599999998,
+          "memoryDelta": {
+            "rss": 59473920,
+            "heapUsed": 49578575,
+            "external": 49543199,
+            "arrayBuffers": 48400647
+          },
+          "gcRequested": true,
+          "hits": 10000,
+          "latencyMicroseconds": {
+            "p50": 3.573000000017146,
+            "p95": 8.463000000006105,
+            "p99": 53.72799999997824
+          },
+          "throughput": {
+            "samples": 100000,
+            "hits": 100000,
+            "durationMs": 344.465906,
+            "queriesPerSecond": 290304.4924277644
+          }
+        },
+        {
+          "loadMs": 187.448896,
+          "memoryDelta": {
+            "rss": 62959616,
+            "heapUsed": 49580079,
+            "external": 49543359,
+            "arrayBuffers": 48400647
+          },
+          "gcRequested": true,
+          "hits": 10000,
+          "latencyMicroseconds": {
+            "p50": 2.9789999999820793,
+            "p95": 6.299000000012711,
+            "p99": 20.39099999998939
+          },
+          "throughput": {
+            "samples": 100000,
+            "hits": 100000,
+            "durationMs": 344.660531,
+            "queriesPerSecond": 290140.56152545067
+          }
+        },
+        {
+          "loadMs": 201.315173,
+          "memoryDelta": {
+            "rss": 61980672,
+            "heapUsed": 49579107,
+            "external": 49543395,
+            "arrayBuffers": 48400647
+          },
+          "gcRequested": true,
+          "hits": 10000,
+          "latencyMicroseconds": {
+            "p50": 3.2230000000481596,
+            "p95": 7.217999999994618,
+            "p99": 28.03799999998091
+          },
+          "throughput": {
+            "samples": 100000,
+            "hits": 100000,
+            "durationMs": 303.9260340000001,
+            "queriesPerSecond": 329027.42382378463
+          }
+        }
+      ]
+    },
+    {
+      "runtime": "bun",
+      "version": "1.4.4",
+      "loader": "ip2region/bun",
+      "families": [4],
+      "bytes": 11122642,
+      "workload": {
+        "addresses": ["120.24.78.68", "8.8.8.8", "1.1.1.1", "192.0.2.1", "0.0.0.0", "255.255.255.255"],
+        "warmup": 1000,
+        "samples": 10000
+      },
+      "runs": [
+        {
+          "loadMs": 62.39197,
+          "memoryDelta": {
+            "rss": 26161152,
+            "heapUsed": 11765922,
+            "external": 11730274,
+            "arrayBuffers": 11122738
+          },
+          "gcRequested": true,
+          "hits": 10000,
+          "latencyMicroseconds": {
+            "p50": 2.240999999997939,
+            "p95": 5.568000000010898,
+            "p99": 33.56200000000342
+          },
+          "throughput": {
+            "samples": 100000,
+            "hits": 100000,
+            "durationMs": 223.834876,
+            "queriesPerSecond": 446757.9038040524
+          }
+        },
+        {
+          "loadMs": 89.945979,
+          "memoryDelta": {
+            "rss": 26136576,
+            "heapUsed": 11765138,
+            "external": 11730274,
+            "arrayBuffers": 11122738
+          },
+          "gcRequested": true,
+          "hits": 10000,
+          "latencyMicroseconds": {
+            "p50": 2.9680000000098516,
+            "p95": 6.759000000016613,
+            "p99": 49.20300000000566
+          },
+          "throughput": {
+            "samples": 100000,
+            "hits": 100000,
+            "durationMs": 246.284823,
+            "queriesPerSecond": 406033.95199873927
+          }
+        },
+        {
+          "loadMs": 79.590173,
+          "memoryDelta": {
+            "rss": 25513984,
+            "heapUsed": 11765410,
+            "external": 11730210,
+            "arrayBuffers": 11122738
+          },
+          "gcRequested": true,
+          "hits": 10000,
+          "latencyMicroseconds": {
+            "p50": 1.9489999999962038,
+            "p95": 4.36900000002538,
+            "p99": 27.204000000011774
+          },
+          "throughput": {
+            "samples": 100000,
+            "hits": 100000,
+            "durationMs": 236.70196299999998,
+            "queriesPerSecond": 422472.2040011135
+          }
+        }
+      ]
+    },
+    {
+      "runtime": "bun",
+      "version": "1.4.4",
+      "loader": "ip2region/bun",
+      "families": [6],
+      "bytes": 37277813,
+      "workload": {
+        "addresses": ["2001:4860:4860::8888", "2606:4700:4700::1111", "2001:db8::1", "2001:db8::2"],
+        "warmup": 1000,
+        "samples": 10000
+      },
+      "runs": [
+        {
+          "loadMs": 122.379824,
+          "memoryDelta": {
+            "rss": 50475008,
+            "heapUsed": 37920469,
+            "external": 37885381,
+            "arrayBuffers": 37277909
+          },
+          "gcRequested": true,
+          "hits": 10000,
+          "latencyMicroseconds": {
+            "p50": 3.7880000000143355,
+            "p95": 11.065000000002101,
+            "p99": 74.96999999997911
+          },
+          "throughput": {
+            "samples": 100000,
+            "hits": 100000,
+            "durationMs": 539.682105,
+            "queriesPerSecond": 185294.26689069116
+          }
+        },
+        {
+          "loadMs": 122.136078,
+          "memoryDelta": {
+            "rss": 51671040,
+            "heapUsed": 37919637,
+            "external": 37885445,
+            "arrayBuffers": 37277909
+          },
+          "gcRequested": true,
+          "hits": 10000,
+          "latencyMicroseconds": {
+            "p50": 3.775999999987789,
+            "p95": 9.36100000001261,
+            "p99": 43.59999999999786
+          },
+          "throughput": {
+            "samples": 100000,
+            "hits": 100000,
+            "durationMs": 513.356154,
+            "queriesPerSecond": 194796.5349607945
+          }
+        },
+        {
+          "loadMs": 111.137305,
+          "memoryDelta": {
+            "rss": 88190976,
+            "heapUsed": 75204502,
+            "external": 75168726,
+            "arrayBuffers": 74555818
+          },
+          "gcRequested": true,
+          "hits": 10000,
+          "latencyMicroseconds": {
+            "p50": 3.921999999988657,
+            "p95": 9.612000000004173,
+            "p99": 64.41899999998668
+          },
+          "throughput": {
+            "samples": 100000,
+            "hits": 100000,
+            "durationMs": 480.56785199999996,
+            "queriesPerSecond": 208087.16101966807
+          }
+        }
+      ]
+    },
+    {
+      "runtime": "deno",
+      "version": "2.0.0",
+      "loader": "ip2region/deno",
+      "families": [4, 6],
+      "bytes": 48400455,
+      "workload": {
+        "addresses": [
+          "120.24.78.68",
+          "8.8.8.8",
+          "1.1.1.1",
+          "192.0.2.1",
+          "0.0.0.0",
+          "255.255.255.255",
+          "2001:4860:4860::8888",
+          "2606:4700:4700::1111",
+          "2001:db8::1",
+          "2001:db8::2"
+        ],
+        "warmup": 1000,
+        "samples": 10000
+      },
+      "runs": [
+        {
+          "loadMs": 181.356119,
+          "memoryDelta": {
+            "rss": 101011456,
+            "heapUsed": 69296,
+            "external": 86661308,
+            "arrayBuffers": null
+          },
+          "gcRequested": true,
+          "hits": 10000,
+          "latencyMicroseconds": {
+            "p50": 3.7140000000022155,
+            "p95": 6.553999999994176,
+            "p99": 38.255999999989854
+          },
+          "throughput": {
+            "samples": 100000,
+            "hits": 100000,
+            "durationMs": 501.226567,
+            "queriesPerSecond": 199510.57382798305
+          }
+        },
+        {
+          "loadMs": 212.43713499999998,
+          "memoryDelta": {
+            "rss": 102600704,
+            "heapUsed": 64176,
+            "external": 86661308,
+            "arrayBuffers": null
+          },
+          "gcRequested": true,
+          "hits": 10000,
+          "latencyMicroseconds": {
+            "p50": 3.742999999985841,
+            "p95": 7.5130000000172,
+            "p99": 72.88199999999279
+          },
+          "throughput": {
+            "samples": 100000,
+            "hits": 100000,
+            "durationMs": 582.081224,
+            "queriesPerSecond": 171797.32978296513
+          }
+        },
+        {
+          "loadMs": 196.739195,
+          "memoryDelta": {
+            "rss": 103165952,
+            "heapUsed": 65080,
+            "external": 86661308,
+            "arrayBuffers": null
+          },
+          "gcRequested": true,
+          "hits": 10000,
+          "latencyMicroseconds": {
+            "p50": 3.7029999999731444,
+            "p95": 6.581000000011272,
+            "p99": 37.742000000037024
+          },
+          "throughput": {
+            "samples": 100000,
+            "hits": 100000,
+            "durationMs": 489.200326,
+            "queriesPerSecond": 204415.23581486737
+          }
+        }
+      ]
+    },
+    {
+      "runtime": "deno",
+      "version": "2.0.0",
+      "loader": "ip2region/deno",
+      "families": [4],
+      "bytes": 11122642,
+      "workload": {
+        "addresses": ["120.24.78.68", "8.8.8.8", "1.1.1.1", "192.0.2.1", "0.0.0.0", "255.255.255.255"],
+        "warmup": 1000,
+        "samples": 10000
+      },
+      "runs": [
+        {
+          "loadMs": 72.35955799999999,
+          "memoryDelta": {
+            "rss": 36007936,
+            "heapUsed": 58120,
+            "external": 22704036,
+            "arrayBuffers": null
+          },
+          "gcRequested": true,
+          "hits": 10000,
+          "latencyMicroseconds": {
+            "p50": 3.7560000000098626,
+            "p95": 6.556999999986601,
+            "p99": 69.63000000001784
+          },
+          "throughput": {
+            "samples": 100000,
+            "hits": 100000,
+            "durationMs": 438.23764900000003,
+            "queriesPerSecond": 228186.69328887347
+          }
+        },
+        {
+          "loadMs": 76.139612,
+          "memoryDelta": {
+            "rss": 34934784,
+            "heapUsed": 56912,
+            "external": 22704036,
+            "arrayBuffers": null
+          },
+          "gcRequested": true,
+          "hits": 10000,
+          "latencyMicroseconds": {
+            "p50": 3.195000000005166,
+            "p95": 5.025999999986652,
+            "p99": 65.85799999999153
+          },
+          "throughput": {
+            "samples": 100000,
+            "hits": 100000,
+            "durationMs": 445.507644,
+            "queriesPerSecond": 224463.0397407951
+          }
+        },
+        {
+          "loadMs": 68.35227,
+          "memoryDelta": {
+            "rss": 35852288,
+            "heapUsed": 58264,
+            "external": 22704036,
+            "arrayBuffers": null
+          },
+          "gcRequested": true,
+          "hits": 10000,
+          "latencyMicroseconds": {
+            "p50": 3.240999999988503,
+            "p95": 4.809999999991987,
+            "p99": 36.50400000000786
+          },
+          "throughput": {
+            "samples": 100000,
+            "hits": 100000,
+            "durationMs": 355.774081,
+            "queriesPerSecond": 281077.2491321536
+          }
+        }
+      ]
+    },
+    {
+      "runtime": "deno",
+      "version": "2.0.0",
+      "loader": "ip2region/deno",
+      "families": [6],
+      "bytes": 37277813,
+      "workload": {
+        "addresses": ["2001:4860:4860::8888", "2606:4700:4700::1111", "2001:db8::1", "2001:db8::2"],
+        "warmup": 1000,
+        "samples": 10000
+      },
+      "runs": [
+        {
+          "loadMs": 107.328812,
+          "memoryDelta": {
+            "rss": 87900160,
+            "heapUsed": 57928,
+            "external": 75014378,
+            "arrayBuffers": null
+          },
+          "gcRequested": true,
+          "hits": 10000,
+          "latencyMicroseconds": {
+            "p50": 5.316999999990912,
+            "p95": 11.110999999999649,
+            "p99": 121.74199999998336
+          },
+          "throughput": {
+            "samples": 100000,
+            "hits": 100000,
+            "durationMs": 680.569213,
+            "queriesPerSecond": 146935.8267900373
+          }
+        },
+        {
+          "loadMs": 119.425105,
+          "memoryDelta": {
+            "rss": 87351296,
+            "heapUsed": 57888,
+            "external": 75014378,
+            "arrayBuffers": null
+          },
+          "gcRequested": true,
+          "hits": 10000,
+          "latencyMicroseconds": {
+            "p50": 5.254000000036285,
+            "p95": 8.003999999999678,
+            "p99": 85.54200000000378
+          },
+          "throughput": {
+            "samples": 100000,
+            "hits": 100000,
+            "durationMs": 1025.3037559999998,
+            "queriesPerSecond": 97532.07224181866
+          }
+        },
+        {
+          "loadMs": 109.50788,
+          "memoryDelta": {
+            "rss": 87363584,
+            "heapUsed": 57928,
+            "external": 75014378,
+            "arrayBuffers": null
+          },
+          "gcRequested": true,
+          "hits": 10000,
+          "latencyMicroseconds": {
+            "p50": 5.249999999989541,
+            "p95": 10.358999999994012,
+            "p99": 116.49599999998372
+          },
+          "throughput": {
+            "samples": 100000,
+            "hits": 100000,
+            "durationMs": 719.97363,
+            "queriesPerSecond": 138893.97588075552
+          }
+        }
+      ]
+    },
+    {
+      "runtime": "deno",
+      "version": "2.9.6",
+      "loader": "ip2region/deno",
+      "families": [4, 6],
+      "bytes": 48400455,
+      "workload": {
+        "addresses": [
+          "120.24.78.68",
+          "8.8.8.8",
+          "1.1.1.1",
+          "192.0.2.1",
+          "0.0.0.0",
+          "255.255.255.255",
+          "2001:4860:4860::8888",
+          "2606:4700:4700::1111",
+          "2001:db8::1",
+          "2001:db8::2"
+        ],
+        "warmup": 1000,
+        "samples": 10000
+      },
+      "runs": [
+        {
+          "loadMs": 203.522792,
+          "memoryDelta": {
+            "rss": 96403456,
+            "heapUsed": 56472,
+            "external": 86726826,
+            "arrayBuffers": null
+          },
+          "gcRequested": true,
+          "hits": 10000,
+          "latencyMicroseconds": {
+            "p50": 4.318000000012034,
+            "p95": 9.422999999969761,
+            "p99": 74.60500000001957
+          },
+          "throughput": {
+            "samples": 100000,
+            "hits": 100000,
+            "durationMs": 531.7015879999999,
+            "queriesPerSecond": 188075.42098219204
+          }
+        },
+        {
+          "loadMs": 216.095426,
+          "memoryDelta": {
+            "rss": 95612928,
+            "heapUsed": 55920,
+            "external": 86726826,
+            "arrayBuffers": null
+          },
+          "gcRequested": true,
+          "hits": 10000,
+          "latencyMicroseconds": {
+            "p50": 4.326999999989312,
+            "p95": 9.786000000019612,
+            "p99": 75.35100000001194
+          },
+          "throughput": {
+            "samples": 100000,
+            "hits": 100000,
+            "durationMs": 558.446472,
+            "queriesPerSecond": 179068.19187497706
+          }
+        },
+        {
+          "loadMs": 234.69935499999997,
+          "memoryDelta": {
+            "rss": 95199232,
+            "heapUsed": 55912,
+            "external": 86726826,
+            "arrayBuffers": null
+          },
+          "gcRequested": true,
+          "hits": 10000,
+          "latencyMicroseconds": {
+            "p50": 3.931999999963409,
+            "p95": 8.561999999983527,
+            "p99": 88.93999999997959
+          },
+          "throughput": {
+            "samples": 100000,
+            "hits": 100000,
+            "durationMs": 605.1981559999999,
+            "queriesPerSecond": 165235.13663845335
+          }
+        }
+      ]
+    },
+    {
+      "runtime": "deno",
+      "version": "2.9.6",
+      "loader": "ip2region/deno",
+      "families": [4],
+      "bytes": 11122642,
+      "workload": {
+        "addresses": ["120.24.78.68", "8.8.8.8", "1.1.1.1", "192.0.2.1", "0.0.0.0", "255.255.255.255"],
+        "warmup": 1000,
+        "samples": 10000
+      },
+      "runs": [
+        {
+          "loadMs": 107.056364,
+          "memoryDelta": {
+            "rss": 28827648,
+            "heapUsed": 50656,
+            "external": 22769554,
+            "arrayBuffers": null
+          },
+          "gcRequested": true,
+          "hits": 10000,
+          "latencyMicroseconds": {
+            "p50": 3.6580000000014934,
+            "p95": 6.482999999974481,
+            "p99": 61.79799999998181
+          },
+          "throughput": {
+            "samples": 100000,
+            "hits": 100000,
+            "durationMs": 423.99078599999996,
+            "queriesPerSecond": 235854.1819821528
+          }
+        },
+        {
+          "loadMs": 60.785061999999996,
+          "memoryDelta": {
+            "rss": 28864512,
+            "heapUsed": 50608,
+            "external": 22769554,
+            "arrayBuffers": null
+          },
+          "gcRequested": true,
+          "hits": 10000,
+          "latencyMicroseconds": {
+            "p50": 3.39799999999002,
+            "p95": 5.927999999983058,
+            "p99": 29.395999999991318
+          },
+          "throughput": {
+            "samples": 100000,
+            "hits": 100000,
+            "durationMs": 375.01862500000004,
+            "queriesPerSecond": 266653.42287999694
+          }
+        },
+        {
+          "loadMs": 91.801271,
+          "memoryDelta": {
+            "rss": 29229056,
+            "heapUsed": 51312,
+            "external": 22769554,
+            "arrayBuffers": null
+          },
+          "gcRequested": true,
+          "hits": 10000,
+          "latencyMicroseconds": {
+            "p50": 3.4160000000156288,
+            "p95": 6.766999999996415,
+            "p99": 50.11300000001029
+          },
+          "throughput": {
+            "samples": 100000,
+            "hits": 100000,
+            "durationMs": 492.066466,
+            "queriesPerSecond": 203224.57820159604
+          }
+        }
+      ]
+    },
+    {
+      "runtime": "deno",
+      "version": "2.9.6",
+      "loader": "ip2region/deno",
+      "families": [6],
+      "bytes": 37277813,
+      "workload": {
+        "addresses": ["2001:4860:4860::8888", "2606:4700:4700::1111", "2001:db8::1", "2001:db8::2"],
+        "warmup": 1000,
+        "samples": 10000
+      },
+      "runs": [
+        {
+          "loadMs": 137.96500099999997,
+          "memoryDelta": {
+            "rss": 81375232,
+            "heapUsed": 50176,
+            "external": 75079896,
+            "arrayBuffers": null
+          },
+          "gcRequested": true,
+          "hits": 10000,
+          "latencyMicroseconds": {
+            "p50": 4.823000000044431,
+            "p95": 10.133000000053016,
+            "p99": 90.97200000002204
+          },
+          "throughput": {
+            "samples": 100000,
+            "hits": 100000,
+            "durationMs": 792.4309580000001,
+            "queriesPerSecond": 126193.95922187075
+          }
+        },
+        {
+          "loadMs": 182.120229,
+          "memoryDelta": {
+            "rss": 81125376,
+            "heapUsed": 50456,
+            "external": 75079896,
+            "arrayBuffers": null
+          },
+          "gcRequested": true,
+          "hits": 10000,
+          "latencyMicroseconds": {
+            "p50": 5.7789999999897645,
+            "p95": 10.13600000001702,
+            "p99": 124.42400000003317
+          },
+          "throughput": {
+            "samples": 100000,
+            "hits": 100000,
+            "durationMs": 785.4952350000001,
+            "queriesPerSecond": 127308.21976278441
+          }
+        },
+        {
+          "loadMs": 138.14199299999999,
+          "memoryDelta": {
+            "rss": 80891904,
+            "heapUsed": 51264,
+            "external": 75079896,
+            "arrayBuffers": null
+          },
+          "gcRequested": true,
+          "hits": 10000,
+          "latencyMicroseconds": {
+            "p50": 5.0689999999917745,
+            "p95": 10.17500000000382,
+            "p99": 105.80699999999865
+          },
+          "throughput": {
+            "samples": 100000,
+            "hits": 100000,
+            "durationMs": 921.447885,
+            "queriesPerSecond": 108524.85705146525
+          }
+        }
+      ]
+    }
+  ],
+  "host": {
+    "platform": "linux",
+    "architecture": "x64",
+    "cpu": "INTEL(R) XEON(R) PLATINUM 8573C",
+    "logicalCPUs": 5,
+    "hostMemoryBytes": 18882674688
+  },
+  "datasets": [
+    {
+      "file": "ip2region_v4.xdb",
+      "sha256": "27ecba8c9a6d5e3b280aedbe7ee15c65372b179fbd0dad3845d8c608f2fcace1",
+      "bytes": 11122642
+    },
+    {
+      "file": "ip2region_v6.xdb",
+      "sha256": "939f6b46bd2b8bec3cf7c5ceb8ba782266ae9b1f35b5ba7916700dec0b7506ed",
+      "bytes": 37277813
+    }
+  ],
+  "notes": "OS page cache uncontrolled. Memory counters differ by runtime; unavailable counters are null. Latency includes parsing, allocation and clock overhead. This small cyclic workload measures coverage and speed, not geographic accuracy or production traffic."
+}

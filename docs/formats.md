@@ -10,7 +10,7 @@ byteOffset. They do not download data or depend on vendor runtime packages.
 (IPv4 or IPv6), vector indexes and 4-byte pointers. Unsupported structure,
 index policy or pointer width raises INVALID_DATABASE. Files declare a single
 address family; the default loader owns the selected readers and routes by family.
-`openDefault()` loads both; `openDefault({ families: [4] })` or `[6]` loads only
+`new IP2Region()` loads both; `new IP2Region({ families: [4] })` or `[6]` loads only
 the requested file. Families must be nonempty and distinct; capabilities and
 per-file metadata contain only the loaded families.
 IPv4 range endpoints use little endian; IPv6 endpoints retain all 128 bits in
@@ -21,11 +21,10 @@ Missing vectors, sparse gaps and zero-length records return null.
 
 XDB contains a UTF-8 region string, **not a field schema**. `createXDB(bytes)`
 defaults to uninterpreted raw records and advertises no geographic fields.
-`openDefault()` explicitly passes the frozen `IP2REGION_FIELDS` preset for the
+The native `IP2Region` bundled loader explicitly passes the frozen `IP2REGION_FIELDS` preset for the
 pinned current upstream snapshots:
 `country_name|region_name|city_name|isp|country_code`, documented upstream as
-`国家|省份|城市|ISP|iso-alpha2-code`. It is distinct from the old
-`country|region|province|city|ISP` layout. The adapter maps actual named columns,
+`国家|省份|城市|ISP|iso-alpha2-code`. The adapter maps actual named columns,
 retains `{ extensions: { region, raw } }`, and advertises configured capabilities.
 Unknown markers are omitted from standard fields; `Reserved` place markers
 remain only in raw data. It never translates names or infers a country code.
@@ -46,7 +45,7 @@ const rawSource = createXDB(bytes); // fields: null has the same behavior
 Column names must be distinct nonempty strings (prototype-reserved names are
 rejected). Extra names are preserved in `extensions.raw`; omitted fields or `fields: null`
 preserves the entire region string and advertises no standard geographic fields.
-There is no heuristic detection of legacy field layouts. Container structure
+Column count alone does not determine the field layout. Container structure
 version does not identify a data schema, language or geographic-data quality.
 
 The header timestamp supplies `builtAt`, not a promise that records were updated
@@ -57,10 +56,11 @@ build time and load time. See [data provenance](../data/README.md).
 To make custom files, use the upstream
 [XDB maker](https://github.com/lionsoul2014/ip2region/tree/f8b0792b0cd729f5b2593f690aeed225e49c1967/maker)
 for the actual address family and chosen region schema. Load with
-`openDatabase("/absolute/path/custom.xdb", createXDB)` or an explicitly configured
-factory to map standard fields. Passing `createXDB` directly returns raw records.
-The old `.db` reader, city ID, ZX IPv6wry and Java v1.9 maker instructions
-are removed. Changing a file extension does not convert its format.
+`new IP2Region({ database: { format: "xdb", path: "/absolute/path/custom.xdb" } })`
+from a native entry, adding `database.fields` to map standard fields. Omitted fields return raw records.
+For custom byte readers use `new IP2Region({ source: createXDB(bytes, options), ownership: "owned" })`
+from the memory-only root entry.
+Changing a file extension does not convert its format.
 
 ## IPIP IPDB
 

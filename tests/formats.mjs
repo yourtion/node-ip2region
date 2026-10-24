@@ -1,28 +1,27 @@
-import { createLookup } from "../dist/esm/index.js";
+import { IP2Region } from "../dist/esm/index.js";
 import { createXDB as createRawXDB, IP2REGION_FIELDS } from "../dist/esm/formats/ip2region-xdb.js";
 import { createIPIP } from "../dist/esm/formats/ipip-ipdb.js";
 import { createBIN } from "../dist/esm/formats/ip2location-bin.js";
 import { xdbFixture, ipipFixture, rewriteIPIP, binFixture } from "./fixtures.mjs";
 import { assert, equal, throws } from "./assert.mjs";
-
 const createXDB = (bytes, options = {}) => createRawXDB(bytes, { fields: IP2REGION_FIELDS, ...options });
-
 function view(input) {
   const bytes = new Uint8Array(input.length + 13);
   bytes.set(input, 7);
   return bytes.subarray(7, input.length + 7);
 }
-
 export function formatSuite(test) {
-  test("unconfigured XDB preserves arbitrary and legacy five-column records without geographic guesses", () => {
+  test("unconfigured XDB preserves arbitrary five-column records without geographic guesses", () => {
     for (const region of ["中国|0|广东省|深圳市|电信", "arbitrary text", "a|b"]) {
-      const query = createLookup(createRawXDB(xdbFixture({ region })), { ownership: "owned" });
+      const query = new IP2Region({
+        source: createRawXDB(xdbFixture({ region })),
+        ownership: "owned",
+      });
       equal(query.lookup("192.0.2.1"), { source: "ip2region-xdb", extensions: { region, raw: {} } });
       equal(query.capabilities.fields, []);
       query.close();
     }
   });
-
   test("BIN rejects strings inside or crossing structural regions", () => {
     for (const location of ["header", "v4", "v6", "index", "crossing"]) {
       const bytes = binFixture({ indexed: true });
@@ -43,18 +42,23 @@ export function formatSuite(test) {
       // required bytes; a string beginning there must still not span an index.
       if (location === "crossing") bytes[pointer] = 4;
       view.setUint32(base + bytes[1] * 4 + 8, pointer, true);
-      const query = createLookup(createBIN(bytes), { ownership: "owned" });
+      const query = new IP2Region({
+        source: createBIN(bytes),
+        ownership: "owned",
+      });
       throws(() => query.lookup("192.0.2.1"), "INVALID_DATABASE");
       query.close();
     }
   });
-
   test("IPIP handles large language maps and rejects impossible record layouts with stable errors", () => {
     const input = rewriteIPIP(ipipFixture(), (header) => {
       header.languages = { CN: 0 };
       for (let i = 0; i < 150000; i++) header.languages[`L${i}`] = 0;
     });
-    const query = createLookup(createIPIP(input), { ownership: "owned" });
+    const query = new IP2Region({
+      source: createIPIP(input),
+      ownership: "owned",
+    });
     equal(query.lookup("192.0.2.1").city.name, "First");
     equal(query.capabilities.languages.length, 150001);
     query.close();
@@ -67,7 +71,10 @@ export function formatSuite(test) {
   });
   test("all BIN product types expose only their declared standard fields", () => {
     for (let type = 1; type <= 26; type++) {
-      const query = createLookup(createBIN(binFixture({ type })), { ownership: "owned" });
+      const query = new IP2Region({
+        source: createBIN(binFixture({ type })),
+        ownership: "owned",
+      });
       for (const ip of ["192.0.2.1", "2001:db8::1"]) {
         const result = query.lookup(ip);
         equal(result.country, { code: "EX", name: "Example" });
@@ -82,7 +89,14 @@ export function formatSuite(test) {
   });
   test("XDB supports sparse IPv4 ranges, structure 2/3, endpoints, misses and close", () => {
     for (const structure of [2, 3]) {
-      const query = createLookup(createXDB(xdbFixture({ structure, edges: false, exclusive: structure === 3 })), {
+      const query = new IP2Region({
+        source: createXDB(
+          xdbFixture({
+            structure,
+            edges: false,
+            exclusive: structure === 3,
+          })
+        ),
         ownership: "owned",
       });
       for (const ip of ["192.0.2.0", "192.0.2.1", "192.0.2.2"]) {
@@ -94,7 +108,9 @@ export function formatSuite(test) {
       throws(() => query.lookup("::1"), "UNSUPPORTED_FAMILY");
       query.close();
       throws(() => query.lookup("192.0.2.1"), "CLOSED");
-      const edges = createLookup(createXDB(xdbFixture({ structure })));
+      const edges = new IP2Region({
+        source: createXDB(xdbFixture({ structure })),
+      });
       equal(edges.lookup("0.0.0.0").city.name, "First");
       equal(edges.lookup("255.255.255.255").city.name, "First");
       equal(edges.metadata.builtAt, "2024-01-01T00:00:00.000Z");
@@ -102,38 +118,50 @@ export function formatSuite(test) {
     }
   });
   test("XDB IPv6 retains all 128 bits, including low-bit neighbors and the last address", () => {
-    const query = createLookup(createXDB(xdbFixture({ family: 6 })), { ownership: "owned" });
+    const query = new IP2Region({
+      source: createXDB(xdbFixture({ family: 6 })),
+      ownership: "owned",
+    });
     for (const ip of ["::", "::1", "2001:db8::1", "ffff:ffff:ffff:ffff:ffff:ffff:ffff:ffff"])
       equal(query.lookup(ip).city.name, "First");
     for (const ip of ["::2", "2001:db8::2"]) equal(query.lookup(ip).city.name, "Second");
     for (const ip of ["::3", "2001:db8::3", "::ffff:192.0.2.1"]) equal(query.lookup(ip), null);
     throws(() => query.lookup("192.0.2.1"), "UNSUPPORTED_FAMILY");
     query.close();
-    const spanning = createLookup(
-      createXDB(xdbFixture({ edges: false, rows: [[0xc000ffffn, 0xc0020000n, "0|0|0|0|0"]] }))
-    );
+    const spanning = new IP2Region({
+      source: createXDB(xdbFixture({ edges: false, rows: [[0xc000ffffn, 0xc0020000n, "0|0|0|0|0"]] })),
+    });
     equal(spanning.lookup("192.1.0.0").country, undefined);
     equal(spanning.lookup("192.2.0.1"), null);
     spanning.close();
   });
-  test("XDB field layouts are explicit, preserve raw fields and never guess legacy schemas", () => {
+  test("XDB field layouts are explicit, preserve raw fields and never guess unconfigured schemas", () => {
     const fields = ["country_name", "region_name", "city_name", "isp", "extra"];
     const source = createXDB(xdbFixture({ region: "Example|0|First|0|kept" }), { fields });
     fields[0] = "changed";
-    const query = createLookup(source);
+    const query = new IP2Region({
+      source: source,
+    });
     equal(query.lookup("192.0.2.1").extensions.raw.extra, "kept");
     equal(query.lookup("192.0.2.1").country, { name: "Example" });
     equal(query.lookup("192.0.2.1").isp, undefined);
     equal(query.lookup("192.0.2.1").subdivisions, undefined);
     equal(query.capabilities.fields.includes("country.code"), false);
-    const raw = createLookup(createXDB(xdbFixture({ region: "arbitrary record" }), { fields: null }));
+    const raw = new IP2Region({
+      source: createXDB(xdbFixture({ region: "arbitrary record" }), { fields: null }),
+    });
     equal(raw.lookup("192.0.2.1").extensions, { region: "arbitrary record", raw: {} });
     equal(raw.capabilities.fields, []);
-    const empty = createLookup(createXDB(xdbFixture({ region: "" })));
+    const empty = new IP2Region({
+      source: createXDB(xdbFixture({ region: "" })),
+    });
     equal(empty.lookup("192.0.2.1"), null);
     empty.close();
     throws(
-      () => createLookup(createXDB(xdbFixture({ region: "short|record" }))).lookup("192.0.2.1"),
+      () =>
+        new IP2Region({
+          source: createXDB(xdbFixture({ region: "short|record" })),
+        }).lookup("192.0.2.1"),
       "INVALID_DATABASE"
     );
     for (const fields of [[], ["x", "x"], [""], ["__proto__"]])
@@ -166,10 +194,15 @@ export function formatSuite(test) {
       }
       const bytes = xdbFixture({ family });
       bytes[256 + 65536 * 8] = 255;
-      throws(() => createLookup(createXDB(bytes)).lookup(family === 4 ? "0.0.0.0" : "::"), "INVALID_DATABASE");
+      throws(
+        () =>
+          new IP2Region({
+            source: createXDB(bytes),
+          }).lookup(family === 4 ? "0.0.0.0" : "::"),
+        "INVALID_DATABASE"
+      );
     }
   });
-
   for (const [name, fixture, factory] of [
     ["XDB", xdbFixture, createXDB],
     ["IPIP", ipipFixture, createIPIP],
@@ -179,7 +212,10 @@ export function formatSuite(test) {
       const input = view(fixture());
       const adapter = factory(input, { metadata: { id: "custom", dataVersion: "fixed" } });
       input.fill(0);
-      const query = createLookup(adapter, { ownership: "owned" });
+      const query = new IP2Region({
+        source: adapter,
+        ownership: "owned",
+      });
       equal(query.lookup("192.0.2.1").city, { name: "First" });
       equal(query.lookup("192.0.2.1").source, "custom");
       equal(query.metadata.dataVersion, "fixed");
@@ -194,10 +230,11 @@ export function formatSuite(test) {
         throws(() => factory(data), "INVALID_DATABASE");
     });
   }
-
   test("IPIP maps metadata field names and languages without guessing locations", () => {
     const input = ipipFixture();
-    const query = createLookup(createIPIP(input));
+    const query = new IP2Region({
+      source: createIPIP(input),
+    });
     const result = query.lookup("192.0.2.1");
     equal(result.country, { code: "EX", name: "Example" });
     equal(result.isp, "Example ISP");
@@ -210,14 +247,20 @@ export function formatSuite(test) {
     equal(query.lookup("::2").city.name, "Tiny two");
     equal(query.lookup("2001:db8::3"), null);
     equal(query.lookup("192.0.3.1"), null);
-    equal(createLookup(createIPIP(input, { language: "EN" })).lookup("192.0.2.1").country.name, "Example (EN)");
+    equal(
+      new IP2Region({
+        source: createIPIP(input, { language: "EN" }),
+      }).lookup("192.0.2.1").country.name,
+      "Example (EN)"
+    );
     throws(() => createIPIP(input, { language: "FR" }), "UNSUPPORTED_LANGUAGE");
     equal(query.metadata.builtAt, "2024-01-01T00:00:00.000Z");
     equal(query.metadata.dataVersion, undefined);
   });
-
   test("IPIP supports first/last addresses, family declarations and absent optional fields", () => {
-    const query = createLookup(createIPIP(ipipFixture()));
+    const query = new IP2Region({
+      source: createIPIP(ipipFixture()),
+    });
     equal(query.lookup("0.0.0.0").city.name, "Zero");
     equal(query.lookup("255.255.255.255").city.name, "Maximum");
     equal(query.lookup("ffff:ffff:ffff:ffff:ffff:ffff:ffff:ffff").city.name, "Maximum");
@@ -225,19 +268,26 @@ export function formatSuite(test) {
       [1, "::1"],
       [2, "192.0.2.1"],
     ])
-      throws(() => createLookup(createIPIP(ipipFixture({ version }))).lookup(unsupported), "UNSUPPORTED_FAMILY");
-    const only = createLookup(
-      createIPIP(ipipFixture({ fields: ["country_name"], values: { country_name: "United States" } }))
-    );
+      throws(
+        () =>
+          new IP2Region({
+            source: createIPIP(ipipFixture({ version })),
+          }).lookup(unsupported),
+        "UNSUPPORTED_FAMILY"
+      );
+    const only = new IP2Region({
+      source: createIPIP(ipipFixture({ fields: ["country_name"], values: { country_name: "United States" } })),
+    });
     const result = only.lookup("192.0.2.1");
     equal(result.country, { name: "United States" });
     equal(result.city, undefined);
     equal(result.isp, undefined);
-    const asOnly = createLookup(createIPIP(ipipFixture({ fields: ["asn_organization"] }))).lookup("192.0.2.1");
+    const asOnly = new IP2Region({
+      source: createIPIP(ipipFixture({ fields: ["asn_organization"] })),
+    }).lookup("192.0.2.1");
     equal(asOnly.organization, "Example AS");
     equal(asOnly.isp, undefined);
   });
-
   test("IPIP rejects malformed metadata, corrupt pointers, short language records and cycles", () => {
     for (const edit of [
       (m) => {
@@ -264,16 +314,29 @@ export function formatSuite(test) {
     const short = rewriteIPIP(ipipFixture(), (m) => {
       m.languages.CN = 1000;
     });
-    throws(() => createLookup(createIPIP(short)).lookup("192.0.2.1"), "INVALID_DATABASE");
+    throws(
+      () =>
+        new IP2Region({
+          source: createIPIP(short),
+        }).lookup("192.0.2.1"),
+      "INVALID_DATABASE"
+    );
     const cycle = ipipFixture({ version: 2 });
     const body = new DataView(cycle.buffer).getUint32(0) + 4;
     new DataView(cycle.buffer).setUint32(body, 0);
-    throws(() => createLookup(createIPIP(cycle)).lookup("::1"), "INVALID_DATABASE");
+    throws(
+      () =>
+        new IP2Region({
+          source: createIPIP(cycle),
+        }).lookup("::1"),
+      "INVALID_DATABASE"
+    );
   });
-
   test("BIN supports indexed and unindexed tables and all 128 IPv6 bits", () => {
     for (const indexed of [false, true]) {
-      const query = createLookup(createBIN(binFixture({ indexed })));
+      const query = new IP2Region({
+        source: createBIN(binFixture({ indexed })),
+      });
       const result = query.lookup("192.0.2.1");
       equal(result.country, { code: "EX", name: "Example" });
       equal(result.city.name, "First");
@@ -288,28 +351,30 @@ export function formatSuite(test) {
       equal(query.metadata.builtAt, "2026-01-01");
     }
   });
-
   test("BIN declares actual product capabilities, separates ASN/ISP and omits unpurchased fields", () => {
-    const minimal = createLookup(createBIN(binFixture({ type: 1, ipv6: false })));
+    const minimal = new IP2Region({
+      source: createBIN(binFixture({ type: 1, ipv6: false })),
+    });
     equal(minimal.capabilities.families, [4]);
     equal(minimal.capabilities.fields, ["country.code", "country.name"]);
     const result = minimal.lookup("192.0.2.1");
     equal(result.city, undefined);
     equal(result.isp, undefined);
     throws(() => minimal.lookup("::1"), "UNSUPPORTED_FAMILY");
-    const db26 = createLookup(createBIN(binFixture({ type: 26, isp: "-" })));
+    const db26 = new IP2Region({
+      source: createBIN(binFixture({ type: 26, isp: "-" })),
+    });
     const full = db26.lookup("192.0.2.1");
     equal(full.asn, 64500);
     equal(full.organization, "Example AS");
     equal(full.isp, undefined);
-    const ad = createLookup(
-      createBIN(
+    const ad = new IP2Region({
+      source: createBIN(
         binFixture({ isp: "This parameter is unavailable for selected data file. Please upgrade the data file." })
-      )
-    );
+      ),
+    });
     equal(ad.lookup("192.0.2.1").isp, undefined);
   });
-
   test("BIN rejects invalid sizes, tables, indexes, record pointers, UTF-8 and reader error sentinels", () => {
     for (const edit of [
       (b) => {
@@ -332,14 +397,29 @@ export function formatSuite(test) {
     const dv = new DataView(pointer.buffer);
     const base = dv.getUint32(9, true) - 1;
     dv.setUint32(base + 20 + 4, 0xffffffff, true);
-    throws(() => createLookup(createBIN(pointer)).lookup("192.0.2.1"), "INVALID_DATABASE");
+    throws(
+      () =>
+        new IP2Region({
+          source: createBIN(pointer),
+        }).lookup("192.0.2.1"),
+      "INVALID_DATABASE"
+    );
     const utf8 = binFixture();
     const view = new DataView(utf8.buffer);
     const country = view.getUint32(base + 20 + 4, true);
     utf8[country + 4] = 0xff;
-    throws(() => createLookup(createBIN(utf8)).lookup("192.0.2.1"), "INVALID_DATABASE");
     throws(
-      () => createLookup(createBIN(binFixture({ countryName: "MISSING_FILE" }))).lookup("192.0.2.1"),
+      () =>
+        new IP2Region({
+          source: createBIN(utf8),
+        }).lookup("192.0.2.1"),
+      "INVALID_DATABASE"
+    );
+    throws(
+      () =>
+        new IP2Region({
+          source: createBIN(binFixture({ countryName: "MISSING_FILE" })),
+        }).lookup("192.0.2.1"),
       "INVALID_DATABASE"
     );
   });

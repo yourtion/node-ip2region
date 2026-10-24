@@ -2,9 +2,8 @@
 
 Both unmodified files come from [lionsoul2014/ip2region](https://github.com/lionsoul2014/ip2region/tree/f8b0792b0cd729f5b2593f690aeed225e49c1967/data),
 pinned upstream revision `f8b0792b0cd729f5b2593f690aeed225e49c1967`, retrieved
-2026-10-23. `openDefault()` explicitly loads both and routes by address family.
+2026-10-23. `new IP2Region()` from a runtime entry explicitly loads both and routes by address family.
 The `families: [4]` or `[6]` option reads only the selected file.
-The old `ip2region.db` and ZX IPv6wry files are removed.
 
 | File             |      Bytes | Header build time (UTC) | SHA-256                                                            |
 | ---------------- | ---------: | ----------------------- | ------------------------------------------------------------------ |
@@ -13,8 +12,7 @@ The old `ip2region.db` and ZX IPv6wry files are removed.
 
 Both use XDB structure 3, vector indexes and 4-byte pointers. The documented
 upstream schema at this revision is `国家|省份|城市|ISP|iso-alpha2-code`, mapped
-as `country_name|region_name|city_name|isp|country_code`. This is unrelated to the
-old five-field `.db` schema. The bundled loader explicitly selects this layout;
+as `country_name|region_name|city_name|isp|country_code`. The bundled loader explicitly selects this layout;
 the generic XDB reader defaults to uninterpreted raw text. Custom XDB records
 require their own field layout for standard geographic fields.
 
