@@ -6,19 +6,35 @@ function invalid(): never {
 }
 
 function ipv4(input: string): Uint8Array {
-  const parts = input.split(".");
-  if (parts.length !== 4) invalid();
-  return Uint8Array.from(
-    parts.map((part) => {
-      if (!/^(0|[1-9][0-9]{0,2})$/.test(part) || Number(part) > 255) invalid();
-      return Number(part);
-    })
-  );
+  const bytes = new Uint8Array(4);
+  let octet = 0;
+  let start = 0;
+  let value = 0;
+  for (let i = 0; i <= input.length; i++) {
+    if (i === input.length || input.charCodeAt(i) === 46) {
+      const length = i - start;
+      if (length === 0 || length > 3 || (length > 1 && input.charCodeAt(start) === 48) || value > 255 || octet === 4)
+        invalid();
+      bytes[octet++] = value;
+      value = 0;
+      start = i + 1;
+    } else {
+      const digit = input.charCodeAt(i) - 48;
+      if (digit < 0 || digit > 9) invalid();
+      value = value * 10 + digit;
+    }
+  }
+  if (octet !== 4) invalid();
+  return bytes;
 }
 
 function valueOf(bytes: Uint8Array): bigint {
   let result = 0n;
-  for (const byte of bytes) result = (result << 8n) | BigInt(byte);
+  for (let i = 0; i < bytes.length; i += 4) {
+    // Multiplication keeps the high byte unsigned before conversion to BigInt.
+    const word = bytes[i] * 0x1000000 + (bytes[i + 1] << 16) + (bytes[i + 2] << 8) + bytes[i + 3];
+    result = (result << 32n) | BigInt(word);
+  }
   return result;
 }
 
@@ -53,7 +69,8 @@ export function parseIP(input: string): ParsedIP {
   if (typeof input !== "string" || input.length === 0 || input.length > 45 || input.trim() !== input) invalid();
   if (!input.includes(":")) {
     const bytes = ipv4(input);
-    return { address: [...bytes].join("."), family: 4, bytes, value: valueOf(bytes) };
+    // Strict decimal parsing already guarantees the canonical spelling.
+    return { address: input, family: 4, bytes, value: valueOf(bytes) };
   }
   if (!/^[0-9a-f:.]+$/i.test(input)) invalid();
   let text = input;

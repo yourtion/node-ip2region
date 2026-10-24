@@ -29,7 +29,25 @@ export const invalidIPs = [
   " 192.0.2.1",
   "192.0.2.1\n",
   "01.2.3.4",
+  "1.02.3.4",
+  "1.2.03.4",
+  "1.2.3.04",
+  "1.2.3.000",
   "256.0.0.1",
+  "1.2.3.256",
+  "1.2.3.999",
+  "1.2.3.1234",
+  "1.2.3.4.5",
+  ".1.2.3.4",
+  "1.2.3.4.",
+  "1..3.4",
+  "1.2..4",
+  "1.2.3.",
+  "1.2.3.-1",
+  "1.2.3.+1",
+  "1.2.3.1e2",
+  "1.2.3.１",
+  "1.2.3.4\u0000",
   "127.1",
   "0x7f000001",
   "1.2.3.4:80",
@@ -44,6 +62,9 @@ export const invalidIPs = [
   "1:2:3:4:5:6:7:",
   "::ffff:192.0.2.256",
   "::ffff:192.0.02.1",
+  "::ffff:192.0.2.01",
+  "::ffff:192.0.2.1.",
+  "::ffff:192.0.2.+1",
   "1:::2",
   "::gggg",
   ":::1",
@@ -64,6 +85,35 @@ export function coreSuite(test) {
   });
   test("invalid inputs, scopes and port syntax have a stable error", () => {
     for (const input of invalidIPs) throws(() => parseIP(input), "INVALID_IP");
+  });
+  test("every decimal octet round-trips without changing its canonical spelling", () => {
+    for (let position = 0; position < 4; position++) {
+      for (let value = 0; value <= 255; value++) {
+        const bytes = [192, 0, 2, 1];
+        bytes[position] = value;
+        const address = bytes.join(".");
+        const parsed = parseIP(address);
+        equal(parsed.address, address);
+        equal(parsed.bytes, bytes);
+        throws(() => parseIP(bytes.map((byte, i) => (i === position ? `0${byte}` : byte)).join(".")), "INVALID_IP");
+      }
+    }
+  });
+  test("address integers retain every bit across unsigned word boundaries", () => {
+    for (const width of [4, 16]) {
+      const maximum = (1n << BigInt(width * 8)) - 1n;
+      const values = [0n, maximum];
+      for (let bit = 0; bit < width * 8; bit++) values.push(1n << BigInt(bit), maximum ^ (1n << BigInt(bit)));
+      for (const value of values) {
+        const hex = value.toString(16).padStart(width * 2, "0");
+        const bytes = hex.match(/../g).map((pair) => Number.parseInt(pair, 16));
+        const input = width === 4 ? bytes.join(".") : hex.match(/.{4}/g).join(":").toUpperCase();
+        const parsed = parseIP(input);
+        equal(parsed.bytes, bytes);
+        equal(parsed.value, value);
+        equal(parseIP(parsed.address).value, value);
+      }
+    }
   });
   test("functions receive canonical addresses and parsed context", () => {
     const query = new IP2Region({

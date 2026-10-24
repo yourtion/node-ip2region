@@ -4,10 +4,10 @@ Local validation on the Linux x64 cloud worker, 2026-10-24:
 
 | Consumer / check                                                      | Result                  |
 | --------------------------------------------------------------------- | ----------------------- |
-| Node 24.19.0 core, independent-reader and release-helper tests        | 71 tests passed         |
-| Node 22.12.0 / 24.19.0 real-tarball shared suite                      | 57 tests passed on each |
-| Bun 1.2.0 / 1.4.4 real-tarball shared suite, native loader            | 55 tests passed on each |
-| Deno 2.0.0 / 2.9.6 real-tarball shared suite, native loader           | 55 tests passed on each |
+| Node 24.19.0 core, independent-reader and release-helper tests        | 73 tests passed         |
+| Node 22.12.0 / 24.19.0 real-tarball shared suite                      | 59 tests passed on each |
+| Bun 1.2.0 / 1.4.4 real-tarball shared suite, native loader            | 57 tests passed on each |
+| Deno 2.0.0 / 2.9.6 real-tarball shared suite, native loader           | 57 tests passed on each |
 | Public custom adapter examples, shipped in the tarball                | 17 tests per runtime    |
 | Packaged examples checked against actual public declarations          | Passed                  |
 | ESM, CJS, mixed-module error propagation                              | Passed                  |
@@ -21,8 +21,12 @@ Local validation on the Linux x64 cloud worker, 2026-10-24:
 | CI and release workflows checked with actionlint 1.7.7                | Passed                  |
 | Recorded 2026-10-23 benchmark matrix, before the constructor API      | 54 runs passed          |
 | Repository-only XDB matrix, Node/Bun/Deno, 2026-10-24                 | 60 runs verified        |
+| Parsing optimization versus main, Node/Bun/Deno, 2026-10-24           | 120 runs verified       |
 
 The same byte fixtures and expected results are used across the runtimes.
+Parser regressions additionally exercise all 256 values in every IPv4 octet,
+reject leading-zero variants, and check every set/cleared bit across IPv4 and
+IPv6 unsigned word boundaries using independently constructed hexadecimal values.
 Checks cover complete 128-bit IPv6 values, mapped-address policy, first/last
 addresses, malformed literals, sparse XDB ranges and vector indexes, metadata language/family
 restrictions, truncated/corrupt files, fields/capabilities for DB1–DB26,

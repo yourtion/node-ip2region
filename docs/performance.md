@@ -39,10 +39,64 @@ family, checks expected records decoded directly from the XDB index, warms up
 20,000 queries, then measures 10,000 individual latencies and 100,000 queries for
 throughput. Each case runs in five sequential fresh processes.
 
-### Results, 2026-10-24
+### IP parsing optimization, 2026-10-24
+
+CPU sampling of standard-record queries identified IPv4 splitting, mapping,
+canonical string reconstruction and per-byte BigInt assembly as recurring costs.
+The parser now scans IPv4 decimal characters into its byte array, reuses the
+validated canonical input and assembles address integers in unsigned 32-bit
+groups. IPv6 parsing also benefits from the grouped integer conversion. Strict
+literal rules, canonical IPv6 spelling and complete 128-bit values are preserved.
+
+The comparison uses a separately built main revision
+`9bd36dbeedeffd50c92613a0184d4a4feb266f66` as the baseline, and the optimized
+working tree identified by source/compiled hashes in the
+[raw report](benchmarks/2026-10-24-ip-parsing.json). Both sides run on the same
+Linux x64 host, with the same files, 4,096-address corpus and mapping mode.
+Each case uses 20,000 warm-up queries, 10,000 latency samples and **500,000**
+throughput queries in each of five fresh processes. All 120 workers verified
+every corpus result and their timed output checksum. No other library is measured.
+
+Standard-record throughput, median queries per second:
+
+| Runtime      | Family | Baseline | Optimized | Change |
+| ------------ | ------ | -------: | --------: | -----: |
+| Node 24.19.0 | IPv4   |  259,123 |   479,727 | +85.1% |
+| Node 24.19.0 | IPv6   |  150,312 |   174,450 | +16.1% |
+| Bun 1.4.4    | IPv4   |  379,940 |   699,925 | +84.2% |
+| Bun 1.4.4    | IPv6   |  190,258 |   237,225 | +24.7% |
+| Deno 2.9.6   | IPv4   |  190,732 |   333,727 | +75.0% |
+| Deno 2.9.6   | IPv6   |  132,689 |   150,633 | +13.5% |
+
+Raw-record throughput, median queries per second:
+
+| Runtime      | Family | Baseline | Optimized |  Change |
+| ------------ | ------ | -------: | --------: | ------: |
+| Node 24.19.0 | IPv4   |  398,092 | 1,227,909 | +208.4% |
+| Node 24.19.0 | IPv6   |  187,936 |   230,565 |  +22.7% |
+| Bun 1.4.4    | IPv4   |  524,384 | 1,257,716 | +139.8% |
+| Bun 1.4.4    | IPv6   |  197,847 |   283,087 |  +43.1% |
+| Deno 2.9.6   | IPv4   |  297,754 |   584,739 |  +96.4% |
+| Deno 2.9.6   | IPv6   |  164,064 |   184,749 |  +12.6% |
+
+These are observed medians, not production guarantees. In particular, some IPv6
+run ranges overlap. The report retains every run and latency percentile;
+loading and memory remain measured but are not optimization claims for this change.
+The earlier 100,000-query baseline below is a separate run and is not the
+denominator for these percentages.
+
+To reproduce, build that baseline in a separate checkout, then run:
+
+```sh
+IP2REGION_BUN=bun IP2REGION_DENO=deno npm run benchmark:matrix -- \
+  --baseline=/path/to/built-9bd36db --runtimes=node,bun,deno \
+  --samples=500000 --output=/tmp/ip2region-ip-parsing.json
+```
+
+### Baseline before parsing optimization, 2026-10-24
 
 Linux x64; Intel Xeon Platinum 8573C; five visible logical CPUs. These are the
-current constructor API's results, with no query-performance changes applied.
+constructor API's results before query-performance changes were applied.
 Each cell is the median of five processes. Loading and RSS columns are from the
 standard-record cases. The [raw report](benchmarks/2026-10-24.json) retains all
 60 runs, including per-run latency percentiles and the measured source hashes.
