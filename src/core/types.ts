@@ -87,12 +87,19 @@ export interface Lookup<R extends LookupResult = LookupResult> {
   close(): void;
 }
 
+export interface AsyncBatchOptions {
+  /** Maximum in-flight lookups per batch. Positive safe integer; defaults to 1. */
+  concurrency?: number;
+}
+
 export interface AsyncLookup<R extends LookupResult = LookupResult> {
   readonly capabilities?: Capabilities;
   readonly metadata?: SourceMetadata;
   lookupAsync(ip: string): Promise<R | null>;
-  lookupManyAsync(ips: Iterable<string>): Promise<(R | null)[]>;
-  lookupManySettledAsync(ips: Iterable<string>): Promise<BatchItem<R>[]>;
+  /** Preserve input order; stop scheduling on failure and drain started lookups before rejecting. */
+  lookupManyAsync(ips: Iterable<string>, options?: AsyncBatchOptions): Promise<(R | null)[]>;
+  /** Preserve input order and collect lookup errors; iterator failures still reject the batch. */
+  lookupManySettledAsync(ips: Iterable<string>, options?: AsyncBatchOptions): Promise<BatchItem<R>[]>;
   /** Reject new work immediately, finish active work, then close the owned source. */
   closeAsync(): Promise<void>;
 }
