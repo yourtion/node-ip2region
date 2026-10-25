@@ -3,6 +3,24 @@
 离线查询 IPv4 / IPv6 的国家、地区、城市和运营商，支持 Node.js、Bun、Deno，零运行时依赖。
 内置双栈 XDB 数据，也可使用自己的 XDB、IP2Location BIN、IPIP IPDB 文件，或接入自定义数据源。
 
+## 从 3.x 升级
+
+4.0 统一使用类构造器，并明确区分同步与异步方法。已有 3.x 调用需要调整：
+
+| 3.x                                                    | 4.0                                                                                                             |
+| ------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------- |
+| `createLookup(source, options)`                        | `new IP2Region({ source, ...options })`，从根入口导入                                                           |
+| `createAsyncLookup(source, options)`                   | `new AsyncIP2Region({ source, ...options })`                                                                    |
+| 原生入口 `openDefault(options)`                        | `await IP2Region.open(options)`                                                                                 |
+| 原生入口 `openDatabase(path, factory, options)`        | 内置格式使用 `await IP2Region.open({ database: { format, path }, ...options })`；自定义读取器通过 `source` 接入 |
+| 异步客户端 `lookup/lookupMany/lookupManySettled/close` | `lookupAsync/lookupManyAsync/lookupManySettledAsync/closeAsync`                                                 |
+| 异步 adapter 的 `close()`                              | `closeAsync()`；`lookupAsync()` 保持不变                                                                        |
+
+同步查询方法不变，外部来源仍默认借用。构造原生客户端时会同步读文件；需要保留异步加载行为，
+请使用 `IP2Region.open()`。3.x 类型 `ReaderFactory` 和 `DefaultOptions` 不再导出；原生入口现在提供
+`IP2RegionOptions`、`DatabaseOptions`、`DatabasesOptions`，自定义来源使用根入口的 adapter 类型。
+运行时最低版本与 3.0 相同，见下表。
+
 ## 安装
 
 | 运行时  | 最低版本 | 安装                          |
