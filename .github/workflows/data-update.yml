@@ -1,0 +1,106 @@
+name: Data updates
+
+on:
+  schedule:
+    # Daily at 03:17 UTC (11:17 Asia/Shanghai), away from the hourly rush.
+    - cron: "17 3 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: bundled-data-update
+  cancel-in-progress: false
+
+jobs:
+  update:
+    # Scheduled writes belong only to the upstream repository and default branch.
+    if: github.repository == 'yourtion/node-ip2region' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: write
+      pull-requests: write
+      actions: write
+    env:
+      DATA_BRANCH: automation/update-ip-data
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          persist-credentials: false
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9.15.9
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24.x
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile --ignore-scripts
+      - run: npm run build
+      - name: Resolve upstream commit and pending snapshot
+        id: resolve
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          revision=$(gh api repos/lionsoul2014/ip2region/commits/HEAD --jq .sha)
+          [[ "$revision" =~ ^[0-9a-f]{40}$ ]]
+          echo "revision=$revision" >> "$GITHUB_OUTPUT"
+          head=$(gh pr list --repo "$GITHUB_REPOSITORY" --base main --head "$DATA_BRANCH" --state open --json headRefOid,isCrossRepository --jq '[.[] | select(.isCrossRepository == false)][0].headRefOid // empty')
+          if [[ -n "$head" ]]; then
+            [[ "$head" =~ ^[0-9a-f]{40}$ ]]
+            gh api "repos/$GITHUB_REPOSITORY/contents/data/manifest.json?ref=$head" --jq .content |
+              base64 --decode > "$RUNNER_TEMP/pending-manifest.json"
+          fi
+      - name: Stage, compare, validate and apply changed snapshots
+        id: candidate
+        env:
+          UPSTREAM_REVISION: ${{ steps.resolve.outputs.revision }}
+        run: |
+          args=()
+          if [[ -f "$RUNNER_TEMP/pending-manifest.json" ]]; then
+            args+=(--pending "$RUNNER_TEMP/pending-manifest.json")
+          fi
+          node scripts/check-data-update.mjs --revision "$UPSTREAM_REVISION" \
+            --stage "$RUNNER_TEMP/ip2region-candidate" --body "$RUNNER_TEMP/data-pr.md" "${args[@]}"
+      - name: Retain the validation report
+        if: always() && steps.candidate.outcome == 'success'
+        uses: actions/upload-artifact@v4
+        with:
+          name: data-update-report
+          path: |
+            ${{ runner.temp }}/ip2region-candidate/report.json
+            ${{ runner.temp }}/ip2region-candidate/report.sha256
+          retention-days: 30
+          if-no-files-found: error
+      - name: Check quality and the updated package
+        if: steps.candidate.outputs.status == 'updated'
+        run: |
+          npm run check
+          npm run test:package
+      - name: Create or update the data PR
+        if: steps.candidate.outputs.status != 'pending'
+        id: pr
+        uses: peter-evans/create-pull-request@22a9089034f40e5a961c8808d113e2c98fb63676 # v7
+        with:
+          token: ${{ github.token }}
+          branch: ${{ env.DATA_BRANCH }}
+          base: main
+          title: "chore(data): update bundled ip2region snapshots"
+          commit-message: "chore(data): update bundled ip2region snapshots"
+          body-path: ${{ runner.temp }}/data-pr.md
+          add-paths: |
+            data/ip2region_v4.xdb
+            data/ip2region_v6.xdb
+            data/LICENSE.ip2region.md
+            data/manifest.json
+            data/README.md
+            src/bundled.ts
+      - name: Run cross-platform CI on the data PR
+        # GITHUB_TOKEN PR/push events do not start CI; workflow_dispatch does.
+        # Also retry this for an unchanged pending PR if a previous dispatch failed.
+        if: steps.pr.outputs.pull-request-number != '' || steps.candidate.outputs.status == 'pending'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh workflow run test.yml --repo "$GITHUB_REPOSITORY" --ref "$DATA_BRANCH"

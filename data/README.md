@@ -39,6 +39,50 @@ recording new digests and rerunning reference and native-runtime validation.
 
 ## Stage, validate and apply updates
 
+### Scheduled pull requests
+
+[Data updates](../.github/workflows/data-update.yml) checks the upstream default
+branch daily at **03:17 UTC** (11:17 Asia/Shanghai); GitHub may delay scheduled runs.
+It can also be run from Actions → Data updates → Run workflow on `main`.
+The scheduled workflow starts operating after it is merged into the default branch.
+This repository's development/release branch is `main`; set **Settings → General →
+Default branch** to `main` before enabling the schedule. A workflow present only
+on `main` cannot run on a schedule while `master` remains the default branch.
+
+Each run resolves a full upstream commit SHA, then uses the same staging and
+validation pipeline described below. Only changes to XDB bytes or the license
+create an update: upstream code-only commits and retrieval dates do not create PRs.
+The fixed `automation/update-ip-data` branch keeps a single open PR. An identical
+pending snapshot is left intact, including its first retrieval date, even if the
+upstream commit advances. A newer snapshot updates that PR; if upstream matches
+`main` again, the obsolete PR is closed by the PR action. This branch is reserved
+for the automation; make manual changes on a separate branch.
+Closing an unmerged data PR does not blacklist that snapshot: the next run can
+recreate it. To pause proposals, disable Data updates from the Actions menu.
+
+Before creating/updating a PR, the job reruns validation during apply, runs
+`npm run check` and `npm run test:package`, and limits the commit to both XDBs,
+license, manifest, generated module and this file's metadata. The PR describes
+range changes and license changes. Each successful check retains `report.json`
+and `report.sha256` as a 30-day Actions artifact. Download, schema, license or test
+failures fail the run without publishing a new candidate PR.
+
+The workflow uses only `GITHUB_TOKEN`; no PAT or npm credential is needed. Enable
+**Settings → Actions → General → Workflow permissions → Allow GitHub Actions to
+create and approve pull requests**. Repository/organization policies must permit
+the declared `contents: write`, `pull-requests: write` and `actions: write`
+permissions. No approval or auto-merge is performed by this workflow.
+
+PRs created with `GITHUB_TOKEN` do not trigger ordinary `pull_request`/`push`
+workflows. The updater explicitly dispatches **Native runtime CI** (`test.yml`)
+on the PR branch to run the full Node/Bun/Deno and OS matrix, including on a
+subsequent run with the same pending candidate so interrupted dispatches recover.
+Check that CI run on the PR's head commit before merging. After merging data,
+publish a version through the normal [release process](../docs/releasing.md);
+the scheduled job does not merge PRs, tag commits or publish packages.
+
+### Manual maintenance
+
 `data/manifest.json` is the maintainer source of truth for the paired snapshots,
 license digest, declared upstream revision and retrieval date. The explicit
 updater regenerates `src/bundled.ts` and the marked metadata section above.

@@ -190,6 +190,8 @@ settled 版本保留每项成功或失败的结果并继续查询。并发上限
 
 仓库提供显式的 `data:stage`、`data:validate`、`data:apply` 命令，用于固定 upstream revision、
 暂存候选快照、校验两份文件并生成变化报告，再更新数据与元信息。
+GitHub Actions 的 `Data updates` 每天 UTC 03:17（北京时间 11:17）检查上游，内容变化且校验通过后
+自动创建或更新数据 PR，也可手动运行。PR 合并和 npm 发布仍由维护者决定。
 这是仓库维护工具，不会在导入、安装或查询时联网；操作与失败恢复说明见[数据维护](data/README.md)。
 
 代码采用 [MIT](LICENSE) 许可；内置数据许可见[数据来源](data/README.md)。

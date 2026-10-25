@@ -59,6 +59,12 @@ See [data maintenance](../data/README.md) for commands and recovery limits.
 Network staging needs `curl`; offline staging and tests do not. Formatting uses
 the repository's existing development formatter.
 
+The scheduled Data updates workflow wraps the same updater with content-based
+change detection and one reusable PR branch. See [scheduled pull requests](../data/README.md#scheduled-pull-requests)
+for timing, GitHub permissions, CI dispatch and manual invocation. Its orchestration
+tests run offline with the update-tool tests, including unchanged data, pending
+candidates, license-only updates and failures that preserve the checkout.
+
 `npm test` includes offline update-tool tests in temporary repositories: invalid
 files, provenance, changed stages/baselines, locks, and replacement-failure rollback.
 Native composition and async batch tests are shared across all three runtime
