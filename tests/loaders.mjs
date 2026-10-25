@@ -1,5 +1,6 @@
-import { IP2Region as MemoryIP2Region } from "../dist/esm/index.js";
+import { IP2Region as MemoryIP2Region, AsyncIP2Region } from "../dist/esm/index.js";
 import { IP2REGION_FIELDS } from "../dist/esm/formats/ip2region-xdb.js";
+import { Bytes } from "../dist/esm/formats/bytes.js";
 import { assert, equal, rejects, throws } from "./assert.mjs";
 import { createLoader } from "../dist/esm/loaders/shared.js";
 import { xdbFixture, binFixture, ipipFixture } from "./fixtures.mjs";
@@ -96,6 +97,182 @@ export function loaderSuite(test, loader) {
     equal(reads, 0);
   });
 
+  test("custom database maps route both families and retain each schema and provenance", async () => {
+    const databases = {
+      4: {
+        format: "xdb",
+        data: xdbFixture({ region: "V4|Four|retained" }),
+        fields: ["country_code", "city_name", "extra"],
+        metadata: { id: "custom-v4", dataVersion: "four" },
+      },
+      6: {
+        format: "xdb",
+        data: xdbFixture({ family: 6, region: "Country Six|Region Six|Six|ISP Six|V6" }),
+        fields: IP2REGION_FIELDS,
+        metadata: { id: "custom-v6", dataVersion: "six" },
+      },
+    };
+    for (const query of [new IP2Region({ databases }), await IP2Region.open({ databases })]) {
+      const v4 = query.lookup("192.0.2.1");
+      const v6 = query.lookup("2001:db8::1");
+      equal(v4.country, { code: "V4" });
+      equal(v4.city, { name: "Four" });
+      equal(v4.extensions.raw.extra, "retained");
+      equal(v4.source, "custom-v4");
+      equal(v6.country, { name: "Country Six", code: "V6" });
+      equal(v6.city, { name: "Six" });
+      equal(v6.source, "custom-v6");
+      equal(query.lookup("2001:db8::3"), null);
+      equal(query.capabilities.families, [4, 6]);
+      equal(new Set(query.capabilities.fields).size, query.capabilities.fields.length);
+      assert(query.capabilities.fields.includes("country.name"));
+      assert(query.capabilities.fields.includes("country.code"));
+      equal(query.metadata.id, "custom-databases");
+      equal(query.metadata.dataVersion, undefined);
+      equal(query.metadata.attribution, undefined);
+      equal(
+        query.metadata.datasets.map(({ id, dataVersion }) => [id, dataVersion]),
+        [
+          ["custom-v4", "four"],
+          ["custom-v6", "six"],
+        ]
+      );
+      query.close();
+      throws(() => query.lookup("192.0.2.1"), "CLOSED");
+    }
+    for (const asyncOpen of [false, true]) {
+      const options = { databases, mappedIPv6: "ipv4" };
+      const query = asyncOpen ? await IP2Region.open(options) : new IP2Region(options);
+      equal(query.lookup("::ffff:192.0.2.1").source, "custom-v4");
+      query.close();
+    }
+  });
+
+  test("database maps support mixed formats and expose only configured families", async () => {
+    const databases = {
+      4: { format: "bin", data: binFixture(), metadata: { id: "bin-v4" } },
+      6: { format: "ipip", data: ipipFixture(), language: "EN", metadata: { id: "ipip-v6" } },
+    };
+    for (const asyncOpen of [false, true]) {
+      const query = asyncOpen ? await IP2Region.open({ databases }) : new IP2Region({ databases });
+      equal(query.lookup("192.0.2.1").source, "bin-v4");
+      equal(query.lookup("2001:db8::1").source, "ipip-v6");
+      equal(query.lookup("2001:db8::1").extensions.language, "EN");
+      equal(query.capabilities.languages, ["CN", "EN"]);
+      equal(
+        query.metadata.datasets.map(({ format }) => format),
+        ["ip2location-bin", "ipip-ipdb"]
+      );
+      query.close();
+      for (const family of [4, 6]) {
+        const options = { databases: { [family]: databases[family] } };
+        const single = asyncOpen ? await IP2Region.open(options) : new IP2Region(options);
+        equal(single.capabilities.families, [family]);
+        throws(() => single.lookup(family === 4 ? "::1" : "192.0.2.1"), "UNSUPPORTED_FAMILY");
+        single.close();
+      }
+    }
+  });
+
+  test("all database map options are checked before I/O and native configuration stays out of core", async () => {
+    let reads = 0;
+    const read = () => {
+      reads++;
+      return xdbFixture();
+    };
+    const MemoryLoader = createLoader(async () => read(), read);
+    const database = { format: "xdb", path: "unused" };
+    const valid = { 4: database };
+    const nonenumerableExtra = Object.defineProperty({ 4: database }, "extra", { value: database });
+    const cases = [
+      ...[
+        null,
+        [],
+        {},
+        "4",
+        { 5: database },
+        { 4: undefined },
+        Object.create({ 4: database }),
+        { 4: database, [Symbol("extra")]: database },
+        nonenumerableExtra,
+        { 4: database, 6: { format: "xdb", path: "unused", fields: [] } },
+        { 4: database, 6: { format: "xdb", path: "unused", metadata: { id: "" } } },
+        { 4: database, 6: { format: "ipip", path: "unused", language: 42 } },
+        { 4: database, 6: { format: "bin", path: "unused", fields: ["x"] } },
+        { 4: database, 6: { format: "xdb", path: "unused", data: new Uint8Array() } },
+      ].map((databases) => ({ databases })),
+      { databases: valid, source: () => null },
+      { databases: valid, database },
+      { databases: valid, families: [4] },
+      { databases: valid, ownership: "owned" },
+    ];
+    for (const options of cases) {
+      throws(() => new MemoryLoader(options), "INVALID_ARGUMENT");
+      await rejects(() => MemoryLoader.open(options), "INVALID_ARGUMENT");
+    }
+    equal(reads, 0);
+    throws(() => new MemoryIP2Region({ source: () => null, databases: valid }), "INVALID_ARGUMENT");
+    throws(() => new AsyncIP2Region({ source: async () => null, databases: valid }), "INVALID_ARGUMENT");
+  });
+
+  test("database map failures release prior readers and closing attempts every reader exactly once", async () => {
+    const originalClose = Bytes.prototype.close;
+    const closed = [];
+    let failClose = false;
+    const closeError = new Error("close failed");
+    Bytes.prototype.close = function () {
+      closed.push(this);
+      originalClose.call(this);
+      if (failClose && closed.length === 1) throw closeError;
+    };
+    try {
+      for (const asyncOpen of [false, true]) {
+        for (const failure of ["read", "corrupt", "family"]) {
+          closed.length = 0;
+          const readError = new Error("second read failed");
+          const read = (path) => {
+            if (path === "four") return xdbFixture();
+            if (failure === "read") throw readError;
+            const bytes = xdbFixture({ family: failure === "family" ? 4 : 6 });
+            if (failure === "corrupt") bytes[0] = 255;
+            return bytes;
+          };
+          const MemoryLoader = createLoader(async (path) => read(path), read);
+          const options = { databases: { 4: { format: "xdb", path: "four" }, 6: { format: "xdb", path: "six" } } };
+          const code =
+            failure === "family" ? "INVALID_ARGUMENT" : failure === "corrupt" ? "INVALID_DATABASE" : undefined;
+          const error = asyncOpen
+            ? await rejects(() => MemoryLoader.open(options), code)
+            : throws(() => new MemoryLoader(options), code);
+          if (failure === "read") assert(error === readError);
+          equal(closed.length, failure === "family" ? 2 : 1);
+          equal(new Set(closed).size, closed.length);
+          for (const bytes of closed) throws(() => bytes.u8(0), "CLOSED");
+        }
+        for (const shouldFailClose of [false, true]) {
+          closed.length = 0;
+          const options = {
+            databases: {
+              4: { format: "xdb", data: xdbFixture() },
+              6: { format: "xdb", data: xdbFixture({ family: 6 }) },
+            },
+          };
+          const query = asyncOpen ? await IP2Region.open(options) : new IP2Region(options);
+          failClose = shouldFailClose;
+          if (shouldFailClose) assert(throws(() => query.close(), "ADAPTER_ERROR").cause === closeError);
+          else query.close();
+          query.close();
+          equal(closed.length, 2);
+          equal(new Set(closed).size, 2);
+          for (const bytes of closed) throws(() => bytes.u8(0), "CLOSED");
+          failClose = false;
+        }
+      }
+    } finally {
+      Bytes.prototype.close = originalClose;
+    }
+  });
+
   test("native constructor and open support each family and explicit mapped IPv4", async () => {
     for (const family of [4, 6]) {
       const options = { families: [family], mappedIPv6: family === 4 ? "ipv4" : "preserve" };
@@ -122,16 +299,22 @@ export function loaderSuite(test, loader) {
       equal(query.lookup("120.24.78.68").isp, "阿里");
       equal(query.capabilities.families, [4, 6]);
       equal(query.metadata.id, "bundled-ip2region");
-      assert(query.metadata.dataVersion.startsWith("upstream:"));
+      assert(/^(upstream|local):[a-f0-9]{40}$/.test(query.metadata.dataVersion));
       equal(query.metadata.builtAt, undefined);
-      assert(query.metadata.attribution.includes("lionsoul2014"));
+      if (query.metadata.dataVersion.startsWith("local:")) {
+        assert(query.metadata.attribution.includes("Operator-supplied XDB files"));
+        assert(query.metadata.attribution.includes("declared upstream revision is unverified"));
+      } else {
+        assert(query.metadata.attribution.includes("lionsoul2014/ip2region contributors"));
+        assert(query.metadata.attribution.includes("upstream XDB snapshots"));
+      }
       equal(query.lookup("2001:4860:4860::8888").country.code, "US");
       equal(query.lookup("::1"), null);
       equal(query.lookup("2001:db8::1").country, undefined);
       equal(query.lookup("::ffff:120.24.78.68"), null);
       equal(query.metadata.datasets.length, 2);
       for (const dataset of query.metadata.datasets) {
-        assert(dataset.builtAt);
+        if (dataset.builtAt !== undefined) assert(Number.isFinite(Date.parse(dataset.builtAt)));
         assert(dataset.dataVersion.startsWith("sha256:"));
       }
       query.close();
