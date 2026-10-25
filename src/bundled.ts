@@ -1,4 +1,4 @@
-/** Pinned upstream files; importing this module performs no file I/O. */
+/** Generated from data/manifest.json; importing performs no file I/O. */
 export const bundledRevision = "f8b0792b0cd729f5b2593f690aeed225e49c1967";
 export const bundledMetadata = {
   id: "bundled-ip2region",

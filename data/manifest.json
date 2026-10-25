@@ -1,0 +1,30 @@
+{
+  "version": 1,
+  "upstream": {
+    "repository": "lionsoul2014/ip2region",
+    "revision": "f8b0792b0cd729f5b2593f690aeed225e49c1967",
+    "retrievedAt": "2026-10-23",
+    "source": "upstream-download"
+  },
+  "fields": ["country_name", "region_name", "city_name", "isp", "country_code"],
+  "license": {
+    "file": "LICENSE.ip2region.md",
+    "sha256": "fe01f2f8fcaafac539154e6aa80b0b7f8af54e01dc4d52322f72971991c6280e"
+  },
+  "files": [
+    {
+      "family": 4,
+      "file": "ip2region_v4.xdb",
+      "bytes": 11122642,
+      "builtAt": "2026-10-14T02:11:07.000Z",
+      "sha256": "27ecba8c9a6d5e3b280aedbe7ee15c65372b179fbd0dad3845d8c608f2fcace1"
+    },
+    {
+      "family": 6,
+      "file": "ip2region_v6.xdb",
+      "bytes": 37277813,
+      "builtAt": "2026-08-14T05:38:41.000Z",
+      "sha256": "939f6b46bd2b8bec3cf7c5ceb8ba782266ae9b1f35b5ba7916700dec0b7506ed"
+    }
+  ]
+}

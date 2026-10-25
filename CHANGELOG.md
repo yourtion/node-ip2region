@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+- Compose custom IPv4/IPv6 databases with explicit native `databases` routing,
+  per-source metadata and cleanup on failed initialization.
+- Add optional bounded concurrency to asynchronous batches while preserving
+  sequential defaults, input order and close semantics.
+- Add explicit maintainer data staging, validation and application with paired
+  snapshot metadata, reference-reader checks and rollback on handled write failure.
+
 - Reduce XDB result-mapping temporary objects while preserving raw/custom fields,
   omitted values and independently mutable query results.
 

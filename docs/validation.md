@@ -1,5 +1,34 @@
 # Implementation validation
 
+## Database composition, async batches and data maintenance, 2026-10-25
+
+Local Node 24.19.0 validation passed 99 core, independent-reader, release-helper
+and data-update tests. The shared native suite contains 75 Node tests and 73
+Bun/Deno tests; real tarball consumers passed on Node 24.19.0, Bun 1.4.4 and
+Deno 2.9.6, including the 17 standalone custom examples, public option types,
+ESM/CJS declarations, permissions and manifest/data/license consistency.
+
+Composition coverage includes both address families, mixed formats, custom
+columns, missing families, configuration rejection before I/O, partial-load
+cleanup and attempting all reader closes even when one throws. Async batch
+tests use controlled promises to check concurrency limits, lazy iteration,
+out-of-order completion, a slow first request, first-error draining, iterator
+cleanup, settled failures and close/reentrant-close behavior.
+
+Ten offline updater tests cover all-record validation, invalid families/columns/
+UTF-8, unknown build timestamps, report and payload edits, changed baselines,
+locks, partial downloads, handled replacement rollback and generated formatting.
+Real network staging of pinned revision `f8b0792b0cd729f5b2593f690aeed225e49c1967`
+verified 553,967 IPv4 ranges and 734,953 IPv6 ranges, all referenced payloads and
+256 independent-reader boundary checks per family. Candidate hashes and license
+matched the existing snapshots; no checked-in XDB bytes were updated.
+
+An isolated checkout exercised upstream and local staging/application. Applying
+local files retained explicit unverified/local provenance; the resulting checkout
+passed quality checks, a fresh build and all 75 Node shared tests. Multi-file
+application is not crash-atomic; recovery limits are documented in
+[data maintenance](../data/README.md).
+
 ## XDB result mapping, 2026-10-25
 
 On the Linux x64 cloud worker, Node 24.19.0 passed all 75 core,

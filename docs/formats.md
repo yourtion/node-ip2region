@@ -62,6 +62,54 @@ For custom byte readers use `new IP2Region({ source: createXDB(bytes, options), 
 from the memory-only root entry.
 Changing a file extension does not convert its format.
 
+## Combining custom databases by address family
+
+Native Node, Bun and Deno entries accept a `databases` map for explicit routing:
+
+```js
+import { IP2Region } from "ip2region/node";
+import { IP2REGION_FIELDS } from "ip2region/formats/ip2region-xdb";
+
+const options = {
+  databases: {
+    4: { format: "xdb", path: "/data/custom-v4.xdb", fields: IP2REGION_FIELDS },
+    6: { format: "xdb", path: "/data/custom-v6.xdb", fields: IP2REGION_FIELDS },
+  },
+};
+const query = await IP2Region.open(options); // new IP2Region(options) also works.
+try {
+  console.log(query.lookup("192.0.2.1"));
+  console.log(query.lookup("2001:db8::1"));
+} finally {
+  query.close();
+}
+```
+
+The map must contain at least one own `4` or `6` key and no other keys. Each
+entry has the same format, path/data, fields/language and metadata options as
+the single `database` configuration. Different slots may use different formats
+and schemas. A dual-family BIN/IPDB may be assigned to either slot; only the
+configured families are advertised and routed. Assigning a reader that does not
+support its slot raises `INVALID_ARGUMENT` during construction/opening.
+
+`database`, `databases`, `source` and bundled `families` are mutually exclusive.
+All configuration shapes are checked before file I/O; file contents and actual
+family support are checked when readers are created. There is no fallback or
+field merging: misses stay `null`, and each result retains its child reader's
+`source` and extensions. `mappedIPv6: "ipv4"` continues to route exact mapped
+addresses through the IPv4 slot.
+
+Composite metadata uses `id: "custom-databases"` and retains each reader's
+metadata in `datasets`, without inventing bundled provenance. Capability fields
+and languages are the union of the child readers' advertised possibilities;
+individual results still depend on the selected family and dataset. The native
+entries export `DatabasesOptions` for typed configuration.
+
+All created readers are owned by the client. A subsequent read, validation or
+family-mismatch failure releases earlier readers. `close()` attempts every
+reader once even if one close fails; it reports the first failure and remains
+idempotent. The core entry remains memory-only and requires a custom `source`.
+
 ## IPIP IPDB
 
 `createIPIP(bytes, { language: "CN", metadata? })` supports the IPIP metadata and

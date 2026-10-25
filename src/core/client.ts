@@ -13,7 +13,7 @@ import type {
 function checkOptions(options: unknown): void {
   if (!options || typeof options !== "object" || Array.isArray(options))
     throw new IP2RegionError("INVALID_ARGUMENT", "Expected an options object with a source");
-  if (Object.hasOwn(options, "database") || Object.hasOwn(options, "families"))
+  if (Object.hasOwn(options, "database") || Object.hasOwn(options, "databases") || Object.hasOwn(options, "families"))
     throw new IP2RegionError("INVALID_ARGUMENT", "Database configuration requires a native runtime entry");
 }
 

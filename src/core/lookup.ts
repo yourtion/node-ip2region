@@ -3,6 +3,7 @@ import { parseIP } from "./ip.js";
 import type {
   Adapter,
   AsyncAdapter,
+  AsyncBatchOptions,
   AsyncLookup,
   AsyncSource,
   BatchItem,
@@ -121,6 +122,81 @@ function closed(): IP2RegionError {
   return new IP2RegionError("CLOSED", "The lookup instance is closed");
 }
 
+async function asyncBatch<T>(
+  ips: Iterable<string>,
+  options: AsyncBatchOptions = {},
+  lookup: (ip: string) => Promise<T>
+): Promise<T[]> {
+  if (!options || typeof options !== "object" || Array.isArray(options))
+    throw new IP2RegionError("INVALID_ARGUMENT", "Expected async batch options");
+  const { concurrency = 1 } = options;
+  if (!Number.isSafeInteger(concurrency) || concurrency < 1)
+    throw new IP2RegionError("INVALID_ARGUMENT", "Batch concurrency must be a positive safe integer");
+
+  // Acquire only after validating options, and pull at most one window ahead.
+  const iterator = ips[Symbol.iterator]();
+  const next = iterator.next;
+  const pending = new Set<Promise<void>>();
+  const results: T[] = [];
+  let index = 0;
+  let done = false;
+  let failed = false;
+  let failure: unknown;
+  let notify: (() => void) | undefined;
+  const fail = (cause: unknown) => {
+    if (failed) return;
+    failed = true;
+    failure = cause;
+  };
+  while (!failed && (!done || pending.size)) {
+    while (!failed && !done && pending.size < concurrency) {
+      try {
+        const item = next.call(iterator);
+        if (!item || (typeof item !== "object" && typeof item !== "function"))
+          throw new TypeError("Iterator result must be an object");
+        if (item.done) {
+          done = true;
+          break;
+        }
+        const position = index++;
+        const task = lookup(item.value)
+          .then((value) => {
+            results[position] = value;
+          }, fail)
+          .finally(() => {
+            pending.delete(task);
+            const resume = notify;
+            notify = undefined;
+            resume?.();
+          });
+        pending.add(task);
+      } catch (cause) {
+        fail(cause);
+      }
+    }
+    // One completion notification avoids retaining repeated race handlers on a slow request.
+    if (!failed && pending.size)
+      await new Promise<void>((resolve) => {
+        notify = resolve;
+      });
+  }
+  if (failed) {
+    if (!done) {
+      try {
+        const returned = iterator.return?.();
+        // A malformed synchronous iterator may return a rejected Promise.
+        if (promiseLike(returned)) void Promise.resolve(returned).catch(() => {});
+      } catch {
+        // Preserve the first query/iteration error, including if cleanup throws.
+      }
+    }
+    // Every started request has a rejection handler; wait before rejecting the batch.
+    await Promise.all(pending);
+    throw failure;
+  }
+  return results;
+}
+
 export function createLookup<R extends LookupResult>(source: Source<R>, options: LookupOptions = {}): Lookup<R> {
   const config = normalizeLookupOptions(options);
   const adapter = sourceOf(source);
@@ -205,22 +281,15 @@ export function createAsyncLookup<R extends LookupResult>(
     capabilities: adapter.capabilities,
     metadata: adapter.metadata,
     lookupAsync: lookup,
-    async lookupManyAsync(ips) {
-      const results: (R | null)[] = [];
-      for (const ip of ips) results.push(await lookup(ip));
-      return results;
-    },
-    async lookupManySettledAsync(ips) {
-      const results: BatchItem<R>[] = [];
-      for (const ip of ips) {
+    lookupManyAsync: (ips, options) => asyncBatch(ips, options, lookup),
+    lookupManySettledAsync: (ips, options) =>
+      asyncBatch(ips, options, async (ip): Promise<BatchItem<R>> => {
         try {
-          results.push({ ok: true, value: await lookup(ip) });
+          return { ok: true, value: await lookup(ip) };
         } catch (cause) {
-          results.push({ ok: false, error: adapterError(cause) });
+          return { ok: false, error: adapterError(cause) };
         }
-      }
-      return results;
-    },
+      }),
     closeAsync() {
       if (closing) return closing;
       isClosed = true;

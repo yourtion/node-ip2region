@@ -1,5 +1,18 @@
 import { IP2Region, AsyncIP2Region, parseIP, IP2RegionError } from "../dist/esm/index.js";
 import { assert, equal, throws, rejects } from "./assert.mjs";
+
+function deferred() {
+  let resolve, reject;
+  const promise = new Promise((yes, no) => {
+    resolve = yes;
+    reject = no;
+  });
+  return { promise, resolve, reject };
+}
+
+// Let all current Promise reactions run while explicitly held requests stay pending.
+const nextTurn = () => new Promise((resolve) => setTimeout(resolve, 0));
+
 export const validIPs = [
   ["0.0.0.0", "0.0.0.0", 4, 0n],
   ["255.255.255.255", "255.255.255.255", 4, 4294967295n],
@@ -352,6 +365,318 @@ export function coreSuite(test) {
     });
     await shared.closeAsync();
     equal(borrowed, 0);
+  });
+  test("async batch options reject invalid concurrency before acquiring the iterable", async () => {
+    let acquired = 0;
+    const ips = {
+      [Symbol.iterator]() {
+        acquired++;
+        return ["::1"][Symbol.iterator]();
+      },
+    };
+    const query = new AsyncIP2Region({ source: async () => null });
+    const invalid = [
+      null,
+      [],
+      false,
+      "options",
+      ...[0, -1, 1.5, NaN, Infinity, Number.MAX_SAFE_INTEGER + 1, "2", null].map((concurrency) => ({ concurrency })),
+    ];
+    for (const method of ["lookupManyAsync", "lookupManySettledAsync"]) {
+      for (const options of invalid) await rejects(() => query[method](ips, options), "INVALID_ARGUMENT");
+      equal(acquired, 0);
+      equal(await query[method]([], { concurrency: Number.MAX_SAFE_INTEGER }), []);
+    }
+    equal(await query.lookupManyAsync(["::1", "::2"], { concurrency: Number.MAX_SAFE_INTEGER }), [null, null]);
+    await query.closeAsync();
+  });
+  test("async batches remain sequential by default and with concurrency one", async () => {
+    for (const options of [undefined, {}, { concurrency: 1 }]) {
+      const requests = [];
+      const query = new AsyncIP2Region({
+        source: () => {
+          const request = deferred();
+          requests.push(request);
+          return request.promise;
+        },
+      });
+      const batch = query.lookupManyAsync(["::1", "::2"], options);
+      equal(requests.length, 1);
+      requests[0].resolve({ isp: "first" });
+      await nextTurn();
+      equal(requests.length, 2);
+      requests[1].resolve(null);
+      equal(await batch, [{ isp: "first" }, null]);
+      await query.closeAsync();
+    }
+  });
+  test("bounded async batches pull lazily and refill completed slots while preserving result order", async () => {
+    let pulled = 0,
+      running = 0,
+      maximum = 0;
+    const requests = new Map();
+    const ips = {
+      *[Symbol.iterator]() {
+        for (let i = 1; i <= 5; i++) {
+          pulled++;
+          yield `::${i}`;
+        }
+      },
+    };
+    const query = new AsyncIP2Region({
+      source: (ip) => {
+        running++;
+        maximum = Math.max(maximum, running);
+        const request = deferred();
+        requests.set(ip, request);
+        return request.promise.finally(() => running--);
+      },
+    });
+    const batch = query.lookupManyAsync(ips, { concurrency: 2 });
+    equal(pulled, 2);
+    equal([...requests.keys()], ["::1", "::2"]);
+    for (const i of [2, 3, 4]) {
+      requests.get(`::${i}`).resolve(i === 2 ? null : { isp: String(i) });
+      await nextTurn();
+      equal(pulled, i + 1);
+      equal(running, 2);
+    }
+    requests.get("::5").resolve({ isp: "5" });
+    requests.get("::1").resolve({ isp: "1" });
+    equal(await batch, [{ isp: "1" }, null, { isp: "3" }, { isp: "4" }, { isp: "5" }]);
+    equal(maximum, 2);
+    equal(running, 0);
+    await query.closeAsync();
+  });
+  test("async fail-fast batches close their iterator, stop pulling and drain started requests", async () => {
+    let pulled = 0,
+      returned = 0,
+      finished = false;
+    const requests = [];
+    const failure = new Error("second request failed");
+    const ips = {
+      *[Symbol.iterator]() {
+        try {
+          for (const ip of ["::1", "::2", "::3", "::4"]) {
+            pulled++;
+            yield ip;
+          }
+        } finally {
+          returned++;
+        }
+      },
+    };
+    const query = new AsyncIP2Region({
+      source: () => {
+        const request = deferred();
+        requests.push(request);
+        return request.promise;
+      },
+    });
+    const observed = rejects(() => query.lookupManyAsync(ips, { concurrency: 2 }), "ADAPTER_ERROR").then((error) => {
+      finished = true;
+      return error;
+    });
+    requests[1].reject(failure);
+    await nextTurn();
+    equal(pulled, 2);
+    equal(returned, 1);
+    equal(requests.length, 2);
+    equal(finished, false);
+    requests[0].resolve(null);
+    assert((await observed).cause === failure);
+    await query.closeAsync();
+  });
+  test("a slow first request does not block a long stream of later async batch results", async () => {
+    const first = deferred();
+    let called = 0,
+      running = 0,
+      maximum = 0;
+    const ips = Array.from({ length: 1000 }, (_, index) => `2001:db8::${(index + 1).toString(16)}`);
+    const query = new AsyncIP2Region({
+      source: async (ip) => {
+        called++;
+        running++;
+        maximum = Math.max(maximum, running);
+        try {
+          if (ip === ips[0]) return await first.promise;
+          return { isp: ip };
+        } finally {
+          running--;
+        }
+      },
+    });
+    const batch = query.lookupManyAsync(ips.values(), { concurrency: 2 });
+    await nextTurn();
+    equal(called, ips.length);
+    equal(running, 1);
+    equal(maximum, 2);
+    first.resolve({ isp: ips[0] });
+    equal(
+      (await batch).map((result) => result.isp),
+      ips
+    );
+    await query.closeAsync();
+  });
+  test("async batches drain requests on iterator errors and preserve the first error over cleanup errors", async () => {
+    for (const method of ["lookupManyAsync", "lookupManySettledAsync"]) {
+      const request = deferred();
+      const failure = new Error("iterator failed");
+      let reads = 0,
+        returned = 0,
+        finished = false,
+        called = 0;
+      const ips = {
+        [Symbol.iterator]() {
+          return {
+            next() {
+              if (reads++ === 0) return { value: "::1", done: false };
+              throw failure;
+            },
+            return() {
+              returned++;
+              throw new Error("cleanup failed");
+            },
+          };
+        },
+      };
+      const query = new AsyncIP2Region({
+        source: () => {
+          called++;
+          return request.promise;
+        },
+      });
+      const observed = rejects(() => query[method](ips, { concurrency: 3 })).then((error) => {
+        finished = true;
+        return error;
+      });
+      equal(returned, 1);
+      equal(called, 1);
+      await nextTurn();
+      equal(finished, false);
+      request.reject(new Error("later request rejection"));
+      assert((await observed) === failure);
+      equal(reads, 2);
+      await query.closeAsync();
+    }
+  });
+  test("async batches reject malformed iterator results and handle rejected iterator cleanup", async () => {
+    let called = 0,
+      returned = 0;
+    const query = new AsyncIP2Region({
+      source: async () => {
+        called++;
+        return null;
+      },
+    });
+    for (const method of ["lookupManyAsync", "lookupManySettledAsync"]) {
+      const ips = {
+        [Symbol.iterator]() {
+          return {
+            next: () => 42,
+            return() {
+              returned++;
+              return Promise.reject(new Error("malformed async cleanup"));
+            },
+          };
+        },
+      };
+      assert((await rejects(() => query[method](ips, { concurrency: 2 }))) instanceof TypeError);
+    }
+    await nextTurn();
+    equal(called, 0);
+    equal(returned, 2);
+    await query.closeAsync();
+  });
+  test("concurrent settled batches retain per-item errors and continue in input order", async () => {
+    const requests = new Map();
+    const failure = new Error("transport failed");
+    const query = new AsyncIP2Region({
+      source: (ip) => {
+        const request = deferred();
+        requests.set(ip, request);
+        return request.promise;
+      },
+    });
+    const batch = query.lookupManySettledAsync(["::1", "bad", "::2", "::3"], { concurrency: 2 });
+    await nextTurn();
+    equal([...requests.keys()], ["::1", "::2"]);
+    requests.get("::2").reject(failure);
+    await nextTurn();
+    equal([...requests.keys()], ["::1", "::2", "::3"]);
+    requests.get("::3").resolve(null);
+    requests.get("::1").resolve({ isp: "first" });
+    const results = await batch;
+    equal(
+      results.map((result) => (result.ok ? result.value : result.error.code)),
+      [{ isp: "first" }, "INVALID_IP", "ADAPTER_ERROR", null]
+    );
+    assert(results[2].error.cause === failure);
+    await query.closeAsync();
+  });
+  test("close during a concurrent batch waits for every started request and rejects queued work", async () => {
+    const requests = [];
+    let closes = 0;
+    const query = new AsyncIP2Region({
+      source: {
+        lookupAsync() {
+          const request = deferred();
+          requests.push(request);
+          return request.promise;
+        },
+        async closeAsync() {
+          closes++;
+        },
+      },
+      ownership: "owned",
+    });
+    const observed = rejects(() => query.lookupManyAsync(["::1", "::2", "::3"], { concurrency: 2 }), "CLOSED");
+    const closing = query.closeAsync();
+    requests[0].resolve(null);
+    await nextTurn();
+    equal(closes, 0);
+    equal(requests.length, 2);
+    requests[1].resolve(null);
+    await observed;
+    await closing;
+    equal(closes, 1);
+    assert(query.closeAsync() === closing);
+  });
+  test("reentrant close in a concurrent batch never invokes more adapter requests", async () => {
+    for (const method of ["lookupManyAsync", "lookupManySettledAsync"]) {
+      let called = 0,
+        closes = 0,
+        closing;
+      const request = deferred();
+      const query = new AsyncIP2Region({
+        source: {
+          lookupAsync() {
+            called++;
+            closing = query.closeAsync();
+            return request.promise;
+          },
+          async closeAsync() {
+            closes++;
+          },
+        },
+        ownership: "owned",
+      });
+      const batch = query[method](["::1", "::2", "::3", "::4"], { concurrency: 3 });
+      const observed = method === "lookupManyAsync" ? rejects(() => batch, "CLOSED") : batch;
+      await nextTurn();
+      equal(called, 1);
+      equal(closes, 0);
+      request.resolve(null);
+      const result = await observed;
+      if (method === "lookupManySettledAsync")
+        equal(
+          result.map((item) => (item.ok ? item.value : item.error.code)),
+          [null, "CLOSED", "CLOSED", "CLOSED"]
+        );
+      await closing;
+      equal(closes, 1);
+      equal(called, 1);
+    }
   });
   test("async rejection does not block cleanup and close failures remain closed", async () => {
     const failure = new Error("failure");

@@ -52,7 +52,15 @@ and native runtime file loaders.
    from location accuracy.
 
 Batch calls retain input order. `lookupMany` fails on the first error;
-`lookupManySettled` records per-item errors and continues. Async batches are
-sequential. Null is a successful miss, not an invalid-IP or corruption sentinel.
+`lookupManySettled` records per-item errors and continues. Async batches default
+to sequential execution; an explicit positive `concurrency` bounds the number
+of pending queries per batch. Iterables are consumed lazily. A failing ordinary
+async batch stops dispatching when it observes the failure and drains started
+work before rejecting. Null is a successful miss, not an invalid-IP or corruption sentinel.
 Built-in database factories copy the supplied byte view to isolate later caller
 mutation; no implicit caching, downloading, fallback or hot reload is performed.
+Native `databases` configuration composes explicitly assigned IPv4/IPv6 readers,
+checks each reader's family support and owns their cleanup. Results retain the
+selected reader's interpretation and source; composite metadata retains the
+individual datasets. Maintainer data staging and application are explicit tools,
+outside runtime loading and queries.

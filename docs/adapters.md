@@ -11,7 +11,7 @@
 以上两个类均从 `ip2region` 导入，该入口不会依赖文件系统。运行时入口 `ip2region/node`、
 `ip2region/bun`、`ip2region/deno` 的 `IP2Region` 也接受同步 `source`，并额外支持数据库配置。
 根入口的 `IP2Region` 必须提供 `source`；运行时入口省略参数时加载内置数据。
-`source` 与 `database`、`families` 配置互斥，文件格式与读取选项见[格式说明](formats.md)。
+`source` 与 `database`、`databases`、`families` 配置互斥，文件格式与读取选项见[格式说明](formats.md)。
 
 ## 输入与返回值
 
@@ -62,8 +62,25 @@ import type { Adapter, AsyncAdapter, LookupFunction, AsyncLookupFunction, Lookup
 异步实例只暴露对应的 `lookupAsync`、`lookupManyAsync`、`lookupManySettledAsync`、`closeAsync`。
 数据库的异步加载 `await IP2Region.open(options)` 得到的仍然是同步查询实例。
 
-批量查询保持输入顺序。普通批量遇到首个错误即失败；settled 批量逐项返回
-`{ ok: true, value }` 或 `{ ok: false, error }`。异步批量顺序调用来源，未自动并发或重试。
+批量查询保持输入顺序。普通批量遇到错误会失败；settled 批量逐项返回
+`{ ok: true, value }` 或 `{ ok: false, error }`。异步批量默认顺序调用来源，可在单次调用中
+显式设置有界并发：
+
+```js
+const results = await query.lookupManyAsync(ips, { concurrency: 4 });
+const settled = await query.lookupManySettledAsync(ips, { concurrency: 4 });
+```
+
+第二个参数的公开类型为 `AsyncBatchOptions`。`concurrency` 必须是正的安全整数，默认 `1`；
+无效选项会在获取输入迭代器前以 `INVALID_ARGUMENT` 拒绝。上限针对单次批量调用，
+同时发起多个批量时，各调用分别计算并发数。输入接受同步 `Iterable<string>`，按空闲槽位
+逐项读取，不会先展开整个输入；返回数组仍会占用与输入数量成正比的内存。
+
+并发任务可以乱序完成，返回结果始终与输入顺序对应。普通异步批量观察到首个失败后停止
+读取输入和启动查询，关闭尚未读完的迭代器，并等待已经启动的请求结束后拒绝；不会取消
+已发出的外部请求。settled 批量记录每项查询错误并继续处理剩余输入。输入迭代器自身抛错
+则两种方法都会停止并等待在途请求结束后拒绝，保留该错误；迭代器清理失败不会覆盖先前错误。
+库不会自动重试，也不会为来源增加取消或超时能力。
 
 外部来源默认**借用**：客户端关闭后不可再查询，但不会关闭来源；多个客户端可以共享它。
 需要转交清理责任时传入 `ownership: "owned"`，并确保同一来源只有一个所有者。
@@ -73,6 +90,8 @@ import type { Adapter, AsyncAdapter, LookupFunction, AsyncLookupFunction, Lookup
 关闭幂等。同步关闭立即标记客户端关闭，然后最多调用一次来源的 `close`。
 异步关闭立即拒绝新查询，等待已开始的查询成功或失败后，再最多调用一次 `closeAsync`；
 重复调用返回同一个 Promise。清理失败仍保持关闭状态，不会自动重试。
+批量查询期间关闭客户端也遵循这一规则：已启动的请求继续完成，剩余项不再调用来源，
+尚未启动的查询产生 `CLOSED`。普通批量按首个错误规则失败；settled 批量为这些项记录 `CLOSED`。
 不要在来源的在途查询内部等待其所属客户端的关闭，否则会形成相互等待。
 
 ## 可运行示例与可复用测试

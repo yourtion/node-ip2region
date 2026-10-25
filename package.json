@@ -24,6 +24,7 @@
   "files": [
     "dist",
     "data/README.md",
+    "data/manifest.json",
     "docs",
     "CHANGELOG.md",
     "data/ip2region_v4.xdb",
@@ -109,7 +110,7 @@
     "format:check": "oxfmt --check .",
     "check": "npm run lint && npm run format:check && npm run typecheck",
     "typecheck": "tsc --noEmit && tsc -p examples/tsconfig.json",
-    "test": "npm run build && node --test tests/node.test.mjs tests/reference.test.mjs scripts/npm-release.test.mjs",
+    "test": "npm run build && node --test tests/node.test.mjs tests/reference.test.mjs scripts/npm-release.test.mjs scripts/update-data.test.mjs",
     "prepublishOnly": "npm run check && npm run test:package",
     "test:package": "npm test && node scripts/test-package.mjs",
     "test:packed": "node scripts/test-package.mjs",
@@ -118,7 +119,10 @@
     "benchmark:bun": "npm run build && bun scripts/benchmark.mjs",
     "benchmark:deno": "npm run build && deno run --allow-read --allow-sys --v8-flags=--expose-gc scripts/benchmark.mjs",
     "test:examples": "npm run build && node --test examples/custom/custom.test.mjs",
-    "benchmark:matrix": "npm run build && node scripts/benchmark-matrix.mjs"
+    "benchmark:matrix": "npm run build && node scripts/benchmark-matrix.mjs",
+    "data:stage": "npm run build && node scripts/update-data.mjs stage",
+    "data:validate": "npm run build && node scripts/update-data.mjs validate",
+    "data:apply": "npm run build && node scripts/update-data.mjs apply"
   },
   "devDependencies": {
     "@types/node": "22.5.0",

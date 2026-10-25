@@ -17,11 +17,17 @@ export type DatabaseOptions = DatabaseInput &
     | { format: "ipip"; language?: string; fields?: never }
   );
 
+/** Explicit routing; a dual-family reader can be assigned to either slot. */
+export type DatabasesOptions =
+  | { 4: DatabaseOptions; 6?: DatabaseOptions }
+  | { 4?: DatabaseOptions; 6: DatabaseOptions };
+
 export type IP2RegionOptions = Omit<LookupOptions, "ownership"> &
   (
-    | { families?: readonly AddressFamily[]; database?: never; source?: never; ownership?: never }
-    | { database: DatabaseOptions; families?: never; source?: never; ownership?: never }
-    | { source: Source; ownership?: LookupOptions["ownership"]; database?: never; families?: never }
+    | { families?: readonly AddressFamily[]; database?: never; databases?: never; source?: never; ownership?: never }
+    | { database: DatabaseOptions; databases?: never; families?: never; source?: never; ownership?: never }
+    | { databases: DatabasesOptions; database?: never; families?: never; source?: never; ownership?: never }
+    | { source: Source; ownership?: LookupOptions["ownership"]; database?: never; databases?: never; families?: never }
   );
 
 export interface IP2RegionConstructor {
@@ -47,28 +53,72 @@ function invalid(message: string): never {
   throw new IP2RegionError("INVALID_ARGUMENT", message);
 }
 
+function validateDatabase(database: DatabaseOptions): DatabaseOptions {
+  if (
+    !database ||
+    typeof database !== "object" ||
+    Array.isArray(database) ||
+    !["xdb", "bin", "ipip"].includes(database.format)
+  )
+    invalid("database needs format: xdb, bin or ipip");
+  const hasPath = Object.hasOwn(database, "path");
+  const hasData = Object.hasOwn(database, "data");
+  if (hasPath === hasData) invalid("database requires exactly one of path or data");
+  if (hasPath && !(typeof database.path === "string" || database.path instanceof URL))
+    invalid("database.path must be a local path or file URL");
+  if (hasData && !(database.data instanceof Uint8Array)) invalid("database.data must be a Uint8Array");
+  if (database.format !== "xdb" && Object.hasOwn(database, "fields")) invalid("fields configures XDB only");
+  if (database.format !== "ipip" && Object.hasOwn(database, "language")) invalid("language configures IPIP only");
+  if (database.format === "xdb" && database.fields != null) {
+    const fields = database.fields;
+    if (
+      !Array.isArray(fields) ||
+      !fields.length ||
+      Array.from(fields).some(
+        (name) => typeof name !== "string" || !name || ["__proto__", "constructor", "prototype"].includes(name)
+      ) ||
+      new Set(fields).size !== fields.length
+    )
+      invalid("XDB fields must be distinct nonempty column names or null");
+  }
+  if (database.format === "ipip" && database.language !== undefined && typeof database.language !== "string")
+    invalid("IPIP language must be a string");
+  if (
+    database.metadata !== undefined &&
+    (!database.metadata ||
+      typeof database.metadata !== "object" ||
+      Array.isArray(database.metadata) ||
+      (database.metadata.id !== undefined && (typeof database.metadata.id !== "string" || !database.metadata.id)))
+  )
+    invalid("Database metadata must be an object with a nonempty id when provided");
+  return database;
+}
+
 function validate(options: IP2RegionOptions) {
   const normalized = normalizeLookupOptions(options);
   const hasSource = Object.hasOwn(options, "source");
   const hasDatabase = Object.hasOwn(options, "database");
-  if ((hasSource && hasDatabase) || ((hasSource || hasDatabase) && Object.hasOwn(options, "families")))
-    invalid("source, database and bundled families are mutually exclusive");
+  const hasDatabases = Object.hasOwn(options, "databases");
+  if ([hasSource, hasDatabase, hasDatabases, Object.hasOwn(options, "families")].filter(Boolean).length > 1)
+    invalid("source, database, databases and bundled families are mutually exclusive");
   if (!hasSource && Object.hasOwn(options, "ownership"))
     invalid("Database readers are owned automatically; ownership configures custom sources only");
   if (hasSource) return { kind: "source", source: options.source!, options: normalized } as const;
   if (hasDatabase) {
-    const database = options.database;
-    if (!database || typeof database !== "object" || !["xdb", "bin", "ipip"].includes(database.format))
-      invalid("database needs format: xdb, bin or ipip");
-    const hasPath = Object.hasOwn(database, "path");
-    const hasData = Object.hasOwn(database, "data");
-    if (hasPath === hasData) invalid("database requires exactly one of path or data");
-    if (hasPath && !(typeof database.path === "string" || database.path instanceof URL))
-      invalid("database.path must be a local path or file URL");
-    if (hasData && !(database.data instanceof Uint8Array)) invalid("database.data must be a Uint8Array");
-    if (database.format !== "xdb" && Object.hasOwn(database, "fields")) invalid("fields configures XDB only");
-    if (database.format !== "ipip" && Object.hasOwn(database, "language")) invalid("language configures IPIP only");
-    return { kind: "database", database, options: normalized } as const;
+    return { kind: "database", database: validateDatabase(options.database!), options: normalized } as const;
+  }
+  if (hasDatabases) {
+    const databases = options.databases;
+    if (!databases || typeof databases !== "object" || Array.isArray(databases))
+      invalid("databases must be a nonempty map of address families 4 and 6");
+    const keys = Reflect.ownKeys(databases);
+    if (!keys.length || keys.some((key) => key !== "4" && key !== "6"))
+      invalid("databases must contain only address family keys 4 and 6");
+    const entries = keys.map((key) => {
+      const family = Number(key) as AddressFamily;
+      return [family, validateDatabase(databases[family]!)] as const;
+    });
+    return { kind: "databases", entries, options: normalized } as const;
   }
   const families = options.families === undefined ? [4, 6] : options.families;
   if (
@@ -107,22 +157,37 @@ function bundledReader(bytes: Uint8Array, file: (typeof bundledFiles)[number]): 
   });
 }
 
-function combined(sources: Map<AddressFamily, Adapter>): Adapter {
+function combined(sources: Map<AddressFamily, Adapter>, bundled = true): Adapter {
+  const readers = [...new Set(sources.values())];
+  const fields = [...new Set(readers.flatMap((source) => source.capabilities?.fields ?? []))];
+  const languages = [...new Set(readers.flatMap((source) => source.capabilities?.languages ?? []))];
+  let isClosed = false;
   return {
     metadata: {
-      ...bundledMetadata,
-      format: "ip2region-xdb",
+      ...(bundled ? { ...bundledMetadata, format: "ip2region-xdb" } : { id: "custom-databases" }),
       loadedAt: new Date().toISOString(),
-      datasets: [...sources.values()].map((source) => source.metadata!),
+      datasets: readers.map((source) => source.metadata!),
     },
-    capabilities: { families: [...sources.keys()], fields: [...sources.values()][0].capabilities!.fields },
+    capabilities: { families: [...sources.keys()], fields, ...(languages.length ? { languages } : {}) },
     lookup(address, parsed) {
       const source = sources.get(parsed.family);
       if (!source) throw new IP2RegionError("UNSUPPORTED_FAMILY", `IPv${parsed.family} was not loaded`);
       return source.lookup(address, parsed);
     },
     close() {
-      for (const source of sources.values()) source.close?.();
+      if (isClosed) return;
+      isClosed = true;
+      let failed = false;
+      let failure: unknown;
+      for (const source of readers) {
+        try {
+          source.close?.();
+        } catch (cause) {
+          if (!failed) failure = cause;
+          failed = true;
+        }
+      }
+      if (failed) throw failure;
     },
   };
 }
@@ -155,6 +220,14 @@ export function createLoader(
         if (config.kind === "database") {
           const database = config.database;
           source = reader(database.data ?? readBytesSync(database.path!), database);
+        } else if (config.kind === "databases") {
+          for (const [family, database] of config.entries) {
+            const loaded = reader(database.data ?? readBytesSync(database.path!), database);
+            sources.set(family, loaded);
+            if (!loaded.capabilities?.families?.includes(family))
+              invalid(`Database assigned to IPv${family} does not support that address family`);
+          }
+          source = combined(sources, false);
         } else {
           for (const file of config.files) sources.set(file.family, bundledReader(readBytesSync(file.url), file));
           source = combined(sources);
@@ -175,6 +248,14 @@ export function createLoader(
         if (config.kind === "database") {
           const database = config.database;
           source = reader(database.data ?? (await readBytes(database.path!)), database);
+        } else if (config.kind === "databases") {
+          for (const [family, database] of config.entries) {
+            const loaded = reader(database.data ?? (await readBytes(database.path!)), database);
+            sources.set(family, loaded);
+            if (!loaded.capabilities?.families?.includes(family))
+              invalid(`Database assigned to IPv${family} does not support that address family`);
+          }
+          source = combined(sources, false);
         } else {
           for (const file of config.files) sources.set(file.family, bundledReader(await readBytes(file.url), file));
           source = combined(sources);

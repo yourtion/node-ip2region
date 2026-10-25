@@ -49,3 +49,17 @@ shipped in the package. See [the adapter contract](adapters.md) and
 deterministic corpus, with optional built revisions as a baseline. It validates
 every result before measuring and writes JSON; see
 [the workload and commands](performance.md#repository-xdb-measurements).
+
+Data maintenance is explicit and separate from runtime use. `npm run data:stage --
+--revision <full-commit-sha> --stage <new-directory>` downloads pinned candidates
+and writes a review report; `--from <directory>` stages local files without claiming
+their revision was verified upstream. `data:validate` rechecks the stage and
+installed baseline, and `data:apply` replaces both snapshots and their metadata.
+See [data maintenance](../data/README.md) for commands and recovery limits.
+Network staging needs `curl`; offline staging and tests do not. Formatting uses
+the repository's existing development formatter.
+
+`npm test` includes offline update-tool tests in temporary repositories: invalid
+files, provenance, changed stages/baselines, locks, and replacement-failure rollback.
+Native composition and async batch tests are shared across all three runtime
+consumers; package checks also validate public option types and the data manifest.
