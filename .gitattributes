@@ -1,0 +1,3 @@
+# Snapshot digests identify upstream bytes, including original line endings.
+data/*.xdb -text
+data/LICENSE.ip2region.md -text

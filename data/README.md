@@ -30,6 +30,8 @@ user's responsibility and are separate from reader code licensing.
 A header build timestamp describes the binary's build, not the freshness of every
 underlying range. File hashes identify the exact snapshots. Runtime `loadedAt`
 is separate; loading/downloading the same file does not create a new data version.
+Git attributes preserve the upstream bytes of both XDB files and the license,
+including on Windows checkouts with automatic line-ending conversion enabled.
 No automatic downloading or updating occurs at import, installation or lookup.
 No geographic-accuracy guarantee is implied by upstream attribution or passing
 reader tests. Updating these files requires checking upstream provenance/license,
