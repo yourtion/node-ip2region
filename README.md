@@ -110,6 +110,27 @@ XDB 示例：`database: { format: "xdb", path, fields: ["country_name", "region_
 相对路径从应用工作目录解析。读取器复制输入字节，自备数据的获取、更新和授权由应用管理。
 格式读取器也可单独从 `ip2region/formats/*` 导入，详细支持范围见[格式说明](docs/formats.md)。
 
+自备 IPv4、IPv6 文件可以按地址族显式组合，各自保留字段布局和来源信息：
+
+```js
+const query = await IP2Region.open({
+  databases: {
+    4: { format: "xdb", path: "/data/custom-v4.xdb" },
+    6: { format: "xdb", path: "/data/custom-v6.xdb" },
+  },
+});
+try {
+  console.log(query.lookup("120.24.78.68")?.extensions);
+  console.log(query.lookup("2001:4860:4860::8888")?.extensions);
+} finally {
+  query.close(); // 统一释放两份读取器
+}
+```
+
+`databases` 至少配置 `4` 或 `6` 中的一项；指定地址族必须被对应文件支持。
+XDB 的 `fields` 规则与单库相同，省略时保留原始文本。组合按地址族路由，不进行命中回退或字段合并。
+同步构造也支持此配置；加载任一文件失败会清理此前已创建的读取器。
+
 ## 自定义接入
 
 函数、对象或类实例均通过 `source` 传入。同步来源使用 `IP2Region`，异步来源使用
@@ -130,9 +151,27 @@ query.close();
 异步客户端只暴露 `lookupAsync`、`lookupManyAsync`、`lookupManySettledAsync`、`closeAsync`，均返回 Promise。
 
 外部来源默认借用；需要转交关闭责任时配置 `ownership: "owned"`。
-数据库配置创建的读取器由实例自动拥有。`source`、`database` 与内置 `families` 配置互斥。
+数据库配置创建的读取器由实例自动拥有。`source`、`database`、`databases` 与内置 `families` 配置互斥。
 完整输入、返回值、错误、批量和生命周期规则见[自定义接入契约](docs/adapters.md)。
 [可运行测试示例](examples/custom/) 包括同步函数、类实例、异步服务和自定义 JSON 字节格式，
 使用公开接口并在三个运行时验证，可直接复制到自己的适配器项目。
+
+异步批量默认串行。接入外部服务时可显式设置并发上限，返回值仍按输入顺序排列：
+
+```js
+const results = await remote.lookupManyAsync(ips, { concurrency: 4 });
+const settled = await remote.lookupManySettledAsync(ips, { concurrency: 4 });
+```
+
+这里 `remote` 是 `AsyncIP2Region` 实例，`ips` 是 IP 字符串的可迭代对象。
+`concurrency` 必须是正的安全整数。普通批量在观察到错误后停止派发，等待已启动查询结束再抛出错误；
+settled 版本保留每项成功或失败的结果并继续查询。并发上限按单次批量调用计算；不表示请求取消或超时。
+关闭会拒绝新的查询，并等待已启动查询结束。详细迭代器与关闭规则见[接入契约](docs/adapters.md)。
+
+## 维护内置数据
+
+仓库提供显式的 `data:stage`、`data:validate`、`data:apply` 命令，用于固定 upstream revision、
+暂存候选快照、校验两份文件并生成变化报告，再更新数据与元信息。
+这是仓库维护工具，不会在导入、安装或查询时联网；操作与失败恢复说明见[数据维护](data/README.md)。
 
 代码采用 [MIT](LICENSE) 许可；内置数据许可见[数据来源](data/README.md)。

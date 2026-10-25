@@ -14,6 +14,8 @@ import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import { createRequire } from "node:module";
 import { createHash } from "node:crypto";
+import assert from "node:assert/strict";
+import { pathToFileURL } from "node:url";
 
 const require = createRequire(import.meta.url);
 const root = resolve(import.meta.dirname, "..");
@@ -63,19 +65,45 @@ try {
 
   const files = run("tar", ["-tzf", archive], root).split(/\r?\n/);
   const allowedFiles =
-    /^package\/(?:dist\/|docs\/|examples\/custom\/|data\/(?:README\.md|LICENSE\.ip2region\.md|ip2region_v[46]\.xdb)$|(?:package\.json|README\.md|LICENSE|CHANGELOG\.md)$)/;
+    /^package\/(?:dist\/|docs\/|examples\/custom\/|data\/(?:README\.md|manifest\.json|LICENSE\.ip2region\.md|ip2region_v[46]\.xdb)$|(?:package\.json|README\.md|LICENSE|CHANGELOG\.md)$)/;
   if (files.some((file) => file && !allowedFiles.test(file)))
     throw new Error("Tarball contains files outside the distribution allowlist");
-  for (const [name, expected] of [
-    ["ip2region_v4.xdb", "27ecba8c9a6d5e3b280aedbe7ee15c65372b179fbd0dad3845d8c608f2fcace1"],
-    ["ip2region_v6.xdb", "939f6b46bd2b8bec3cf7c5ceb8ba782266ae9b1f35b5ba7916700dec0b7506ed"],
-  ]) {
-    const hash = createHash("sha256")
-      .update(readFileSync(join(installed, "data", name)))
-      .digest("hex");
-    if (hash !== expected) throw new Error("Bundled XDB snapshot changed");
+  const snapshot = JSON.parse(readFileSync(join(root, "data/manifest.json"), "utf8"));
+  const packedSnapshot = JSON.parse(readFileSync(join(installed, "data/manifest.json"), "utf8"));
+  assert.deepEqual(packedSnapshot, snapshot, "Packed data manifest differs from the reviewed snapshot");
+  assert.equal(snapshot.version, 1);
+  assert.deepEqual(
+    snapshot.files.map((file) => file.family),
+    [4, 6]
+  );
+  const { bundledFiles, bundledRevision, bundledMetadata } = await import(
+    pathToFileURL(join(installed, "dist/esm/bundled.js"))
+  );
+  assert.equal(bundledRevision, snapshot.upstream.revision);
+  assert.equal(
+    bundledMetadata.dataVersion,
+    `${snapshot.upstream.source === "local-files" ? "local" : "upstream"}:${snapshot.upstream.revision}`
+  );
+  for (const file of snapshot.files) {
+    const name = `ip2region_v${file.family}.xdb`;
+    assert.equal(file.file, name);
+    const bytes = readFileSync(join(installed, "data", name));
+    const hash = createHash("sha256").update(bytes).digest("hex");
+    assert.equal(bytes.length, file.bytes, "Bundled XDB size differs from manifest");
+    assert.equal(hash, file.sha256, "Bundled XDB snapshot differs from manifest");
+    assert.equal(bundledFiles.find((entry) => entry.family === file.family)?.sha256, hash);
+    const built = bytes.readUInt32LE(4);
+    assert.equal(built ? new Date(built * 1000).toISOString() : null, file.builtAt);
   }
   if (!files.includes("package/data/LICENSE.ip2region.md")) throw new Error("Upstream license missing");
+  assert.equal(snapshot.license.file, "LICENSE.ip2region.md");
+  assert.equal(
+    createHash("sha256")
+      .update(readFileSync(join(installed, "data/LICENSE.ip2region.md")))
+      .digest("hex"),
+    snapshot.license.sha256,
+    "Bundled license differs from manifest"
+  );
 
   const esm = `import { IP2Region as MemoryIP2Region, AsyncIP2Region, IP2RegionError } from 'ip2region';
     import { IP2Region } from 'ip2region/node';
@@ -95,7 +123,19 @@ try {
       equal(typeof query.lookupAsync, 'undefined'); query.close();
     }
     const external = new AsyncIP2Region({ source: async () => null });
-    equal(typeof external.lookup, 'undefined'); equal(await external.lookupAsync('::1'), null); await external.closeAsync();
+    equal(typeof external.lookup, 'undefined'); equal(await external.lookupAsync('::1'), null);
+    equal(await external.lookupManyAsync(['::1', '192.0.2.1'], { concurrency: 2 }), [null, null]);
+    equal(await external.lookupManySettledAsync(['::1', '192.0.2.1'], { concurrency: 2 }), [{ok:true,value:null},{ok:true,value:null}]);
+    await external.closeAsync();
+    const databases = {
+      4: { format: 'xdb', data: xdbFixture({ region: 'V4|0|First|0|EX' }), fields: IP2REGION_FIELDS },
+      6: { format: 'xdb', data: xdbFixture({ family: 6, region: 'V6|0|First|0|EX' }), fields: IP2REGION_FIELDS }
+    };
+    for (const composite of [new IP2Region({ databases }), await IP2Region.open({ databases })]) {
+      equal(composite.lookup('192.0.2.1').country.name, 'V4');
+      equal(composite.lookup('2001:db8::1').country.name, 'V6');
+      equal(composite.metadata.datasets.length, 2); composite.close();
+    }
     equal(new IP2RegionError('CLOSED', 'closed').code, 'CLOSED');
     throws(() => new MemoryIP2Region({ source: () => null }).lookup('bad'), 'INVALID_IP');
     console.log('Packed ESM classes, sync construction and async opening passed');`;
@@ -137,8 +177,8 @@ try {
     ])
   );
 
-  const typed = `import { IP2Region as MemoryIP2Region, AsyncIP2Region, type LookupResult, type Adapter, type AsyncAdapter } from 'ip2region';
-    import { IP2Region } from 'ip2region/node';
+  const typed = `import { IP2Region as MemoryIP2Region, AsyncIP2Region, type LookupResult, type Adapter, type AsyncAdapter, type AsyncBatchOptions, type BatchItem } from 'ip2region';
+    import { IP2Region, type DatabasesOptions } from 'ip2region/node';
     import { createIPIP } from 'ip2region/formats/ipip-ipdb';
     const query = new MemoryIP2Region<LookupResult>({ source: () => ({ country: { name: 'Example' } }) });
     const name: string | undefined = query.lookup('::1')?.country?.name;
@@ -150,6 +190,25 @@ try {
     new MemoryIP2Region({ source: adapter });
     const remote = new AsyncIP2Region({ source: asyncAdapter });
     const promised: Promise<LookupResult | null> = remote.lookupAsync('::1'); void promised;
+    const batchOptions: AsyncBatchOptions = { concurrency: 3 };
+    const batch: Promise<(LookupResult | null)[]> = remote.lookupManyAsync(['::1'], batchOptions); void batch;
+    const settled: Promise<BatchItem<LookupResult>[]> = remote.lookupManySettledAsync(['::1'], batchOptions); void settled;
+    const databases: DatabasesOptions = { 4: { format: 'xdb', path: '/data/v4.xdb' }, 6: { format: 'xdb', data: new Uint8Array() } };
+    new IP2Region({ databases }); IP2Region.open({ databases });
+    // @ts-expect-error database maps must not be empty
+    new IP2Region({ databases: {} });
+    // @ts-expect-error only IPv4 and IPv6 map keys exist
+    new IP2Region({ databases: { 5: { format: 'xdb', path: '/data/v5.xdb' } } });
+    // @ts-expect-error single and multiple database configuration are mutually exclusive
+    new IP2Region({ databases, database: { format: 'xdb', path: '/data/v4.xdb' } });
+    // @ts-expect-error sources cannot be combined with a database map
+    new IP2Region({ databases, source: adapter });
+    // @ts-expect-error the memory-only entry does not load databases
+    new MemoryIP2Region({ databases });
+    // @ts-expect-error concurrency is numeric
+    remote.lookupManyAsync(['::1'], { concurrency: '2' });
+    // @ts-expect-error sync batches have no concurrency option
+    query.lookupMany(['::1'], batchOptions);
     const native: IP2Region = new IP2Region({ families: [4] }); void native;
     const loading: Promise<IP2Region> = IP2Region.open({ database: { format: 'ipip', path: '/data/custom.ipdb', language: 'EN' } }); void loading;
     // @ts-expect-error only IPv4 and IPv6 may be selected
