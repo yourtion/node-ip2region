@@ -1,0 +1,3110 @@
+{
+  "recordedAt": "2026-10-25T04:36:45.702Z",
+  "host": {
+    "platform": "linux",
+    "architecture": "x64",
+    "cpu": "AMD EPYC 9V74 80-Core Processor",
+    "logicalCPUs": 5,
+    "hostMemoryBytes": 18882674688
+  },
+  "methodology": {
+    "repetitions": 5,
+    "size": 4096,
+    "samples": 500000,
+    "warmup": 20000,
+    "seed": "0x243f6a88",
+    "order": "cyclically rotated candidates in sequential fresh processes",
+    "corpus": "stratified XDB index sampling; alternating first and last addresses of disjoint segments",
+    "io": "all candidates read the full same file via node:fs.readFileSync; import and corpus setup excluded",
+    "output": "raw region text or standard records; expected values decoded independently from sampled XDB segments",
+    "validation": "every candidate verifies the complete corpus and measured checksum before accepting a result",
+    "notes": "GC requested before/after loading. OS page cache uncontrolled. Corpus samples ranges, not production traffic or location accuracy. Query timings include parsing and output consumption. All measured query APIs are synchronous."
+  },
+  "versions": {
+    "currentHead": "4e5c34614afd2ae53695776152a054b6084ac3c1",
+    "currentBranch": "perf/xdb-result-mapping",
+    "runtimes": {
+      "node": "24.19.0",
+      "bun": "1.4.4",
+      "deno": "2.9.6"
+    },
+    "currentSourceSHA256": "2d7ea069a084b786cc7c61c93ad496b7bd0147464aafbe9912939a3f37d6aa3c",
+    "currentCompiledSHA256": "99f92a3aa8bfd534416704b3a8d6569ef7e1d081faf2e5325284242d90293e1d",
+    "harnessSHA256": "6a75915bae3e5eb1cfb87fd4c6df6dc0dfe81534a3dadf426b33a5d664cad63d",
+    "baselineDirectory": "/workspace/ip2region-xdb-baseline",
+    "baselineSourceSHA256": "b061ac5b93a1a36e615f7d9a1c3447599a349f0cddb5d39a15488b89496d1d87",
+    "baselineCompiledSHA256": "ba7131ac7dbe68f376344e27c4253311a97965ef9dc9eb726698a99c7d268cef"
+  },
+  "datasets": [
+    {
+      "family": 4,
+      "file": "ip2region_v4.xdb",
+      "bytes": 11122642,
+      "sha256": "27ecba8c9a6d5e3b280aedbe7ee15c65372b179fbd0dad3845d8c608f2fcace1",
+      "corpusSHA256": "e2577a2d7f7ff9d7a56f639eee8ddeae4e857328e66d3cbcf0de270a7cdbc439",
+      "addresses": 4096,
+      "distinctRegions": 2631,
+      "hits": 4096
+    },
+    {
+      "family": 6,
+      "file": "ip2region_v6.xdb",
+      "bytes": 37277813,
+      "sha256": "939f6b46bd2b8bec3cf7c5ceb8ba782266ae9b1f35b5ba7916700dec0b7506ed",
+      "corpusSHA256": "0583fe13f23c68547fa4f2d44fb52f1489e02cf5219e586d20f77c357fecdceb",
+      "addresses": 4096,
+      "distinctRegions": 3180,
+      "hits": 4096
+    }
+  ],
+  "cases": [
+    {
+      "runtime": "node",
+      "family": 4,
+      "candidate": "current-raw",
+      "runs": [
+        {
+          "candidate": "current-raw",
+          "runtime": "node",
+          "version": "24.19.0",
+          "family": 4,
+          "loadMs": 37.592887999999995,
+          "memoryDelta": {
+            "rss": 18067456,
+            "heapUsed": 53960,
+            "external": 11646970,
+            "arrayBuffers": 11646930
+          },
+          "verified": 4096,
+          "warmup": 20000,
+          "samples": 500000,
+          "checksum": 19770045,
+          "durationMs": 224.90104100000002,
+          "queriesPerSecond": 2223200.0251168245,
+          "latencyMicroseconds": {
+            "p50": 0.7410000000049877,
+            "p95": 1.1120000000062191,
+            "p99": 1.4230000000168275
+          }
+        },
+        {
+          "candidate": "current-raw",
+          "runtime": "node",
+          "version": "24.19.0",
+          "family": 4,
+          "loadMs": 35.323384,
+          "memoryDelta": {
+            "rss": 18038784,
+            "heapUsed": 55528,
+            "external": 11646970,
+            "arrayBuffers": 11646930
+          },
+          "verified": 4096,
+          "warmup": 20000,
+          "samples": 500000,
+          "checksum": 19770045,
+          "durationMs": 242.142176,
+          "queriesPerSecond": 2064902.5636905155,
+          "latencyMicroseconds": {
+            "p50": 0.6010000000031823,
+            "p95": 0.8609999999862339,
+            "p99": 1.1120000000062191
+          }
+        },
+        {
+          "candidate": "current-raw",
+          "runtime": "node",
+          "version": "24.19.0",
+          "family": 4,
+          "loadMs": 32.300141999999994,
+          "memoryDelta": {
+            "rss": 17588224,
+            "heapUsed": 53960,
+            "external": 11646970,
+            "arrayBuffers": 11646930
+          },
+          "verified": 4096,
+          "warmup": 20000,
+          "samples": 500000,
+          "checksum": 19770045,
+          "durationMs": 212.40054200000003,
+          "queriesPerSecond": 2354042.95719735,
+          "latencyMicroseconds": {
+            "p50": 0.6110000000063565,
+            "p95": 0.9119999999995798,
+            "p99": 1.3620000000003074
+          }
+        },
+        {
+          "candidate": "current-raw",
+          "runtime": "node",
+          "version": "24.19.0",
+          "family": 4,
+          "loadMs": 43.873212,
+          "memoryDelta": {
+            "rss": 17924096,
+            "heapUsed": 55888,
+            "external": 11646970,
+            "arrayBuffers": 11646930
+          },
+          "verified": 4096,
+          "warmup": 20000,
+          "samples": 500000,
+          "checksum": 19770045,
+          "durationMs": 227.470498,
+          "queriesPerSecond": 2198087.2438235926,
+          "latencyMicroseconds": {
+            "p50": 0.641000000001668,
+            "p95": 0.9610000000179753,
+            "p99": 1.3720000000034815
+          }
+        },
+        {
+          "candidate": "current-raw",
+          "runtime": "node",
+          "version": "24.19.0",
+          "family": 4,
+          "loadMs": 34.708335,
+          "memoryDelta": {
+            "rss": 18055168,
+            "heapUsed": 53960,
+            "external": 11646970,
+            "arrayBuffers": 11646930
+          },
+          "verified": 4096,
+          "warmup": 20000,
+          "samples": 500000,
+          "checksum": 19770045,
+          "durationMs": 216.25731100000002,
+          "queriesPerSecond": 2312060.561966388,
+          "latencyMicroseconds": {
+            "p50": 0.6010000000173932,
+            "p95": 0.8410000000083073,
+            "p99": 1.0709999999960473
+          }
+        }
+      ]
+    },
+    {
+      "runtime": "node",
+      "family": 4,
+      "candidate": "current-standard",
+      "runs": [
+        {
+          "candidate": "current-standard",
+          "runtime": "node",
+          "version": "24.19.0",
+          "family": 4,
+          "loadMs": 35.81510600000001,
+          "memoryDelta": {
+            "rss": 17690624,
+            "heapUsed": 54832,
+            "external": 11646970,
+            "arrayBuffers": 11646930
+          },
+          "verified": 4096,
+          "warmup": 20000,
+          "samples": 500000,
+          "checksum": 36997119,
+          "durationMs": 609.397884,
+          "queriesPerSecond": 820482.0087626035,
+          "latencyMicroseconds": {
+            "p50": 1.5129999999885513,
+            "p95": 2.554000000003498,
+            "p99": 3.2750000000021373
+          }
+        },
+        {
+          "candidate": "current-standard",
+          "runtime": "node",
+          "version": "24.19.0",
+          "family": 4,
+          "loadMs": 33.861942,
+          "memoryDelta": {
+            "rss": 18227200,
+            "heapUsed": 54832,
+            "external": 11646970,
+            "arrayBuffers": 11646930
+          },
+          "verified": 4096,
+          "warmup": 20000,
+          "samples": 500000,
+          "checksum": 36997119,
+          "durationMs": 640.620007,
+          "queriesPerSecond": 780493.8880093391,
+          "latencyMicroseconds": {
+            "p50": 1.3019999999812626,
+            "p95": 1.7429999999762913,
+            "p99": 2.1729999999990923
+          }
+        },
+        {
+          "candidate": "current-standard",
+          "runtime": "node",
+          "version": "24.19.0",
+          "family": 4,
+          "loadMs": 33.94137299999999,
+          "memoryDelta": {
+            "rss": 18067456,
+            "heapUsed": 54832,
+            "external": 11646970,
+            "arrayBuffers": 11646930
+          },
+          "verified": 4096,
+          "warmup": 20000,
+          "samples": 500000,
+          "checksum": 36997119,
+          "durationMs": 559.914764,
+          "queriesPerSecond": 892993.0627798198,
+          "latencyMicroseconds": {
+            "p50": 1.331999999990785,
+            "p95": 1.8129999999985102,
+            "p99": 2.5939999999877728
+          }
+        },
+        {
+          "candidate": "current-standard",
+          "runtime": "node",
+          "version": "24.19.0",
+          "family": 4,
+          "loadMs": 33.790234999999996,
+          "memoryDelta": {
+            "rss": 17821696,
+            "heapUsed": 54832,
+            "external": 11646970,
+            "arrayBuffers": 11646930
+          },
+          "verified": 4096,
+          "warmup": 20000,
+          "samples": 500000,
+          "checksum": 36997119,
+          "durationMs": 609.609925,
+          "queriesPerSecond": 820196.6199943349,
+          "latencyMicroseconds": {
+            "p50": 1.3120000000128584,
+            "p95": 1.7330000000015389,
+            "p99": 2.2739999999998872
+          }
+        },
+        {
+          "candidate": "current-standard",
+          "runtime": "node",
+          "version": "24.19.0",
+          "family": 4,
+          "loadMs": 33.039418999999995,
+          "memoryDelta": {
+            "rss": 17682432,
+            "heapUsed": 54832,
+            "external": 11646970,
+            "arrayBuffers": 11646930
+          },
+          "verified": 4096,
+          "warmup": 20000,
+          "samples": 500000,
+          "checksum": 36997119,
+          "durationMs": 571.112312,
+          "queriesPerSecond": 875484.5404208341,
+          "latencyMicroseconds": {
+            "p50": 1.2520000000222353,
+            "p95": 1.6719999999850188,
+            "p99": 2.162999999995918
+          }
+        }
+      ]
+    },
+    {
+      "runtime": "node",
+      "family": 4,
+      "candidate": "baseline-raw",
+      "runs": [
+        {
+          "candidate": "baseline-raw",
+          "runtime": "node",
+          "version": "24.19.0",
+          "family": 4,
+          "loadMs": 40.021086999999994,
+          "memoryDelta": {
+            "rss": 17440768,
+            "heapUsed": 53960,
+            "external": 11646970,
+            "arrayBuffers": 11646930
+          },
+          "verified": 4096,
+          "warmup": 20000,
+          "samples": 500000,
+          "checksum": 19770045,
+          "durationMs": 304.527777,
+          "queriesPerSecond": 1641886.3491720166,
+          "latencyMicroseconds": {
+            "p50": 0.8010000000240325,
+            "p95": 1.462000000003627,
+            "p99": 1.9630000000177006
+          }
+        },
+        {
+          "candidate": "baseline-raw",
+          "runtime": "node",
+          "version": "24.19.0",
+          "family": 4,
+          "loadMs": 41.413346999999995,
+          "memoryDelta": {
+            "rss": 17809408,
+            "heapUsed": 53960,
+            "external": 11646970,
+            "arrayBuffers": 11646930
+          },
+          "verified": 4096,
+          "warmup": 20000,
+          "samples": 500000,
+          "checksum": 19770045,
+          "durationMs": 292.542863,
+          "queriesPerSecond": 1709151.2500853592,
+          "latencyMicroseconds": {
+            "p50": 0.7710000000145101,
+            "p95": 1.4219999999909305,
+            "p99": 1.8629999999859592
+          }
+        },
+        {
+          "candidate": "baseline-raw",
+          "runtime": "node",
+          "version": "24.19.0",
+          "family": 4,
+          "loadMs": 49.173148999999995,
+          "memoryDelta": {
+            "rss": 17887232,
+            "heapUsed": 53960,
+            "external": 11646970,
+            "arrayBuffers": 11646930
+          },
+          "verified": 4096,
+          "warmup": 20000,
+          "samples": 500000,
+          "checksum": 19770045,
+          "durationMs": 277.73378,
+          "queriesPerSecond": 1800285.1507656,
+          "latencyMicroseconds": {
+            "p50": 0.7209999999986394,
+            "p95": 1.0320000000092477,
+            "p99": 1.381999999978234
+          }
+        },
+        {
+          "candidate": "baseline-raw",
+          "runtime": "node",
+          "version": "24.19.0",
+          "family": 4,
+          "loadMs": 36.21800399999999,
+          "memoryDelta": {
+            "rss": 17739776,
+            "heapUsed": 53960,
+            "external": 11646970,
+            "arrayBuffers": 11646930
+          },
+          "verified": 4096,
+          "warmup": 20000,
+          "samples": 500000,
+          "checksum": 19770045,
+          "durationMs": 275.50084000000004,
+          "queriesPerSecond": 1814876.4991061368,
+          "latencyMicroseconds": {
+            "p50": 0.7209999999986394,
+            "p95": 1.0210000000085984,
+            "p99": 1.3120000000128584
+          }
+        },
+        {
+          "candidate": "baseline-raw",
+          "runtime": "node",
+          "version": "24.19.0",
+          "family": 4,
+          "loadMs": 48.17574599999999,
+          "memoryDelta": {
+            "rss": 17616896,
+            "heapUsed": 53960,
+            "external": 11646970,
+            "arrayBuffers": 11646930
+          },
+          "verified": 4096,
+          "warmup": 20000,
+          "samples": 500000,
+          "checksum": 19770045,
+          "durationMs": 293.849601,
+          "queriesPerSecond": 1701550.7194784314,
+          "latencyMicroseconds": {
+            "p50": 0.8009999999956108,
+            "p95": 1.4419999999972788,
+            "p99": 2.1240000000091186
+          }
+        }
+      ]
+    },
+    {
+      "runtime": "node",
+      "family": 4,
+      "candidate": "baseline-standard",
+      "runs": [
+        {
+          "candidate": "baseline-standard",
+          "runtime": "node",
+          "version": "24.19.0",
+          "family": 4,
+          "loadMs": 39.87395800000001,
+          "memoryDelta": {
+            "rss": 17620992,
+            "heapUsed": 55168,
+            "external": 11646970,
+            "arrayBuffers": 11646930
+          },
+          "verified": 4096,
+          "warmup": 20000,
+          "samples": 500000,
+          "checksum": 36997119,
+          "durationMs": 852.4869699999999,
+          "queriesPerSecond": 586519.2285578278,
+          "latencyMicroseconds": {
+            "p50": 1.8230000000016844,
+            "p95": 2.864000000016631,
+            "p99": 3.8160000000004857
+          }
+        },
+        {
+          "candidate": "baseline-standard",
+          "runtime": "node",
+          "version": "24.19.0",
+          "family": 4,
+          "loadMs": 39.128240000000005,
+          "memoryDelta": {
+            "rss": 17940480,
+            "heapUsed": 54832,
+            "external": 11646970,
+            "arrayBuffers": 11646930
+          },
+          "verified": 4096,
+          "warmup": 20000,
+          "samples": 500000,
+          "checksum": 36997119,
+          "durationMs": 831.6220919999998,
+          "queriesPerSecond": 601234.6290579304,
+          "latencyMicroseconds": {
+            "p50": 1.7029999999920165,
+            "p95": 2.1530000000211658,
+            "p99": 2.9839999999978772
+          }
+        },
+        {
+          "candidate": "baseline-standard",
+          "runtime": "node",
+          "version": "24.19.0",
+          "family": 4,
+          "loadMs": 38.724990999999996,
+          "memoryDelta": {
+            "rss": 17416192,
+            "heapUsed": 54832,
+            "external": 11646970,
+            "arrayBuffers": 11646930
+          },
+          "verified": 4096,
+          "warmup": 20000,
+          "samples": 500000,
+          "checksum": 36997119,
+          "durationMs": 885.1203079999999,
+          "queriesPerSecond": 564894.9588895887,
+          "latencyMicroseconds": {
+            "p50": 1.8029999999953361,
+            "p95": 2.9750000000206,
+            "p99": 3.7360000000035143
+          }
+        },
+        {
+          "candidate": "baseline-standard",
+          "runtime": "node",
+          "version": "24.19.0",
+          "family": 4,
+          "loadMs": 50.501024,
+          "memoryDelta": {
+            "rss": 18034688,
+            "heapUsed": 54832,
+            "external": 11646970,
+            "arrayBuffers": 11646930
+          },
+          "verified": 4096,
+          "warmup": 20000,
+          "samples": 500000,
+          "checksum": 36997119,
+          "durationMs": 838.688803,
+          "queriesPerSecond": 596168.6840357161,
+          "latencyMicroseconds": {
+            "p50": 1.7029999999920165,
+            "p95": 2.1830000000022665,
+            "p99": 3.1050000000050204
+          }
+        },
+        {
+          "candidate": "baseline-standard",
+          "runtime": "node",
+          "version": "24.19.0",
+          "family": 4,
+          "loadMs": 36.167732,
+          "memoryDelta": {
+            "rss": 17793024,
+            "heapUsed": 54832,
+            "external": 11646970,
+            "arrayBuffers": 11646930
+          },
+          "verified": 4096,
+          "warmup": 20000,
+          "samples": 500000,
+          "checksum": 36997119,
+          "durationMs": 822.3511780000001,
+          "queriesPerSecond": 608012.7485389216,
+          "latencyMicroseconds": {
+            "p50": 1.7719999999883385,
+            "p95": 3.024000000010574,
+            "p99": 3.776000000016211
+          }
+        }
+      ]
+    },
+    {
+      "runtime": "node",
+      "family": 6,
+      "candidate": "current-raw",
+      "runs": [
+        {
+          "candidate": "current-raw",
+          "runtime": "node",
+          "version": "24.19.0",
+          "family": 6,
+          "loadMs": 60.559478,
+          "memoryDelta": {
+            "rss": 43986944,
+            "heapUsed": 54872,
+            "external": 37802141,
+            "arrayBuffers": 37802101
+          },
+          "verified": 4096,
+          "warmup": 20000,
+          "samples": 500000,
+          "checksum": 26736962,
+          "durationMs": 1717.396058,
+          "queriesPerSecond": 291138.4346498832,
+          "latencyMicroseconds": {
+            "p50": 3.3449999999959346,
+            "p95": 5.147999999991271,
+            "p99": 8.313000000015336
+          }
+        },
+        {
+          "candidate": "current-raw",
+          "runtime": "node",
+          "version": "24.19.0",
+          "family": 6,
+          "loadMs": 76.87247299999999,
+          "memoryDelta": {
+            "rss": 44134400,
+            "heapUsed": 54872,
+            "external": 37802141,
+            "arrayBuffers": 37802101
+          },
+          "verified": 4096,
+          "warmup": 20000,
+          "samples": 500000,
+          "checksum": 26736962,
+          "durationMs": 1574.818215,
+          "queriesPerSecond": 317496.9626573693,
+          "latencyMicroseconds": {
+            "p50": 3.2550000000242107,
+            "p95": 4.015999999978703,
+            "p99": 9.153000000026168
+          }
+        },
+        {
+          "candidate": "current-raw",
+          "runtime": "node",
+          "version": "24.19.0",
+          "family": 6,
+          "loadMs": 62.324348,
+          "memoryDelta": {
+            "rss": 44126208,
+            "heapUsed": 53960,
+            "external": 37802141,
+            "arrayBuffers": 37802101
+          },
+          "verified": 4096,
+          "warmup": 20000,
+          "samples": 500000,
+          "checksum": 26736962,
+          "durationMs": 1608.02882,
+          "queriesPerSecond": 310939.7006951654,
+          "latencyMicroseconds": {
+            "p50": 3.2950000000084856,
+            "p95": 4.086000000029344,
+            "p99": 10.716000000002168
+          }
+        },
+        {
+          "candidate": "current-raw",
+          "runtime": "node",
+          "version": "24.19.0",
+          "family": 6,
+          "loadMs": 64.131224,
+          "memoryDelta": {
+            "rss": 43548672,
+            "heapUsed": 54872,
+            "external": 37802141,
+            "arrayBuffers": 37802101
+          },
+          "verified": 4096,
+          "warmup": 20000,
+          "samples": 500000,
+          "checksum": 26736962,
+          "durationMs": 2128.2013429999997,
+          "queriesPerSecond": 234940.17689847876,
+          "latencyMicroseconds": {
+            "p50": 3.776000000016211,
+            "p95": 5.297999999982039,
+            "p99": 30.385000000023865
+          }
+        },
+        {
+          "candidate": "current-raw",
+          "runtime": "node",
+          "version": "24.19.0",
+          "family": 6,
+          "loadMs": 62.178082,
+          "memoryDelta": {
+            "rss": 44077056,
+            "heapUsed": 54872,
+            "external": 37802141,
+            "arrayBuffers": 37802101
+          },
+          "verified": 4096,
+          "warmup": 20000,
+          "samples": 500000,
+          "checksum": 26736962,
+          "durationMs": 1855.3868300000001,
+          "queriesPerSecond": 269485.5821521596,
+          "latencyMicroseconds": {
+            "p50": 3.7160000000255877,
+            "p95": 6.069000000024971,
+            "p99": 11.006000000008953
+          }
+        }
+      ]
+    },
+    {
+      "runtime": "node",
+      "family": 6,
+      "candidate": "current-standard",
+      "runs": [
+        {
+          "candidate": "current-standard",
+          "runtime": "node",
+          "version": "24.19.0",
+          "family": 6,
+          "loadMs": 73.66540600000002,
+          "memoryDelta": {
+            "rss": 44048384,
+            "heapUsed": 55552,
+            "external": 37802141,
+            "arrayBuffers": 37802101
+          },
+          "verified": 4096,
+          "warmup": 20000,
+          "samples": 500000,
+          "checksum": 50313021,
+          "durationMs": 2206.59318,
+          "queriesPerSecond": 226593.64876673825,
+          "latencyMicroseconds": {
+            "p50": 4.42699999996421,
+            "p95": 5.408999999986008,
+            "p99": 17.086000000006152
+          }
+        },
+        {
+          "candidate": "current-standard",
+          "runtime": "node",
+          "version": "24.19.0",
+          "family": 6,
+          "loadMs": 60.658483,
+          "memoryDelta": {
+            "rss": 43819008,
+            "heapUsed": 54832,
+            "external": 37802141,
+            "arrayBuffers": 37802101
+          },
+          "verified": 4096,
+          "warmup": 20000,
+          "samples": 500000,
+          "checksum": 50313021,
+          "durationMs": 2075.4737840000003,
+          "queriesPerSecond": 240908.8487913177,
+          "latencyMicroseconds": {
+            "p50": 4.276000000004387,
+            "p95": 5.24799999999459,
+            "p99": 17.404999999996562
+          }
+        },
+        {
+          "candidate": "current-standard",
+          "runtime": "node",
+          "version": "24.19.0",
+          "family": 6,
+          "loadMs": 65.052493,
+          "memoryDelta": {
+            "rss": 43991040,
+            "heapUsed": 55744,
+            "external": 37802141,
+            "arrayBuffers": 37802101
+          },
+          "verified": 4096,
+          "warmup": 20000,
+          "samples": 500000,
+          "checksum": 50313021,
+          "durationMs": 2192.2573780000002,
+          "queriesPerSecond": 228075.4098572818,
+          "latencyMicroseconds": {
+            "p50": 4.195999999978994,
+            "p95": 6.218999999987318,
+            "p99": 17.806000000007316
+          }
+        },
+        {
+          "candidate": "current-standard",
+          "runtime": "node",
+          "version": "24.19.0",
+          "family": 6,
+          "loadMs": 114.90874500000001,
+          "memoryDelta": {
+            "rss": 46575616,
+            "heapUsed": 56416,
+            "external": 37802141,
+            "arrayBuffers": 37802101
+          },
+          "verified": 4096,
+          "warmup": 20000,
+          "samples": 500000,
+          "checksum": 50313021,
+          "durationMs": 2653.729574,
+          "queriesPerSecond": 188414.07387503458,
+          "latencyMicroseconds": {
+            "p50": 4.626999999970849,
+            "p95": 6.64000000000442,
+            "p99": 26.65999999999258
+          }
+        },
+        {
+          "candidate": "current-standard",
+          "runtime": "node",
+          "version": "24.19.0",
+          "family": 6,
+          "loadMs": 64.914008,
+          "memoryDelta": {
+            "rss": 44179456,
+            "heapUsed": 55744,
+            "external": 37802141,
+            "arrayBuffers": 37802101
+          },
+          "verified": 4096,
+          "warmup": 20000,
+          "samples": 500000,
+          "checksum": 50313021,
+          "durationMs": 2270.140937,
+          "queriesPerSecond": 220250.64252651727,
+          "latencyMicroseconds": {
+            "p50": 4.496000000017375,
+            "p95": 6.598999999994248,
+            "p99": 37.18500000002223
+          }
+        }
+      ]
+    },
+    {
+      "runtime": "node",
+      "family": 6,
+      "candidate": "baseline-raw",
+      "runs": [
+        {
+          "candidate": "baseline-raw",
+          "runtime": "node",
+          "version": "24.19.0",
+          "family": 6,
+          "loadMs": 94.64894,
+          "memoryDelta": {
+            "rss": 44822528,
+            "heapUsed": 53960,
+            "external": 37802141,
+            "arrayBuffers": 37802101
+          },
+          "verified": 4096,
+          "warmup": 20000,
+          "samples": 500000,
+          "checksum": 26736962,
+          "durationMs": 1948.943521,
+          "queriesPerSecond": 256549.25071581898,
+          "latencyMicroseconds": {
+            "p50": 4.187000000001717,
+            "p95": 6.64000000000442,
+            "p99": 26.14899999997533
+          }
+        },
+        {
+          "candidate": "baseline-raw",
+          "runtime": "node",
+          "version": "24.19.0",
+          "family": 6,
+          "loadMs": 61.581495000000004,
+          "memoryDelta": {
+            "rss": 43802624,
+            "heapUsed": 54872,
+            "external": 37802141,
+            "arrayBuffers": 37802101
+          },
+          "verified": 4096,
+          "warmup": 20000,
+          "samples": 500000,
+          "checksum": 26736962,
+          "durationMs": 1837.1326040000001,
+          "queriesPerSecond": 272163.2607855018,
+          "latencyMicroseconds": {
+            "p50": 4.006000000003951,
+            "p95": 5.787999999995463,
+            "p99": 25.799000000006345
+          }
+        },
+        {
+          "candidate": "baseline-raw",
+          "runtime": "node",
+          "version": "24.19.0",
+          "family": 6,
+          "loadMs": 85.730159,
+          "memoryDelta": {
+            "rss": 43966464,
+            "heapUsed": 54872,
+            "external": 37802141,
+            "arrayBuffers": 37802101
+          },
+          "verified": 4096,
+          "warmup": 20000,
+          "samples": 500000,
+          "checksum": 26736962,
+          "durationMs": 1765.2423200000003,
+          "queriesPerSecond": 283247.2314622504,
+          "latencyMicroseconds": {
+            "p50": 3.995000000031723,
+            "p95": 5.078000000025895,
+            "p99": 27.670999999998003
+          }
+        },
+        {
+          "candidate": "baseline-raw",
+          "runtime": "node",
+          "version": "24.19.0",
+          "family": 6,
+          "loadMs": 65.87166099999999,
+          "memoryDelta": {
+            "rss": 43720704,
+            "heapUsed": 59448,
+            "external": 37802141,
+            "arrayBuffers": 37802101
+          },
+          "verified": 4096,
+          "warmup": 20000,
+          "samples": 500000,
+          "checksum": 26736962,
+          "durationMs": 2055.883313,
+          "queriesPerSecond": 243204.46439656473,
+          "latencyMicroseconds": {
+            "p50": 4.195999999978994,
+            "p95": 6.390000000010332,
+            "p99": 26.11899999999423
+          }
+        },
+        {
+          "candidate": "baseline-raw",
+          "runtime": "node",
+          "version": "24.19.0",
+          "family": 6,
+          "loadMs": 64.10903200000001,
+          "memoryDelta": {
+            "rss": 44064768,
+            "heapUsed": 54680,
+            "external": 37802141,
+            "arrayBuffers": 37802101
+          },
+          "verified": 4096,
+          "warmup": 20000,
+          "samples": 500000,
+          "checksum": 26736962,
+          "durationMs": 1955.2718320000001,
+          "queriesPerSecond": 255718.91939371015,
+          "latencyMicroseconds": {
+            "p50": 3.9659999999912543,
+            "p95": 5.047999999987951,
+            "p99": 18.958999999995285
+          }
+        }
+      ]
+    },
+    {
+      "runtime": "node",
+      "family": 6,
+      "candidate": "baseline-standard",
+      "runs": [
+        {
+          "candidate": "baseline-standard",
+          "runtime": "node",
+          "version": "24.19.0",
+          "family": 6,
+          "loadMs": 64.341619,
+          "memoryDelta": {
+            "rss": 43859968,
+            "heapUsed": 55744,
+            "external": 37802141,
+            "arrayBuffers": 37802101
+          },
+          "verified": 4096,
+          "warmup": 20000,
+          "samples": 500000,
+          "checksum": 50313021,
+          "durationMs": 2478.5826880000004,
+          "queriesPerSecond": 201728.19023579007,
+          "latencyMicroseconds": {
+            "p50": 4.886999999996533,
+            "p95": 6.468999999981406,
+            "p99": 30.926000000022213
+          }
+        },
+        {
+          "candidate": "baseline-standard",
+          "runtime": "node",
+          "version": "24.19.0",
+          "family": 6,
+          "loadMs": 59.7282,
+          "memoryDelta": {
+            "rss": 44007424,
+            "heapUsed": 55744,
+            "external": 37802141,
+            "arrayBuffers": 37802101
+          },
+          "verified": 4096,
+          "warmup": 20000,
+          "samples": 500000,
+          "checksum": 50313021,
+          "durationMs": 2327.993073,
+          "queriesPerSecond": 214777.27137549777,
+          "latencyMicroseconds": {
+            "p50": 4.65699999995195,
+            "p95": 6.058999999993375,
+            "p99": 26.16899999998168
+          }
+        },
+        {
+          "candidate": "baseline-standard",
+          "runtime": "node",
+          "version": "24.19.0",
+          "family": 6,
+          "loadMs": 87.01887400000001,
+          "memoryDelta": {
+            "rss": 43479040,
+            "heapUsed": 55552,
+            "external": 37802141,
+            "arrayBuffers": 37802101
+          },
+          "verified": 4096,
+          "warmup": 20000,
+          "samples": 500000,
+          "checksum": 50313021,
+          "durationMs": 2414.2161260000003,
+          "queriesPerSecond": 207106.56126236144,
+          "latencyMicroseconds": {
+            "p50": 4.596999999989748,
+            "p95": 6.1289999999871725,
+            "p99": 22.49299999999721
+          }
+        },
+        {
+          "candidate": "baseline-standard",
+          "runtime": "node",
+          "version": "24.19.0",
+          "family": 6,
+          "loadMs": 78.503868,
+          "memoryDelta": {
+            "rss": 44613632,
+            "heapUsed": 55744,
+            "external": 37802141,
+            "arrayBuffers": 37802101
+          },
+          "verified": 4096,
+          "warmup": 20000,
+          "samples": 500000,
+          "checksum": 50313021,
+          "durationMs": 2847.441565,
+          "queriesPerSecond": 175596.2286095237,
+          "latencyMicroseconds": {
+            "p50": 4.817000000002736,
+            "p95": 6.389999999953488,
+            "p99": 26.6990000000078
+          }
+        },
+        {
+          "candidate": "baseline-standard",
+          "runtime": "node",
+          "version": "24.19.0",
+          "family": 6,
+          "loadMs": 75.51698799999998,
+          "memoryDelta": {
+            "rss": 44322816,
+            "heapUsed": 55744,
+            "external": 37802141,
+            "arrayBuffers": 37802101
+          },
+          "verified": 4096,
+          "warmup": 20000,
+          "samples": 500000,
+          "checksum": 50313021,
+          "durationMs": 2547.133358,
+          "queriesPerSecond": 196299.1055924132,
+          "latencyMicroseconds": {
+            "p50": 5.066999999996824,
+            "p95": 8.162000000027092,
+            "p99": 30.35499999998592
+          }
+        }
+      ]
+    },
+    {
+      "runtime": "bun",
+      "family": 4,
+      "candidate": "current-raw",
+      "runs": [
+        {
+          "candidate": "current-raw",
+          "runtime": "bun",
+          "version": "1.4.4",
+          "family": 4,
+          "loadMs": 60.550081000000006,
+          "memoryDelta": {
+            "rss": 26509312,
+            "heapUsed": 11758816,
+            "external": 11726240,
+            "arrayBuffers": 11122738
+          },
+          "verified": 4096,
+          "warmup": 20000,
+          "samples": 500000,
+          "checksum": 19770045,
+          "durationMs": 212.81862199999998,
+          "queriesPerSecond": 2349418.4639537795,
+          "latencyMicroseconds": {
+            "p50": 0.4909999999824777,
+            "p95": 0.9610000000179753,
+            "p99": 2.7039999999942665
+          }
+        },
+        {
+          "candidate": "current-raw",
+          "runtime": "bun",
+          "version": "1.4.4",
+          "family": 4,
+          "loadMs": 51.60641699999999,
+          "memoryDelta": {
+            "rss": 26619904,
+            "heapUsed": 11758752,
+            "external": 11726176,
+            "arrayBuffers": 11122738
+          },
+          "verified": 4096,
+          "warmup": 20000,
+          "samples": 500000,
+          "checksum": 19770045,
+          "durationMs": 228.49805700000002,
+          "queriesPerSecond": 2188202.41434263,
+          "latencyMicroseconds": {
+            "p50": 0.44100000000923956,
+            "p95": 0.8009999999956108,
+            "p99": 1.7629999999968504
+          }
+        },
+        {
+          "candidate": "current-raw",
+          "runtime": "bun",
+          "version": "1.4.4",
+          "family": 4,
+          "loadMs": 55.73461400000001,
+          "memoryDelta": {
+            "rss": 36343808,
+            "heapUsed": 22889022,
+            "external": 22855918,
+            "arrayBuffers": 22245476
+          },
+          "verified": 4096,
+          "warmup": 20000,
+          "samples": 500000,
+          "checksum": 19770045,
+          "durationMs": 219.52950800000002,
+          "queriesPerSecond": 2277598.144118284,
+          "latencyMicroseconds": {
+            "p50": 0.4710000000045511,
+            "p95": 0.930999999994242,
+            "p99": 1.8320000000073833
+          }
+        },
+        {
+          "candidate": "current-raw",
+          "runtime": "bun",
+          "version": "1.4.4",
+          "family": 4,
+          "loadMs": 46.95485400000001,
+          "memoryDelta": {
+            "rss": 25960448,
+            "heapUsed": 11758816,
+            "external": 11726240,
+            "arrayBuffers": 11122738
+          },
+          "verified": 4096,
+          "warmup": 20000,
+          "samples": 500000,
+          "checksum": 19770045,
+          "durationMs": 202.841132,
+          "queriesPerSecond": 2464983.2855399367,
+          "latencyMicroseconds": {
+            "p50": 0.4210000000028913,
+            "p95": 0.7710000000002992,
+            "p99": 1.6020000000054324
+          }
+        },
+        {
+          "candidate": "current-raw",
+          "runtime": "bun",
+          "version": "1.4.4",
+          "family": 4,
+          "loadMs": 55.693302,
+          "memoryDelta": {
+            "rss": 30502912,
+            "heapUsed": 11756240,
+            "external": 11726240,
+            "arrayBuffers": 11122738
+          },
+          "verified": 4096,
+          "warmup": 20000,
+          "samples": 500000,
+          "checksum": 19770045,
+          "durationMs": 243.819357,
+          "queriesPerSecond": 2050698.5423638863,
+          "latencyMicroseconds": {
+            "p50": 0.6510000000048421,
+            "p95": 1.2419999999906395,
+            "p99": 3.1749999999988177
+          }
+        }
+      ]
+    },
+    {
+      "runtime": "bun",
+      "family": 4,
+      "candidate": "current-standard",
+      "runs": [
+        {
+          "candidate": "current-standard",
+          "runtime": "bun",
+          "version": "1.4.4",
+          "family": 4,
+          "loadMs": 56.489615,
+          "memoryDelta": {
+            "rss": 36446208,
+            "heapUsed": 22890576,
+            "external": 22856992,
+            "arrayBuffers": 22245476
+          },
+          "verified": 4096,
+          "warmup": 20000,
+          "samples": 500000,
+          "checksum": 36997119,
+          "durationMs": 413.30059600000004,
+          "queriesPerSecond": 1209773.2372977268,
+          "latencyMicroseconds": {
+            "p50": 1.0210000000085984,
+            "p95": 1.6029999999886968,
+            "p99": 6.871000000018057
+          }
+        },
+        {
+          "candidate": "current-standard",
+          "runtime": "bun",
+          "version": "1.4.4",
+          "family": 4,
+          "loadMs": 49.012963,
+          "memoryDelta": {
+            "rss": 27066368,
+            "heapUsed": 11760930,
+            "external": 11727314,
+            "arrayBuffers": 11122738
+          },
+          "verified": 4096,
+          "warmup": 20000,
+          "samples": 500000,
+          "checksum": 36997119,
+          "durationMs": 394.851144,
+          "queriesPerSecond": 1266299.9907631015,
+          "latencyMicroseconds": {
+            "p50": 1.1220000000093933,
+            "p95": 1.86300000000017,
+            "p99": 7.350999999999885
+          }
+        },
+        {
+          "candidate": "current-standard",
+          "runtime": "bun",
+          "version": "1.4.4",
+          "family": 4,
+          "loadMs": 53.78467499999999,
+          "memoryDelta": {
+            "rss": 26681344,
+            "heapUsed": 11760994,
+            "external": 11727378,
+            "arrayBuffers": 11122738
+          },
+          "verified": 4096,
+          "warmup": 20000,
+          "samples": 500000,
+          "checksum": 36997119,
+          "durationMs": 410.95937699999996,
+          "queriesPerSecond": 1216665.2666499445,
+          "latencyMicroseconds": {
+            "p50": 1.0619999999903484,
+            "p95": 1.6929999999888423,
+            "p99": 6.990999999999303
+          }
+        },
+        {
+          "candidate": "current-standard",
+          "runtime": "bun",
+          "version": "1.4.4",
+          "family": 4,
+          "loadMs": 68.203944,
+          "memoryDelta": {
+            "rss": 26857472,
+            "heapUsed": 11760595,
+            "external": 11727315,
+            "arrayBuffers": 11122738
+          },
+          "verified": 4096,
+          "warmup": 20000,
+          "samples": 500000,
+          "checksum": 36997119,
+          "durationMs": 451.816879,
+          "queriesPerSecond": 1106643.0300404958,
+          "latencyMicroseconds": {
+            "p50": 1.3219999999876109,
+            "p95": 1.9929999999988013,
+            "p99": 4.326999999989312
+          }
+        },
+        {
+          "candidate": "current-standard",
+          "runtime": "bun",
+          "version": "1.4.4",
+          "family": 4,
+          "loadMs": 54.843248,
+          "memoryDelta": {
+            "rss": 26181632,
+            "heapUsed": 11760930,
+            "external": 11727314,
+            "arrayBuffers": 11122738
+          },
+          "verified": 4096,
+          "warmup": 20000,
+          "samples": 500000,
+          "checksum": 36997119,
+          "durationMs": 465.39079499999997,
+          "queriesPerSecond": 1074365.8993083437,
+          "latencyMicroseconds": {
+            "p50": 1.3620000000003074,
+            "p95": 2.2139999999808424,
+            "p99": 7.420999999993683
+          }
+        }
+      ]
+    },
+    {
+      "runtime": "bun",
+      "family": 4,
+      "candidate": "baseline-raw",
+      "runs": [
+        {
+          "candidate": "baseline-raw",
+          "runtime": "bun",
+          "version": "1.4.4",
+          "family": 4,
+          "loadMs": 51.78434200000001,
+          "memoryDelta": {
+            "rss": 26030080,
+            "heapUsed": 11757584,
+            "external": 11726240,
+            "arrayBuffers": 11122738
+          },
+          "verified": 4096,
+          "warmup": 20000,
+          "samples": 500000,
+          "checksum": 19770045,
+          "durationMs": 311.200867,
+          "queriesPerSecond": 1606679.3284351614,
+          "latencyMicroseconds": {
+            "p50": 0.7510000000081618,
+            "p95": 1.3220000000018217,
+            "p99": 2.15400000000443
+          }
+        },
+        {
+          "candidate": "baseline-raw",
+          "runtime": "bun",
+          "version": "1.4.4",
+          "family": 4,
+          "loadMs": 48.409065000000005,
+          "memoryDelta": {
+            "rss": 25858048,
+            "heapUsed": 11758816,
+            "external": 11726240,
+            "arrayBuffers": 11122738
+          },
+          "verified": 4096,
+          "warmup": 20000,
+          "samples": 500000,
+          "checksum": 19770045,
+          "durationMs": 280.534755,
+          "queriesPerSecond": 1782310.359370624,
+          "latencyMicroseconds": {
+            "p50": 0.5899999999883221,
+            "p95": 1.041999999998211,
+            "p99": 1.4320000000083155
+          }
+        },
+        {
+          "candidate": "baseline-raw",
+          "runtime": "bun",
+          "version": "1.4.4",
+          "family": 4,
+          "loadMs": 60.887803,
+          "memoryDelta": {
+            "rss": 36548608,
+            "heapUsed": 22889022,
+            "external": 22855918,
+            "arrayBuffers": 22245476
+          },
+          "verified": 4096,
+          "warmup": 20000,
+          "samples": 500000,
+          "checksum": 19770045,
+          "durationMs": 285.54422,
+          "queriesPerSecond": 1751042.2728920935,
+          "latencyMicroseconds": {
+            "p50": 0.6510000000048421,
+            "p95": 1.1520000000047048,
+            "p99": 2.734000000003789
+          }
+        },
+        {
+          "candidate": "baseline-raw",
+          "runtime": "bun",
+          "version": "1.4.4",
+          "family": 4,
+          "loadMs": 48.023392,
+          "memoryDelta": {
+            "rss": 25640960,
+            "heapUsed": 11758704,
+            "external": 11726240,
+            "arrayBuffers": 11122738
+          },
+          "verified": 4096,
+          "warmup": 20000,
+          "samples": 500000,
+          "checksum": 19770045,
+          "durationMs": 335.87555399999997,
+          "queriesPerSecond": 1488646.5955780754,
+          "latencyMicroseconds": {
+            "p50": 0.701000000006502,
+            "p95": 1.3320000000049959,
+            "p99": 2.494000000012875
+          }
+        },
+        {
+          "candidate": "baseline-raw",
+          "runtime": "bun",
+          "version": "1.4.4",
+          "family": 4,
+          "loadMs": 46.910297,
+          "memoryDelta": {
+            "rss": 26132480,
+            "heapUsed": 11758368,
+            "external": 11726240,
+            "arrayBuffers": 11122738
+          },
+          "verified": 4096,
+          "warmup": 20000,
+          "samples": 500000,
+          "checksum": 19770045,
+          "durationMs": 265.049768,
+          "queriesPerSecond": 1886438.1726227356,
+          "latencyMicroseconds": {
+            "p50": 0.6110000000063565,
+            "p95": 1.050999999989699,
+            "p99": 1.4619999999894162
+          }
+        }
+      ]
+    },
+    {
+      "runtime": "bun",
+      "family": 4,
+      "candidate": "baseline-standard",
+      "runs": [
+        {
+          "candidate": "baseline-standard",
+          "runtime": "bun",
+          "version": "1.4.4",
+          "family": 4,
+          "loadMs": 48.60252199999999,
+          "memoryDelta": {
+            "rss": 26497024,
+            "heapUsed": 11759586,
+            "external": 11727314,
+            "arrayBuffers": 11122738
+          },
+          "verified": 4096,
+          "warmup": 20000,
+          "samples": 500000,
+          "checksum": 36997119,
+          "durationMs": 577.787019,
+          "queriesPerSecond": 865370.7742783332,
+          "latencyMicroseconds": {
+            "p50": 1.3720000000034815,
+            "p95": 2.0629999999925985,
+            "p99": 2.9949999999985266
+          }
+        },
+        {
+          "candidate": "baseline-standard",
+          "runtime": "bun",
+          "version": "1.4.4",
+          "family": 4,
+          "loadMs": 53.81954699999999,
+          "memoryDelta": {
+            "rss": 37179392,
+            "heapUsed": 22891024,
+            "external": 22856992,
+            "arrayBuffers": 22245476
+          },
+          "verified": 4096,
+          "warmup": 20000,
+          "samples": 500000,
+          "checksum": 36997119,
+          "durationMs": 647.6652809999999,
+          "queriesPerSecond": 772003.7103548246,
+          "latencyMicroseconds": {
+            "p50": 1.3920000000098298,
+            "p95": 2.2739999999998872,
+            "p99": 3.8150000000030104
+          }
+        },
+        {
+          "candidate": "baseline-standard",
+          "runtime": "bun",
+          "version": "1.4.4",
+          "family": 4,
+          "loadMs": 54.740797,
+          "memoryDelta": {
+            "rss": 26198016,
+            "heapUsed": 11760482,
+            "external": 11727314,
+            "arrayBuffers": 11122738
+          },
+          "verified": 4096,
+          "warmup": 20000,
+          "samples": 500000,
+          "checksum": 36997119,
+          "durationMs": 638.036673,
+          "queriesPerSecond": 783654.0141948863,
+          "latencyMicroseconds": {
+            "p50": 1.3219999999876109,
+            "p95": 2.1839999999997417,
+            "p99": 2.9339999999820066
+          }
+        },
+        {
+          "candidate": "baseline-standard",
+          "runtime": "bun",
+          "version": "1.4.4",
+          "family": 4,
+          "loadMs": 55.541366,
+          "memoryDelta": {
+            "rss": 25833472,
+            "heapUsed": 11760034,
+            "external": 11727314,
+            "arrayBuffers": 11122738
+          },
+          "verified": 4096,
+          "warmup": 20000,
+          "samples": 500000,
+          "checksum": 36997119,
+          "durationMs": 672.0834010000001,
+          "queriesPerSecond": 743955.2877753633,
+          "latencyMicroseconds": {
+            "p50": 1.6219999999975698,
+            "p95": 2.4240000000190776,
+            "p99": 3.8649999999904594
+          }
+        },
+        {
+          "candidate": "baseline-standard",
+          "runtime": "bun",
+          "version": "1.4.4",
+          "family": 4,
+          "loadMs": 50.050796000000005,
+          "memoryDelta": {
+            "rss": 27672576,
+            "heapUsed": 11760594,
+            "external": 11727314,
+            "arrayBuffers": 11122738
+          },
+          "verified": 4096,
+          "warmup": 20000,
+          "samples": 500000,
+          "checksum": 36997119,
+          "durationMs": 590.1317369999999,
+          "queriesPerSecond": 847268.4464350374,
+          "latencyMicroseconds": {
+            "p50": 1.3419999999939591,
+            "p95": 2.0629999999925985,
+            "p99": 3.4150000000181535
+          }
+        }
+      ]
+    },
+    {
+      "runtime": "bun",
+      "family": 6,
+      "candidate": "current-raw",
+      "runs": [
+        {
+          "candidate": "current-raw",
+          "runtime": "bun",
+          "version": "1.4.4",
+          "family": 6,
+          "loadMs": 63.325947,
+          "memoryDelta": {
+            "rss": 52072448,
+            "heapUsed": 37912707,
+            "external": 37881475,
+            "arrayBuffers": 37277909
+          },
+          "verified": 4096,
+          "warmup": 20000,
+          "samples": 500000,
+          "checksum": 26736962,
+          "durationMs": 1570.698282,
+          "queriesPerSecond": 318329.7554533137,
+          "latencyMicroseconds": {
+            "p50": 2.6939999999910924,
+            "p95": 4.467000000005328,
+            "p99": 11.26700000000369
+          }
+        },
+        {
+          "candidate": "current-raw",
+          "runtime": "bun",
+          "version": "1.4.4",
+          "family": 6,
+          "loadMs": 69.938266,
+          "memoryDelta": {
+            "rss": 51822592,
+            "heapUsed": 37912147,
+            "external": 37881475,
+            "arrayBuffers": 37277909
+          },
+          "verified": 4096,
+          "warmup": 20000,
+          "samples": 500000,
+          "checksum": 26736962,
+          "durationMs": 1484.954849,
+          "queriesPerSecond": 336710.57428898296,
+          "latencyMicroseconds": {
+            "p50": 2.7039999999942665,
+            "p95": 4.857999999984486,
+            "p99": 13.069999999999027
+          }
+        },
+        {
+          "candidate": "current-raw",
+          "runtime": "bun",
+          "version": "1.4.4",
+          "family": 6,
+          "loadMs": 64.856483,
+          "memoryDelta": {
+            "rss": 52105216,
+            "heapUsed": 37912819,
+            "external": 37881475,
+            "arrayBuffers": 37277909
+          },
+          "verified": 4096,
+          "warmup": 20000,
+          "samples": 500000,
+          "checksum": 26736962,
+          "durationMs": 1706.9986640000002,
+          "queriesPerSecond": 292911.7699649236,
+          "latencyMicroseconds": {
+            "p50": 2.7640000000133114,
+            "p95": 4.8469999999838365,
+            "p99": 12.499000000019578
+          }
+        },
+        {
+          "candidate": "current-raw",
+          "runtime": "bun",
+          "version": "1.4.4",
+          "family": 6,
+          "loadMs": 71.88400999999999,
+          "memoryDelta": {
+            "rss": 52506624,
+            "heapUsed": 37913203,
+            "external": 37881411,
+            "arrayBuffers": 37277909
+          },
+          "verified": 4096,
+          "warmup": 20000,
+          "samples": 500000,
+          "checksum": 26736962,
+          "durationMs": 1521.11943,
+          "queriesPerSecond": 328705.28778926976,
+          "latencyMicroseconds": {
+            "p50": 2.744000000006963,
+            "p95": 4.586999999986574,
+            "p99": 10.785999999995965
+          }
+        },
+        {
+          "candidate": "current-raw",
+          "runtime": "bun",
+          "version": "1.4.4",
+          "family": 6,
+          "loadMs": 65.120575,
+          "memoryDelta": {
+            "rss": 52187136,
+            "heapUsed": 37914051,
+            "external": 37881475,
+            "arrayBuffers": 37277909
+          },
+          "verified": 4096,
+          "warmup": 20000,
+          "samples": 500000,
+          "checksum": 26736962,
+          "durationMs": 1563.756335,
+          "queriesPerSecond": 319742.90930690296,
+          "latencyMicroseconds": {
+            "p50": 2.7639999999848897,
+            "p95": 4.716999999999416,
+            "p99": 12.157999999999447
+          }
+        }
+      ]
+    },
+    {
+      "runtime": "bun",
+      "family": 6,
+      "candidate": "current-standard",
+      "runs": [
+        {
+          "candidate": "current-standard",
+          "runtime": "bun",
+          "version": "1.4.4",
+          "family": 6,
+          "loadMs": 64.44472999999999,
+          "memoryDelta": {
+            "rss": 50941952,
+            "heapUsed": 37916165,
+            "external": 37882549,
+            "arrayBuffers": 37277909
+          },
+          "verified": 4096,
+          "warmup": 20000,
+          "samples": 500000,
+          "checksum": 50313021,
+          "durationMs": 1851.2668630000003,
+          "queriesPerSecond": 270085.3183261456,
+          "latencyMicroseconds": {
+            "p50": 3.3349999999927604,
+            "p95": 4.767000000015287,
+            "p99": 12.097999999980402
+          }
+        },
+        {
+          "candidate": "current-standard",
+          "runtime": "bun",
+          "version": "1.4.4",
+          "family": 6,
+          "loadMs": 66.945307,
+          "memoryDelta": {
+            "rss": 51687424,
+            "heapUsed": 37916165,
+            "external": 37882549,
+            "arrayBuffers": 37277909
+          },
+          "verified": 4096,
+          "warmup": 20000,
+          "samples": 500000,
+          "checksum": 50313021,
+          "durationMs": 1906.569926,
+          "queriesPerSecond": 262251.0683618116,
+          "latencyMicroseconds": {
+            "p50": 3.2350000000178625,
+            "p95": 4.847000000012258,
+            "p99": 13.219999999989795
+          }
+        },
+        {
+          "candidate": "current-standard",
+          "runtime": "bun",
+          "version": "1.4.4",
+          "family": 6,
+          "loadMs": 81.830833,
+          "memoryDelta": {
+            "rss": 51044352,
+            "heapUsed": 37915653,
+            "external": 37882485,
+            "arrayBuffers": 37277909
+          },
+          "verified": 4096,
+          "warmup": 20000,
+          "samples": 500000,
+          "checksum": 50313021,
+          "durationMs": 1868.9944589999998,
+          "queriesPerSecond": 267523.53255639056,
+          "latencyMicroseconds": {
+            "p50": 3.315000000014834,
+            "p95": 5.107000000009521,
+            "p99": 15.523000000030152
+          }
+        },
+        {
+          "candidate": "current-standard",
+          "runtime": "bun",
+          "version": "1.4.4",
+          "family": 6,
+          "loadMs": 63.155593,
+          "memoryDelta": {
+            "rss": 89169920,
+            "heapUsed": 75201462,
+            "external": 75167430,
+            "arrayBuffers": 74555818
+          },
+          "verified": 4096,
+          "warmup": 20000,
+          "samples": 500000,
+          "checksum": 50313021,
+          "durationMs": 1827.409078,
+          "queriesPerSecond": 273611.4239660136,
+          "latencyMicroseconds": {
+            "p50": 3.2149999999830925,
+            "p95": 5.517999999995027,
+            "p99": 16.583999999994603
+          }
+        },
+        {
+          "candidate": "current-standard",
+          "runtime": "bun",
+          "version": "1.4.4",
+          "family": 6,
+          "loadMs": 63.59572899999999,
+          "memoryDelta": {
+            "rss": 52273152,
+            "heapUsed": 37916165,
+            "external": 37882549,
+            "arrayBuffers": 37277909
+          },
+          "verified": 4096,
+          "warmup": 20000,
+          "samples": 500000,
+          "checksum": 50313021,
+          "durationMs": 1804.9859789999998,
+          "queriesPerSecond": 277010.4620297441,
+          "latencyMicroseconds": {
+            "p50": 3.264999999998963,
+            "p95": 5.327999999991562,
+            "p99": 16.51499999999828
+          }
+        }
+      ]
+    },
+    {
+      "runtime": "bun",
+      "family": 6,
+      "candidate": "baseline-raw",
+      "runs": [
+        {
+          "candidate": "baseline-raw",
+          "runtime": "bun",
+          "version": "1.4.4",
+          "family": 6,
+          "loadMs": 64.38461,
+          "memoryDelta": {
+            "rss": 51683328,
+            "heapUsed": 37914051,
+            "external": 37881475,
+            "arrayBuffers": 37277909
+          },
+          "verified": 4096,
+          "warmup": 20000,
+          "samples": 500000,
+          "checksum": 26736962,
+          "durationMs": 1759.298898,
+          "queriesPerSecond": 284204.12277209305,
+          "latencyMicroseconds": {
+            "p50": 3.1050000000050204,
+            "p95": 5.007000000006201,
+            "p99": 14.050999999994929
+          }
+        },
+        {
+          "candidate": "baseline-raw",
+          "runtime": "bun",
+          "version": "1.4.4",
+          "family": 6,
+          "loadMs": 75.244708,
+          "memoryDelta": {
+            "rss": 52539392,
+            "heapUsed": 37913267,
+            "external": 37881475,
+            "arrayBuffers": 37277909
+          },
+          "verified": 4096,
+          "warmup": 20000,
+          "samples": 500000,
+          "checksum": 26736962,
+          "durationMs": 1561.692742,
+          "queriesPerSecond": 320165.4118976497,
+          "latencyMicroseconds": {
+            "p50": 2.9250000000047294,
+            "p95": 4.547000000002299,
+            "p99": 11.126999999987675
+          }
+        },
+        {
+          "candidate": "baseline-raw",
+          "runtime": "bun",
+          "version": "1.4.4",
+          "family": 6,
+          "loadMs": 67.651096,
+          "memoryDelta": {
+            "rss": 52158464,
+            "heapUsed": 37914051,
+            "external": 37881475,
+            "arrayBuffers": 37277909
+          },
+          "verified": 4096,
+          "warmup": 20000,
+          "samples": 500000,
+          "checksum": 26736962,
+          "durationMs": 1739.9397179999999,
+          "queriesPerSecond": 287366.2775942218,
+          "latencyMicroseconds": {
+            "p50": 3.1239999999854717,
+            "p95": 4.887999999994008,
+            "p99": 13.238999999998668
+          }
+        },
+        {
+          "candidate": "baseline-raw",
+          "runtime": "bun",
+          "version": "1.4.4",
+          "family": 6,
+          "loadMs": 74.243095,
+          "memoryDelta": {
+            "rss": 51789824,
+            "heapUsed": 37913267,
+            "external": 37881475,
+            "arrayBuffers": 37277909
+          },
+          "verified": 4096,
+          "warmup": 20000,
+          "samples": 500000,
+          "checksum": 26736962,
+          "durationMs": 1537.172537,
+          "queriesPerSecond": 325272.5298981841,
+          "latencyMicroseconds": {
+            "p50": 2.773999999988064,
+            "p95": 4.6360000000049695,
+            "p99": 13.409000000024207
+          }
+        },
+        {
+          "candidate": "baseline-raw",
+          "runtime": "bun",
+          "version": "1.4.4",
+          "family": 6,
+          "loadMs": 65.883819,
+          "memoryDelta": {
+            "rss": 51175424,
+            "heapUsed": 37914051,
+            "external": 37881475,
+            "arrayBuffers": 37277909
+          },
+          "verified": 4096,
+          "warmup": 20000,
+          "samples": 500000,
+          "checksum": 26736962,
+          "durationMs": 1534.431474,
+          "queriesPerSecond": 325853.58712473855,
+          "latencyMicroseconds": {
+            "p50": 3.2950000000084856,
+            "p95": 5.11800000001017,
+            "p99": 14.500999999995656
+          }
+        }
+      ]
+    },
+    {
+      "runtime": "bun",
+      "family": 6,
+      "candidate": "baseline-standard",
+      "runs": [
+        {
+          "candidate": "baseline-standard",
+          "runtime": "bun",
+          "version": "1.4.4",
+          "family": 6,
+          "loadMs": 75.853774,
+          "memoryDelta": {
+            "rss": 52920320,
+            "heapUsed": 37916165,
+            "external": 37882549,
+            "arrayBuffers": 37277909
+          },
+          "verified": 4096,
+          "warmup": 20000,
+          "samples": 500000,
+          "checksum": 50313021,
+          "durationMs": 2119.0395999999996,
+          "queriesPerSecond": 235955.94910071528,
+          "latencyMicroseconds": {
+            "p50": 3.9249999999810825,
+            "p95": 5.8490000000119835,
+            "p99": 14.570999999989453
+          }
+        },
+        {
+          "candidate": "baseline-standard",
+          "runtime": "bun",
+          "version": "1.4.4",
+          "family": 6,
+          "loadMs": 71.654697,
+          "memoryDelta": {
+            "rss": 51494912,
+            "heapUsed": 37915605,
+            "external": 37882549,
+            "arrayBuffers": 37277909
+          },
+          "verified": 4096,
+          "warmup": 20000,
+          "samples": 500000,
+          "checksum": 50313021,
+          "durationMs": 1887.953424,
+          "queriesPerSecond": 264837.0418697363,
+          "latencyMicroseconds": {
+            "p50": 3.68500000001859,
+            "p95": 4.9579999999878055,
+            "p99": 11.457000000007156
+          }
+        },
+        {
+          "candidate": "baseline-standard",
+          "runtime": "bun",
+          "version": "1.4.4",
+          "family": 6,
+          "loadMs": 80.643844,
+          "memoryDelta": {
+            "rss": 51724288,
+            "heapUsed": 37915429,
+            "external": 37882485,
+            "arrayBuffers": 37277909
+          },
+          "verified": 4096,
+          "warmup": 20000,
+          "samples": 500000,
+          "checksum": 50313021,
+          "durationMs": 2033.9354210000001,
+          "queriesPerSecond": 245828.8472866907,
+          "latencyMicroseconds": {
+            "p50": 3.836000000006834,
+            "p95": 5.148000000019692,
+            "p99": 12.367999999980839
+          }
+        },
+        {
+          "candidate": "baseline-standard",
+          "runtime": "bun",
+          "version": "1.4.4",
+          "family": 6,
+          "loadMs": 74.20908399999999,
+          "memoryDelta": {
+            "rss": 50810880,
+            "heapUsed": 37915653,
+            "external": 37882485,
+            "arrayBuffers": 37277909
+          },
+          "verified": 4096,
+          "warmup": 20000,
+          "samples": 500000,
+          "checksum": 50313021,
+          "durationMs": 2041.435665,
+          "queriesPerSecond": 244925.6709738144,
+          "latencyMicroseconds": {
+            "p50": 3.7360000000035143,
+            "p95": 5.038000000013199,
+            "p99": 11.936999999988984
+          }
+        },
+        {
+          "candidate": "baseline-standard",
+          "runtime": "bun",
+          "version": "1.4.4",
+          "family": 6,
+          "loadMs": 64.56638199999999,
+          "memoryDelta": {
+            "rss": 52551680,
+            "heapUsed": 37916165,
+            "external": 37882549,
+            "arrayBuffers": 37277909
+          },
+          "verified": 4096,
+          "warmup": 20000,
+          "samples": 500000,
+          "checksum": 50313021,
+          "durationMs": 1858.579451,
+          "queriesPerSecond": 269022.6666021608,
+          "latencyMicroseconds": {
+            "p50": 3.6360000000001946,
+            "p95": 5.0970000000063465,
+            "p99": 13.720000000006394
+          }
+        }
+      ]
+    },
+    {
+      "runtime": "deno",
+      "family": 4,
+      "candidate": "current-raw",
+      "runs": [
+        {
+          "candidate": "current-raw",
+          "runtime": "deno",
+          "version": "2.9.6",
+          "family": 4,
+          "loadMs": 38.110457999999994,
+          "memoryDelta": {
+            "rss": 17448960,
+            "heapUsed": 48088,
+            "external": 11646930,
+            "arrayBuffers": null
+          },
+          "verified": 4096,
+          "warmup": 20000,
+          "samples": 500000,
+          "checksum": 19770045,
+          "durationMs": 684.601003,
+          "queriesPerSecond": 730352.4210583139,
+          "latencyMicroseconds": {
+            "p50": 1.2619999999969878,
+            "p95": 2.3630000000025575,
+            "p99": 4.9080000000003565
+          }
+        },
+        {
+          "candidate": "current-raw",
+          "runtime": "deno",
+          "version": "2.9.6",
+          "family": 4,
+          "loadMs": 52.545078000000004,
+          "memoryDelta": {
+            "rss": 17547264,
+            "heapUsed": 48160,
+            "external": 11646930,
+            "arrayBuffers": null
+          },
+          "verified": 4096,
+          "warmup": 20000,
+          "samples": 500000,
+          "checksum": 19770045,
+          "durationMs": 538.092322,
+          "queriesPerSecond": 929208.5754756412,
+          "latencyMicroseconds": {
+            "p50": 1.1320000000125674,
+            "p95": 1.4720000000068012,
+            "p99": 1.91300000000183
+          }
+        },
+        {
+          "candidate": "current-raw",
+          "runtime": "deno",
+          "version": "2.9.6",
+          "family": 4,
+          "loadMs": 52.115004,
+          "memoryDelta": {
+            "rss": 17645568,
+            "heapUsed": 48160,
+            "external": 11646930,
+            "arrayBuffers": null
+          },
+          "verified": 4096,
+          "warmup": 20000,
+          "samples": 500000,
+          "checksum": 19770045,
+          "durationMs": 626.752907,
+          "queriesPerSecond": 797762.554294782,
+          "latencyMicroseconds": {
+            "p50": 1.3320000000192067,
+            "p95": 2.5229999999965003,
+            "p99": 5.5490000000020245
+          }
+        },
+        {
+          "candidate": "current-raw",
+          "runtime": "deno",
+          "version": "2.9.6",
+          "family": 4,
+          "loadMs": 35.068686,
+          "memoryDelta": {
+            "rss": 17231872,
+            "heapUsed": 48088,
+            "external": 11646930,
+            "arrayBuffers": null
+          },
+          "verified": 4096,
+          "warmup": 20000,
+          "samples": 500000,
+          "checksum": 19770045,
+          "durationMs": 538.52097,
+          "queriesPerSecond": 928468.9508005602,
+          "latencyMicroseconds": {
+            "p50": 1.1820000000000164,
+            "p95": 1.5719999999816991,
+            "p99": 2.4830000000122254
+          }
+        },
+        {
+          "candidate": "current-raw",
+          "runtime": "deno",
+          "version": "2.9.6",
+          "family": 4,
+          "loadMs": 47.48425000000001,
+          "memoryDelta": {
+            "rss": 17502208,
+            "heapUsed": 48160,
+            "external": 11646930,
+            "arrayBuffers": null
+          },
+          "verified": 4096,
+          "warmup": 20000,
+          "samples": 500000,
+          "checksum": 19770045,
+          "durationMs": 533.848393,
+          "queriesPerSecond": 936595.4951933329,
+          "latencyMicroseconds": {
+            "p50": 1.161999999993668,
+            "p95": 1.5319999999974243,
+            "p99": 2.1729999999990923
+          }
+        }
+      ]
+    },
+    {
+      "runtime": "deno",
+      "family": 4,
+      "candidate": "current-standard",
+      "runs": [
+        {
+          "candidate": "current-standard",
+          "runtime": "deno",
+          "version": "2.9.6",
+          "family": 4,
+          "loadMs": 53.600511999999995,
+          "memoryDelta": {
+            "rss": 17481728,
+            "heapUsed": 48984,
+            "external": 11646930,
+            "arrayBuffers": null
+          },
+          "verified": 4096,
+          "warmup": 20000,
+          "samples": 500000,
+          "checksum": 36997119,
+          "durationMs": 899.5756670000001,
+          "queriesPerSecond": 555817.6130613368,
+          "latencyMicroseconds": {
+            "p50": 1.8929999999954816,
+            "p95": 3.185000000001992,
+            "p99": 4.065999999994574
+          }
+        },
+        {
+          "candidate": "current-standard",
+          "runtime": "deno",
+          "version": "2.9.6",
+          "family": 4,
+          "loadMs": 52.78202499999999,
+          "memoryDelta": {
+            "rss": 17551360,
+            "heapUsed": 48984,
+            "external": 11646930,
+            "arrayBuffers": null
+          },
+          "verified": 4096,
+          "warmup": 20000,
+          "samples": 500000,
+          "checksum": 36997119,
+          "durationMs": 977.817039,
+          "queriesPerSecond": 511343.104136683,
+          "latencyMicroseconds": {
+            "p50": 1.9029999999986558,
+            "p95": 2.953999999988355,
+            "p99": 6.749999999982492
+          }
+        },
+        {
+          "candidate": "current-standard",
+          "runtime": "deno",
+          "version": "2.9.6",
+          "family": 4,
+          "loadMs": 49.50304100000001,
+          "memoryDelta": {
+            "rss": 17281024,
+            "heapUsed": 48984,
+            "external": 11646930,
+            "arrayBuffers": null
+          },
+          "verified": 4096,
+          "warmup": 20000,
+          "samples": 500000,
+          "checksum": 36997119,
+          "durationMs": 1023.740165,
+          "queriesPerSecond": 488405.1804297431,
+          "latencyMicroseconds": {
+            "p50": 1.8930000000239033,
+            "p95": 3.034000000013748,
+            "p99": 6.25999999999749
+          }
+        },
+        {
+          "candidate": "current-standard",
+          "runtime": "deno",
+          "version": "2.9.6",
+          "family": 4,
+          "loadMs": 35.04120499999999,
+          "memoryDelta": {
+            "rss": 17170432,
+            "heapUsed": 48912,
+            "external": 11646930,
+            "arrayBuffers": null
+          },
+          "verified": 4096,
+          "warmup": 20000,
+          "samples": 500000,
+          "checksum": 36997119,
+          "durationMs": 1015.63148,
+          "queriesPerSecond": 492304.551253177,
+          "latencyMicroseconds": {
+            "p50": 1.7919999999946867,
+            "p95": 2.3140000000125838,
+            "p99": 3.3349999999927604
+          }
+        },
+        {
+          "candidate": "current-standard",
+          "runtime": "deno",
+          "version": "2.9.6",
+          "family": 4,
+          "loadMs": 33.78685,
+          "memoryDelta": {
+            "rss": 17215488,
+            "heapUsed": 48912,
+            "external": 11646930,
+            "arrayBuffers": null
+          },
+          "verified": 4096,
+          "warmup": 20000,
+          "samples": 500000,
+          "checksum": 36997119,
+          "durationMs": 871.1936729999999,
+          "queriesPerSecond": 573925.1965389332,
+          "latencyMicroseconds": {
+            "p50": 1.8520000000137316,
+            "p95": 3.1140000000107193,
+            "p99": 3.9859999999976026
+          }
+        }
+      ]
+    },
+    {
+      "runtime": "deno",
+      "family": 4,
+      "candidate": "baseline-raw",
+      "runs": [
+        {
+          "candidate": "baseline-raw",
+          "runtime": "deno",
+          "version": "2.9.6",
+          "family": 4,
+          "loadMs": 48.547782999999995,
+          "memoryDelta": {
+            "rss": 17489920,
+            "heapUsed": 48160,
+            "external": 11646930,
+            "arrayBuffers": null
+          },
+          "verified": 4096,
+          "warmup": 20000,
+          "samples": 500000,
+          "checksum": 19770045,
+          "durationMs": 569.6375909999999,
+          "queriesPerSecond": 877751.0612005942,
+          "latencyMicroseconds": {
+            "p50": 1.331999999990785,
+            "p95": 2.734000000003789,
+            "p99": 5.407999999988533
+          }
+        },
+        {
+          "candidate": "baseline-raw",
+          "runtime": "deno",
+          "version": "2.9.6",
+          "family": 4,
+          "loadMs": 53.537329,
+          "memoryDelta": {
+            "rss": 17428480,
+            "heapUsed": 48160,
+            "external": 11646930,
+            "arrayBuffers": null
+          },
+          "verified": 4096,
+          "warmup": 20000,
+          "samples": 500000,
+          "checksum": 19770045,
+          "durationMs": 541.465715,
+          "queriesPerSecond": 923419.5003463884,
+          "latencyMicroseconds": {
+            "p50": 1.2020000000063646,
+            "p95": 1.5429999999980737,
+            "p99": 1.9829999999956271
+          }
+        },
+        {
+          "candidate": "baseline-raw",
+          "runtime": "deno",
+          "version": "2.9.6",
+          "family": 4,
+          "loadMs": 51.293927999999994,
+          "memoryDelta": {
+            "rss": 17473536,
+            "heapUsed": 48160,
+            "external": 11646930,
+            "arrayBuffers": null
+          },
+          "verified": 4096,
+          "warmup": 20000,
+          "samples": 500000,
+          "checksum": 19770045,
+          "durationMs": 605.558854,
+          "queriesPerSecond": 825683.5759187826,
+          "latencyMicroseconds": {
+            "p50": 1.2420000000190612,
+            "p95": 1.7330000000015389,
+            "p99": 2.5339999999971496
+          }
+        },
+        {
+          "candidate": "baseline-raw",
+          "runtime": "deno",
+          "version": "2.9.6",
+          "family": 4,
+          "loadMs": 52.090517000000006,
+          "memoryDelta": {
+            "rss": 17596416,
+            "heapUsed": 48160,
+            "external": 11646930,
+            "arrayBuffers": null
+          },
+          "verified": 4096,
+          "warmup": 20000,
+          "samples": 500000,
+          "checksum": 19770045,
+          "durationMs": 562.748554,
+          "queriesPerSecond": 888496.2856785945,
+          "latencyMicroseconds": {
+            "p50": 1.272000000000162,
+            "p95": 2.0230000000083237,
+            "p99": 2.5829999999871234
+          }
+        },
+        {
+          "candidate": "baseline-raw",
+          "runtime": "deno",
+          "version": "2.9.6",
+          "family": 4,
+          "loadMs": 34.51051700000001,
+          "memoryDelta": {
+            "rss": 17289216,
+            "heapUsed": 48088,
+            "external": 11646930,
+            "arrayBuffers": null
+          },
+          "verified": 4096,
+          "warmup": 20000,
+          "samples": 500000,
+          "checksum": 19770045,
+          "durationMs": 642.6717880000001,
+          "queriesPerSecond": 778002.0989500786,
+          "latencyMicroseconds": {
+            "p50": 1.3620000000003074,
+            "p95": 2.2139999999808424,
+            "p99": 2.9640000000199507
+          }
+        }
+      ]
+    },
+    {
+      "runtime": "deno",
+      "family": 4,
+      "candidate": "baseline-standard",
+      "runs": [
+        {
+          "candidate": "baseline-standard",
+          "runtime": "deno",
+          "version": "2.9.6",
+          "family": 4,
+          "loadMs": 34.406591999999996,
+          "memoryDelta": {
+            "rss": 17223680,
+            "heapUsed": 48912,
+            "external": 11646930,
+            "arrayBuffers": null
+          },
+          "verified": 4096,
+          "warmup": 20000,
+          "samples": 500000,
+          "checksum": 36997119,
+          "durationMs": 1280.151245,
+          "queriesPerSecond": 390578.8491421574,
+          "latencyMicroseconds": {
+            "p50": 2.322999999989861,
+            "p95": 3.9960000000007767,
+            "p99": 6.058999999993375
+          }
+        },
+        {
+          "candidate": "baseline-standard",
+          "runtime": "deno",
+          "version": "2.9.6",
+          "family": 4,
+          "loadMs": 37.17479999999999,
+          "memoryDelta": {
+            "rss": 17477632,
+            "heapUsed": 48912,
+            "external": 11646930,
+            "arrayBuffers": null
+          },
+          "verified": 4096,
+          "warmup": 20000,
+          "samples": 500000,
+          "checksum": 36997119,
+          "durationMs": 1155.36724,
+          "queriesPerSecond": 432762.8330538435,
+          "latencyMicroseconds": {
+            "p50": 2.2440000000187865,
+            "p95": 3.5849999999868487,
+            "p99": 4.4969999999864285
+          }
+        },
+        {
+          "candidate": "baseline-standard",
+          "runtime": "deno",
+          "version": "2.9.6",
+          "family": 4,
+          "loadMs": 41.796437,
+          "memoryDelta": {
+            "rss": 17387520,
+            "heapUsed": 48912,
+            "external": 11646930,
+            "arrayBuffers": null
+          },
+          "verified": 4096,
+          "warmup": 20000,
+          "samples": 500000,
+          "checksum": 36997119,
+          "durationMs": 1189.068438,
+          "queriesPerSecond": 420497.2430695364,
+          "latencyMicroseconds": {
+            "p50": 2.374000000003207,
+            "p95": 3.565000000008922,
+            "p99": 4.907000000002881
+          }
+        },
+        {
+          "candidate": "baseline-standard",
+          "runtime": "deno",
+          "version": "2.9.6",
+          "family": 4,
+          "loadMs": 35.839411,
+          "memoryDelta": {
+            "rss": 17408000,
+            "heapUsed": 48912,
+            "external": 11646930,
+            "arrayBuffers": null
+          },
+          "verified": 4096,
+          "warmup": 20000,
+          "samples": 500000,
+          "checksum": 36997119,
+          "durationMs": 1194.731585,
+          "queriesPerSecond": 418504.0441531476,
+          "latencyMicroseconds": {
+            "p50": 2.1729999999990923,
+            "p95": 2.623999999997295,
+            "p99": 3.6450000000058935
+          }
+        },
+        {
+          "candidate": "baseline-standard",
+          "runtime": "deno",
+          "version": "2.9.6",
+          "family": 4,
+          "loadMs": 49.33771599999999,
+          "memoryDelta": {
+            "rss": 17498112,
+            "heapUsed": 48984,
+            "external": 11646930,
+            "arrayBuffers": null
+          },
+          "verified": 4096,
+          "warmup": 20000,
+          "samples": 500000,
+          "checksum": 36997119,
+          "durationMs": 1171.79198,
+          "queriesPerSecond": 426696.89546774334,
+          "latencyMicroseconds": {
+            "p50": 2.2030000000086147,
+            "p95": 2.673999999984744,
+            "p99": 4.145999999991545
+          }
+        }
+      ]
+    },
+    {
+      "runtime": "deno",
+      "family": 6,
+      "candidate": "current-raw",
+      "runs": [
+        {
+          "candidate": "current-raw",
+          "runtime": "deno",
+          "version": "2.9.6",
+          "family": 6,
+          "loadMs": 74.41718300000001,
+          "memoryDelta": {
+            "rss": 43241472,
+            "heapUsed": 48088,
+            "external": 37802101,
+            "arrayBuffers": null
+          },
+          "verified": 4096,
+          "warmup": 20000,
+          "samples": 500000,
+          "checksum": 26736962,
+          "durationMs": 2162.2497869999997,
+          "queriesPerSecond": 231240.62862955438,
+          "latencyMicroseconds": {
+            "p50": 4.547000000002299,
+            "p95": 6.270000000029086,
+            "p99": 24.557000000015705
+          }
+        },
+        {
+          "candidate": "current-raw",
+          "runtime": "deno",
+          "version": "2.9.6",
+          "family": 6,
+          "loadMs": 91.587636,
+          "memoryDelta": {
+            "rss": 43569152,
+            "heapUsed": 48088,
+            "external": 37802101,
+            "arrayBuffers": null
+          },
+          "verified": 4096,
+          "warmup": 20000,
+          "samples": 500000,
+          "checksum": 26736962,
+          "durationMs": 2210.3420029999997,
+          "queriesPerSecond": 226209.3374334705,
+          "latencyMicroseconds": {
+            "p50": 4.145999999991545,
+            "p95": 5.087000000003172,
+            "p99": 20.129999999994652
+          }
+        },
+        {
+          "candidate": "current-raw",
+          "runtime": "deno",
+          "version": "2.9.6",
+          "family": 6,
+          "loadMs": 74.25027599999999,
+          "memoryDelta": {
+            "rss": 43180032,
+            "heapUsed": 48088,
+            "external": 37802101,
+            "arrayBuffers": null
+          },
+          "verified": 4096,
+          "warmup": 20000,
+          "samples": 500000,
+          "checksum": 26736962,
+          "durationMs": 2033.7486950000002,
+          "queriesPerSecond": 245851.41774362634,
+          "latencyMicroseconds": {
+            "p50": 4.136000000016793,
+            "p95": 6.368999999949665,
+            "p99": 17.80700000000479
+          }
+        },
+        {
+          "candidate": "current-raw",
+          "runtime": "deno",
+          "version": "2.9.6",
+          "family": 6,
+          "loadMs": 81.31882,
+          "memoryDelta": {
+            "rss": 43380736,
+            "heapUsed": 48088,
+            "external": 37802101,
+            "arrayBuffers": null
+          },
+          "verified": 4096,
+          "warmup": 20000,
+          "samples": 500000,
+          "checksum": 26736962,
+          "durationMs": 2188.6425879999997,
+          "queriesPerSecond": 228452.10211179536,
+          "latencyMicroseconds": {
+            "p50": 4.256999999995514,
+            "p95": 6.841000000008535,
+            "p99": 26.249000000007072
+          }
+        },
+        {
+          "candidate": "current-raw",
+          "runtime": "deno",
+          "version": "2.9.6",
+          "family": 6,
+          "loadMs": 68.96546900000001,
+          "memoryDelta": {
+            "rss": 43311104,
+            "heapUsed": 48088,
+            "external": 37802101,
+            "arrayBuffers": null
+          },
+          "verified": 4096,
+          "warmup": 20000,
+          "samples": 500000,
+          "checksum": 26736962,
+          "durationMs": 1925.7922790000002,
+          "queriesPerSecond": 259633.40151079706,
+          "latencyMicroseconds": {
+            "p50": 4.105999999978849,
+            "p95": 4.9270000000092296,
+            "p99": 18.03699999999253
+          }
+        }
+      ]
+    },
+    {
+      "runtime": "deno",
+      "family": 6,
+      "candidate": "current-standard",
+      "runs": [
+        {
+          "candidate": "current-standard",
+          "runtime": "deno",
+          "version": "2.9.6",
+          "family": 6,
+          "loadMs": 73.97666799999999,
+          "memoryDelta": {
+            "rss": 43343872,
+            "heapUsed": 48912,
+            "external": 37802101,
+            "arrayBuffers": null
+          },
+          "verified": 4096,
+          "warmup": 20000,
+          "samples": 500000,
+          "checksum": 50313021,
+          "durationMs": 2416.861151,
+          "queriesPerSecond": 206879.90280000988,
+          "latencyMicroseconds": {
+            "p50": 4.787000000021635,
+            "p95": 6.249000000025262,
+            "p99": 20.74100000004364
+          }
+        },
+        {
+          "candidate": "current-standard",
+          "runtime": "deno",
+          "version": "2.9.6",
+          "family": 6,
+          "loadMs": 69.352856,
+          "memoryDelta": {
+            "rss": 43356160,
+            "heapUsed": 48912,
+            "external": 37802101,
+            "arrayBuffers": null
+          },
+          "verified": 4096,
+          "warmup": 20000,
+          "samples": 500000,
+          "checksum": 50313021,
+          "durationMs": 2291.992724,
+          "queriesPerSecond": 218150.77978406355,
+          "latencyMicroseconds": {
+            "p50": 4.6169999999960964,
+            "p95": 7.350999999971464,
+            "p99": 13.259999999945649
+          }
+        },
+        {
+          "candidate": "current-standard",
+          "runtime": "deno",
+          "version": "2.9.6",
+          "family": 6,
+          "loadMs": 72.24432300000001,
+          "memoryDelta": {
+            "rss": 43511808,
+            "heapUsed": 48864,
+            "external": 37802101,
+            "arrayBuffers": null
+          },
+          "verified": 4096,
+          "warmup": 20000,
+          "samples": 500000,
+          "checksum": 50313021,
+          "durationMs": 2394.592338,
+          "queriesPerSecond": 208803.80850863643,
+          "latencyMicroseconds": {
+            "p50": 4.787000000021635,
+            "p95": 6.209999999953197,
+            "p99": 17.786000000000968
+          }
+        },
+        {
+          "candidate": "current-standard",
+          "runtime": "deno",
+          "version": "2.9.6",
+          "family": 6,
+          "loadMs": 73.20910599999999,
+          "memoryDelta": {
+            "rss": 43368448,
+            "heapUsed": 48912,
+            "external": 37802101,
+            "arrayBuffers": null
+          },
+          "verified": 4096,
+          "warmup": 20000,
+          "samples": 500000,
+          "checksum": 50313021,
+          "durationMs": 2205.6737989999997,
+          "queriesPerSecond": 226688.098769042,
+          "latencyMicroseconds": {
+            "p50": 4.947000000015578,
+            "p95": 6.619000000000597,
+            "p99": 19.929999999988013
+          }
+        },
+        {
+          "candidate": "current-standard",
+          "runtime": "deno",
+          "version": "2.9.6",
+          "family": 6,
+          "loadMs": 69.401468,
+          "memoryDelta": {
+            "rss": 43646976,
+            "heapUsed": 48864,
+            "external": 37802101,
+            "arrayBuffers": null
+          },
+          "verified": 4096,
+          "warmup": 20000,
+          "samples": 500000,
+          "checksum": 50313021,
+          "durationMs": 2319.9097949999996,
+          "queriesPerSecond": 215525.62133132425,
+          "latencyMicroseconds": {
+            "p50": 4.997000000003027,
+            "p95": 8.001999999976306,
+            "p99": 28.6530000000198
+          }
+        }
+      ]
+    },
+    {
+      "runtime": "deno",
+      "family": 6,
+      "candidate": "baseline-raw",
+      "runs": [
+        {
+          "candidate": "baseline-raw",
+          "runtime": "deno",
+          "version": "2.9.6",
+          "family": 6,
+          "loadMs": 70.67202699999999,
+          "memoryDelta": {
+            "rss": 43364352,
+            "heapUsed": 48088,
+            "external": 37802101,
+            "arrayBuffers": null
+          },
+          "verified": 4096,
+          "warmup": 20000,
+          "samples": 500000,
+          "checksum": 26736962,
+          "durationMs": 2288.933106,
+          "queriesPerSecond": 218442.38203787856,
+          "latencyMicroseconds": {
+            "p50": 4.43599999999833,
+            "p95": 6.058999999993375,
+            "p99": 21.582000000023527
+          }
+        },
+        {
+          "candidate": "baseline-raw",
+          "runtime": "deno",
+          "version": "2.9.6",
+          "family": 6,
+          "loadMs": 73.78390200000001,
+          "memoryDelta": {
+            "rss": 43319296,
+            "heapUsed": 48088,
+            "external": 37802101,
+            "arrayBuffers": null
+          },
+          "verified": 4096,
+          "warmup": 20000,
+          "samples": 500000,
+          "checksum": 26736962,
+          "durationMs": 2026.944548,
+          "queriesPerSecond": 246676.703856232,
+          "latencyMicroseconds": {
+            "p50": 4.205999999953747,
+            "p95": 6.7400000000361615,
+            "p99": 20.46100000001161
+          }
+        },
+        {
+          "candidate": "baseline-raw",
+          "runtime": "deno",
+          "version": "2.9.6",
+          "family": 6,
+          "loadMs": 73.76385199999999,
+          "memoryDelta": {
+            "rss": 43528192,
+            "heapUsed": 48040,
+            "external": 37802101,
+            "arrayBuffers": null
+          },
+          "verified": 4096,
+          "warmup": 20000,
+          "samples": 500000,
+          "checksum": 26736962,
+          "durationMs": 2051.551752,
+          "queriesPerSecond": 243717.95618246731,
+          "latencyMicroseconds": {
+            "p50": 4.1760000000294895,
+            "p95": 6.359999999972388,
+            "p99": 14.660999999989599
+          }
+        },
+        {
+          "candidate": "baseline-raw",
+          "runtime": "deno",
+          "version": "2.9.6",
+          "family": 6,
+          "loadMs": 72.73029500000001,
+          "memoryDelta": {
+            "rss": 43307008,
+            "heapUsed": 48088,
+            "external": 37802101,
+            "arrayBuffers": null
+          },
+          "verified": 4096,
+          "warmup": 20000,
+          "samples": 500000,
+          "checksum": 26736962,
+          "durationMs": 2083.205565,
+          "queriesPerSecond": 240014.71981474856,
+          "latencyMicroseconds": {
+            "p50": 4.086000000029344,
+            "p95": 5.24799999999459,
+            "p99": 21.39199999999164
+          }
+        },
+        {
+          "candidate": "baseline-raw",
+          "runtime": "deno",
+          "version": "2.9.6",
+          "family": 6,
+          "loadMs": 72.552811,
+          "memoryDelta": {
+            "rss": 43315200,
+            "heapUsed": 48088,
+            "external": 37802101,
+            "arrayBuffers": null
+          },
+          "verified": 4096,
+          "warmup": 20000,
+          "samples": 500000,
+          "checksum": 26736962,
+          "durationMs": 2068.956292,
+          "queriesPerSecond": 241667.74423091585,
+          "latencyMicroseconds": {
+            "p50": 4.385999999954038,
+            "p95": 5.829000000005635,
+            "p99": 21.87200000003031
+          }
+        }
+      ]
+    },
+    {
+      "runtime": "deno",
+      "family": 6,
+      "candidate": "baseline-standard",
+      "runs": [
+        {
+          "candidate": "baseline-standard",
+          "runtime": "deno",
+          "version": "2.9.6",
+          "family": 6,
+          "loadMs": 75.637107,
+          "memoryDelta": {
+            "rss": 43438080,
+            "heapUsed": 48912,
+            "external": 37802101,
+            "arrayBuffers": null
+          },
+          "verified": 4096,
+          "warmup": 20000,
+          "samples": 500000,
+          "checksum": 50313021,
+          "durationMs": 2640.557781,
+          "queriesPerSecond": 189353.9325659619,
+          "latencyMicroseconds": {
+            "p50": 5.198000000007141,
+            "p95": 6.349999999997635,
+            "p99": 27.781000000004497
+          }
+        },
+        {
+          "candidate": "baseline-standard",
+          "runtime": "deno",
+          "version": "2.9.6",
+          "family": 6,
+          "loadMs": 72.997008,
+          "memoryDelta": {
+            "rss": 43323392,
+            "heapUsed": 48912,
+            "external": 37802101,
+            "arrayBuffers": null
+          },
+          "verified": 4096,
+          "warmup": 20000,
+          "samples": 500000,
+          "checksum": 50313021,
+          "durationMs": 2737.1511339999997,
+          "queriesPerSecond": 182671.68143883723,
+          "latencyMicroseconds": {
+            "p50": 5.1879999999755455,
+            "p95": 7.111000000008971,
+            "p99": 26.028999999994085
+          }
+        },
+        {
+          "candidate": "baseline-standard",
+          "runtime": "deno",
+          "version": "2.9.6",
+          "family": 6,
+          "loadMs": 73.27193,
+          "memoryDelta": {
+            "rss": 43397120,
+            "heapUsed": 48912,
+            "external": 37802101,
+            "arrayBuffers": null
+          },
+          "verified": 4096,
+          "warmup": 20000,
+          "samples": 500000,
+          "checksum": 50313021,
+          "durationMs": 2590.04207,
+          "queriesPerSecond": 193047.0573398833,
+          "latencyMicroseconds": {
+            "p50": 5.226999999990767,
+            "p95": 8.172000000001844,
+            "p99": 27.7110000000107
+          }
+        },
+        {
+          "candidate": "baseline-standard",
+          "runtime": "deno",
+          "version": "2.9.6",
+          "family": 6,
+          "loadMs": 76.39469199999999,
+          "memoryDelta": {
+            "rss": 43253760,
+            "heapUsed": 48912,
+            "external": 37802101,
+            "arrayBuffers": null
+          },
+          "verified": 4096,
+          "warmup": 20000,
+          "samples": 500000,
+          "checksum": 50313021,
+          "durationMs": 2809.8854469999997,
+          "queriesPerSecond": 177943.1971270678,
+          "latencyMicroseconds": {
+            "p50": 5.198000000007141,
+            "p95": 6.488999999987755,
+            "p99": 29.413999999974294
+          }
+        },
+        {
+          "candidate": "baseline-standard",
+          "runtime": "deno",
+          "version": "2.9.6",
+          "family": 6,
+          "loadMs": 70.01150399999999,
+          "memoryDelta": {
+            "rss": 43307008,
+            "heapUsed": 48912,
+            "external": 37802101,
+            "arrayBuffers": null
+          },
+          "verified": 4096,
+          "warmup": 20000,
+          "samples": 500000,
+          "checksum": 50313021,
+          "durationMs": 2574.20839,
+          "queriesPerSecond": 194234.46910605402,
+          "latencyMicroseconds": {
+            "p50": 5.24799999999459,
+            "p95": 6.219999999984793,
+            "p99": 21.240999999974974
+          }
+        }
+      ]
+    }
+  ]
+}

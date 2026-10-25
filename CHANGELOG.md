@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- Reduce XDB result-mapping temporary objects while preserving raw/custom fields,
+  omitted values and independently mutable query results.
+
 - Reduce IP parsing allocations and BigInt operations while preserving strict
   literal validation, canonical addresses and complete unsigned 128-bit values.
 
