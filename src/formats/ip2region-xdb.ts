@@ -21,6 +21,10 @@ export interface XDBResult extends LookupResult {
   extensions: { region: string; raw: Record<string, string> };
 }
 
+function place(value: string | undefined): string | undefined {
+  return value === "Reserved" ? undefined : field(value);
+}
+
 /** XDB structure 2 (IPv4) and 3 (IPv4/IPv6), vector indexes and 32-bit pointers. */
 export function createXDB(input: Uint8Array, options: XDBOptions = {}): Adapter<XDBResult> {
   const reader = new Bytes(input, "ip2region-xdb");
@@ -136,27 +140,27 @@ export function createXDB(input: Uint8Array, options: XDBOptions = {}): Adapter<
         const pointer = reader.u32(at + width * 2 + 2, true);
         const region = reader.text(pointer, size);
         const raw: Record<string, string> = {};
-        if (columns) {
-          const values = region.split("|");
-          if (values.length !== columns.length) reader.fail("record does not match configured field layout", pointer);
-          columns.forEach((name, i) => {
-            raw[name] = values[i];
-          });
-        }
-        const place = (value: string | undefined) => (value === "Reserved" ? undefined : field(value));
+        if (!columns) return { source: info.id, extensions: { region, raw } };
+        const values = region.split("|");
+        if (values.length !== columns.length) reader.fail("record does not match configured field layout", pointer);
+        for (let i = 0; i < columns.length; i++) raw[columns[i]] = values[i];
         const country = place(raw.country_name),
           code = field(raw.country_code);
         const subdivision = place(raw.region_name),
           city = place(raw.city_name),
           isp = field(raw.isp);
-        return {
-          ...(country || code ? { country: { ...(country ? { name: country } : {}), ...(code ? { code } : {}) } } : {}),
-          ...(subdivision ? { subdivisions: [{ name: subdivision }] } : {}),
-          ...(city ? { city: { name: city } } : {}),
-          ...(isp ? { isp } : {}),
-          source: info.id,
-          extensions: { region, raw },
-        };
+        const result = {} as XDBResult;
+        if (country || code) {
+          result.country = {};
+          if (country) result.country.name = country;
+          if (code) result.country.code = code;
+        }
+        if (subdivision) result.subdivisions = [{ name: subdivision }];
+        if (city) result.city = { name: city };
+        if (isp) result.isp = isp;
+        result.source = info.id;
+        result.extensions = { region, raw };
+        return result;
       }
       return null;
     },

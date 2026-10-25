@@ -157,17 +157,108 @@ export function formatSuite(test) {
     });
     equal(empty.lookup("192.0.2.1"), null);
     empty.close();
-    throws(
-      () =>
-        new IP2Region({
-          source: createXDB(xdbFixture({ region: "short|record" })),
-        }).lookup("192.0.2.1"),
-      "INVALID_DATABASE"
-    );
+    for (const region of ["short|record", "Example|Region|First|Example ISP|EX|extra"]) {
+      const mismatched = createXDB(xdbFixture({ region }));
+      try {
+        throws(() => mismatched.lookup("192.0.2.1"), "INVALID_DATABASE");
+      } finally {
+        mismatched.close();
+      }
+    }
     for (const fields of [[], ["x", "x"], [""], ["__proto__"]])
       throws(() => createXDB(xdbFixture(), { fields }), "INVALID_ARGUMENT");
     query.close();
     raw.close();
+  });
+  test("XDB mapping omits absent fields while preserving raw placeholders and country parts", () => {
+    const cases = [
+      [
+        "Example|Region|First|Example ISP|EX",
+        {
+          country: { name: "Example", code: "EX" },
+          subdivisions: [{ name: "Region" }],
+          city: { name: "First" },
+          isp: "Example ISP",
+        },
+      ],
+      ["Example|0|0|0|0", { country: { name: "Example" } }],
+      ["0|0|0|0|EX", { country: { code: "EX" } }],
+      [
+        "0|Region|First|Example ISP|0",
+        { subdivisions: [{ name: "Region" }], city: { name: "First" }, isp: "Example ISP" },
+      ],
+      ["Reserved|Reserved|Reserved|Reserved|Reserved", { country: { code: "Reserved" }, isp: "Reserved" }],
+      ...["", "0", "-", "--", "?", "未知", "unknown"].map((missing) => [Array(5).fill(missing).join("|"), {}]),
+    ];
+    const base = 0xc0000200n;
+    const source = createXDB(
+      xdbFixture({ edges: false, rows: cases.map(([region], i) => [base + BigInt(i), base + BigInt(i), region]) })
+    );
+    try {
+      cases.forEach(([region, expected], i) => {
+        const actual = source.lookup(`192.0.2.${i}`);
+        equal(actual, {
+          ...expected,
+          source: "ip2region-xdb",
+          extensions: {
+            region,
+            raw: Object.fromEntries(IP2REGION_FIELDS.map((name, j) => [name, region.split("|")[j]])),
+          },
+        });
+        // Undefined properties are not equivalent to omitted properties for consumers.
+        equal(Object.keys(actual), [...Object.keys(expected), "source", "extensions"]);
+        if (actual.country) equal(Object.keys(actual.country), Object.keys(expected.country));
+      });
+    } finally {
+      source.close();
+    }
+  });
+  test("XDB maps reordered custom columns and returns independent nested result objects", () => {
+    const fields = ["country_code", "city_name", "country_name", "extra", "isp", "region_name"];
+    const region = "EX|First|Example|retained|Example ISP|Region";
+    const source = createRawXDB(xdbFixture({ region }), { fields, metadata: { id: "custom-xdb" } });
+    const expected = {
+      country: { name: "Example", code: "EX" },
+      subdivisions: [{ name: "Region" }],
+      city: { name: "First" },
+      isp: "Example ISP",
+      source: "custom-xdb",
+      extensions: {
+        region,
+        raw: {
+          country_code: "EX",
+          city_name: "First",
+          country_name: "Example",
+          extra: "retained",
+          isp: "Example ISP",
+          region_name: "Region",
+        },
+      },
+    };
+    try {
+      const first = source.lookup("192.0.2.1");
+      equal(first, expected);
+      first.country.name = "changed";
+      first.subdivisions[0].name = "changed";
+      first.subdivisions.push({ name: "extra" });
+      first.city.name = "changed";
+      first.isp = "changed";
+      first.extensions.region = "changed";
+      first.extensions.raw.extra = "changed";
+      equal(source.lookup("192.0.2.1"), expected);
+      equal(source.lookup("192.0.2.2"), expected);
+    } finally {
+      source.close();
+    }
+    const raw = createRawXDB(xdbFixture({ region }));
+    try {
+      const first = raw.lookup("192.0.2.1");
+      first.extensions.raw.extra = "changed";
+      first.extensions.region = "changed";
+      equal(raw.lookup("192.0.2.1"), { source: "ip2region-xdb", extensions: { region, raw: {} } });
+    } finally {
+      raw.close();
+    }
   });
   test("XDB rejects corrupt headers, index ranges, vector entries, pointers and UTF-8", () => {
     for (const family of [4, 6]) {

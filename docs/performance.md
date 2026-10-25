@@ -39,6 +39,89 @@ family, checks expected records decoded directly from the XDB index, warms up
 20,000 queries, then measures 10,000 individual latencies and 100,000 queries for
 throughput. Each case runs in five sequential fresh processes.
 
+### XDB result mapping optimization, 2026-10-25
+
+XDB record interpretation lives in the format adapter. Mapped queries now build
+the result directly instead of allocating conditional object-spread wrappers;
+the field loop and placeholder helper also avoid per-query callbacks. Unmapped
+queries return their raw record directly. Column validation, omission rules,
+custom layouts and independent mutable results are preserved. No result cache
+or public API change is introduced.
+
+The baseline is separately built main `4e5c34614afd2ae53695776152a054b6084ac3c1`,
+which already contains the IP parsing optimization. The optimized working tree
+is identified by source/compiled hashes in the
+[raw report](benchmarks/2026-10-25-xdb-result-mapping.json). Both revisions run on
+the same Linux x64 AMD EPYC 9V74 host with five visible logical CPUs. This is a
+different host from the October 24 report; the percentages below compare only
+the paired revisions in this run.
+
+Each case uses the same pinned files and 4,096-address corpus, 20,000 warm-up
+queries, 10,000 latency samples and 500,000 throughput queries in five fresh
+sequential processes. Candidate order rotates between repetitions. All 120
+workers verified the complete corpus and timed output checksum.
+
+Standard-record throughput, median queries per second:
+
+| Runtime      | Family | Baseline | Optimized | Change |
+| ------------ | ------ | -------: | --------: | -----: |
+| Node 24.19.0 | IPv4   |  596,169 |   820,482 | +37.6% |
+| Node 24.19.0 | IPv6   |  201,728 |   226,594 | +12.3% |
+| Bun 1.4.4    | IPv4   |  783,654 | 1,209,773 | +54.4% |
+| Bun 1.4.4    | IPv6   |  245,829 |   270,085 |  +9.9% |
+| Deno 2.9.6   | IPv4   |  420,497 |   511,343 | +21.6% |
+| Deno 2.9.6   | IPv6   |  189,354 |   215,526 | +13.8% |
+
+Raw-record throughput, median queries per second:
+
+| Runtime      | Family |  Baseline | Optimized | Change |
+| ------------ | ------ | --------: | --------: | -----: |
+| Node 24.19.0 | IPv4   | 1,709,151 | 2,223,200 | +30.1% |
+| Node 24.19.0 | IPv6   |   256,549 |   291,138 | +13.5% |
+| Bun 1.4.4    | IPv4   | 1,751,042 | 2,277,598 | +30.1% |
+| Bun 1.4.4    | IPv6   |   320,165 |   319,743 |  -0.1% |
+| Deno 2.9.6   | IPv4   |   877,751 |   928,469 |  +5.8% |
+| Deno 2.9.6   | IPv6   |   241,668 |   231,241 |  -4.3% |
+
+These measurements do not show a universal improvement. Several run ranges
+overlap, including raw IPv6 on Bun and Deno. Bun standard-record median p99
+increases from 3.415 to 6.991 microseconds for IPv4 and from 12.368 to 15.523
+microseconds for IPv6, despite improved throughput and median p50/p95. The full
+report retains every latency percentile, loading time and memory delta; loading
+and memory are not improvement claims for this change.
+
+The [Bun warm-up follow-up](benchmarks/2026-10-25-xdb-bun-warmup.json) uses the
+same source, compiled code, data, corpus and worker, with three fresh processes
+per standard-record case. All 24 workers verified every result. Median p99 in
+microseconds, recorded separately from the five-run matrix above:
+
+| Family | Warm-up queries | Baseline | Optimized |
+| ------ | --------------: | -------: | --------: |
+| IPv4   |          20,000 |    3.105 |     3.546 |
+| IPv4   |         200,000 |    2.224 |     1.762 |
+| IPv6   |          20,000 |   25.648 |    16.515 |
+| IPv6   |         200,000 |   16.805 |    15.363 |
+
+The IPv4 tail difference reverses after longer warm-up; IPv6 results vary between
+runs. This demonstrates sensitivity to measurement conditions, not a proven
+JIT/GC cause. It does not remove the initial short-warm-up tradeoff or establish
+a production latency guarantee. At 200,000 warm-up queries, median throughput
+still improves from 825,530 to 1,290,469 queries/s for IPv4 and from 241,450 to
+259,284 for IPv6.
+
+To reproduce, separately build that baseline revision, then run:
+
+```sh
+IP2REGION_BUN=bun IP2REGION_DENO=deno npm run benchmark:matrix -- \
+  --baseline=/path/to/built-4e5c346 --runtimes=node,bun,deno \
+  --samples=500000 --output=/tmp/ip2region-xdb-result-mapping.json
+```
+
+To repeat the Bun follow-up conditions, run the same command with
+`--runtimes=bun --repetitions=3`, once with `--warmup=20000` and once with
+`--warmup=200000`. The full harness also measures raw cases; the focused
+follow-up report contains standard-record cases only.
+
 ### IP parsing optimization, 2026-10-24
 
 CPU sampling of standard-record queries identified IPv4 splitting, mapping,

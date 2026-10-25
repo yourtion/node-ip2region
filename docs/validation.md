@@ -1,5 +1,26 @@
 # Implementation validation
 
+## XDB result mapping, 2026-10-25
+
+On the Linux x64 cloud worker, Node 24.19.0 passed all 75 core,
+independent-reader and release-helper tests. Real-tarball validation passed on
+Node 24.19.0, Bun 1.4.4 and Deno 2.9.6, including the public custom adapter
+examples, ESM/CJS consumers, declarations, permission checks and pinned data
+hashes. The shared consumer suites contain 61 Node tests and 59 Bun/Deno tests;
+the standalone Node custom example suite contains 17 tests.
+
+XDB regressions cover omitted fields and raw placeholders, name-only/code-only
+countries, the existing `Reserved` rules, reordered custom columns, independent
+nested results, and both too few and too many record columns. Query results
+remain independently mutable, including `extensions.raw` in unmapped mode.
+
+The repository-only XDB comparison against main `4e5c346` verified 120 fresh
+workers across Node/Bun/Deno. See [performance.md](performance.md) for throughput,
+latency tradeoffs and reproduction details. The earlier runtime-floor checks
+below remain historical; this local run uses the three versions listed above.
+
+## Previous validation, 2026-10-24
+
 Local validation on the Linux x64 cloud worker, 2026-10-24:
 
 | Consumer / check                                                      | Result                  |
