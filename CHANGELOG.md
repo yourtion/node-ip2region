@@ -2,6 +2,21 @@
 
 ## Unreleased
 
+## 4.0.0 — 2026-10-25
+
+### Breaking changes
+
+- Replace root `createLookup(source, options)` with `new IP2Region({ source, ...options })`
+  and `createAsyncLookup(source, options)` with `new AsyncIP2Region({ source, ...options })`.
+- Replace native `openDefault(options)` with `IP2Region.open(options)` and
+  `openDatabase(path, factory, options)` with explicit `database` configuration
+  or a custom `source`. Native entries also offer synchronous construction.
+- Async clients use `lookupAsync`, `lookupManyAsync`, `lookupManySettledAsync`
+  and `closeAsync`; async adapters now implement `lookupAsync` and optional `closeAsync`.
+  Synchronous query method names remain unchanged. See the README migration table.
+
+### Added and improved
+
 - Compose custom IPv4/IPv6 databases with explicit native `databases` routing,
   per-source metadata and cleanup on failed initialization.
 - Add optional bounded concurrency to asynchronous batches while preserving
