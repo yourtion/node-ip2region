@@ -17,6 +17,7 @@ import { test } from "node:test";
 import { format } from "oxfmt";
 import { xdbFixture } from "../tests/fixtures.mjs";
 import { applyStage, inspectDatabase, renderBundled, renderReadme, stageData, validateStage } from "./update-data.mjs";
+import { prepareDataUpdate } from "./check-data-update.mjs";
 
 const revision = "a".repeat(40);
 const fields = ["country_name", "region_name", "city_name", "isp", "country_code"];
@@ -71,6 +72,109 @@ function fixture(t) {
 }
 
 const snapshot = (root) => Object.fromEntries(names.map((name) => [name, hash(readFileSync(join(root, name)))]));
+
+function automatic(options) {
+  return {
+    ...options,
+    revision: "b".repeat(40),
+    fetchFile: async (url) =>
+      readFileSync(join(options.from, url.endsWith("LICENSE.md") ? "LICENSE.ip2region.md" : url.split("/").at(-1))),
+  };
+}
+
+test("automatic checks ignore upstream code-only commits and retrieval dates", async (t) => {
+  const options = fixture(t);
+  const before = snapshot(options.root);
+  const result = await prepareDataUpdate(automatic(options));
+  assert.equal(result.status, "unchanged");
+  assert.deepEqual(snapshot(options.root), before);
+  assert.equal(result.report.manifest.upstream.revision, "b".repeat(40));
+  assert.ok(existsSync(join(options.stage, "report.json")));
+});
+
+test("automatic changes update both snapshot metadata and the review report, then become a no-op", async (t) => {
+  const options = fixture(t);
+  writeFileSync(
+    join(options.from, "ip2region_v6.xdb"),
+    xdbFixture({ family: 6, exclusive: false, region: "New|Area|City|ISP|NX" })
+  );
+  const result = await prepareDataUpdate(automatic(options));
+  assert.equal(result.status, "updated");
+  assert.deepEqual(JSON.parse(readFileSync(join(options.root, "data/manifest.json"))), result.report.manifest);
+  assert.ok(result.report.checks[1].changes.changedRecords > 0);
+  assert.match(result.body, /IPv4.*\n.*IPv6/);
+  assert.match(result.body, /License content changed: \*\*no\*\*/);
+  assert.ok(result.body.includes(result.report.manifest.files[1].sha256));
+  const before = snapshot(options.root);
+  const repeated = await prepareDataUpdate({ ...automatic(options), stage: options.stage + "-repeat" });
+  assert.equal(repeated.status, "unchanged");
+  assert.deepEqual(snapshot(options.root), before);
+});
+
+test("an identical pending snapshot preserves its existing PR even when the upstream SHA advances", async (t) => {
+  const options = fixture(t);
+  writeFileSync(
+    join(options.from, "ip2region_v4.xdb"),
+    xdbFixture({ exclusive: false, region: "New|Area|City|ISP|NX" })
+  );
+  const pending = (await stageData({ ...automatic(options), from: undefined, stage: options.stage + "-pending" }))
+    .manifest;
+  const before = snapshot(options.root);
+  const result = await prepareDataUpdate({ ...automatic(options), revision: "c".repeat(40), pending });
+  assert.equal(result.status, "pending");
+  assert.deepEqual(snapshot(options.root), before);
+});
+
+test("a newer snapshot replaces an older pending candidate", async (t) => {
+  const options = fixture(t);
+  const pending = JSON.parse(readFileSync(join(options.root, "data/manifest.json")));
+  writeFileSync(
+    join(options.from, "ip2region_v4.xdb"),
+    xdbFixture({ exclusive: false, region: "New|Area|City|ISP|NX" })
+  );
+  const result = await prepareDataUpdate({ ...automatic(options), pending });
+  assert.equal(result.status, "updated");
+  assert.notEqual(result.report.manifest.files[0].sha256, pending.files[0].sha256);
+});
+
+test("license-only updates produce a PR and unsupported licenses fail without changing the checkout", async (t) => {
+  const options = fixture(t);
+  writeFileSync(
+    join(options.from, "LICENSE.ip2region.md"),
+    Buffer.concat([license, Buffer.from("\nCopyright update\n")])
+  );
+  const result = await prepareDataUpdate(automatic(options));
+  assert.equal(result.status, "updated");
+  assert.match(result.body, /yes — review the license diff/);
+  const before = snapshot(options.root);
+  writeFileSync(join(options.from, "LICENSE.ip2region.md"), "An unsupported license");
+  await assert.rejects(
+    () => prepareDataUpdate({ ...automatic(options), stage: options.stage + "-invalid" }),
+    /Upstream license changed/
+  );
+  assert.deepEqual(snapshot(options.root), before);
+});
+
+test("automatic checks reject invalid candidates, download failures and unverified pending manifests", async (t) => {
+  const options = fixture(t);
+  const before = snapshot(options.root);
+  await assert.rejects(
+    () =>
+      prepareDataUpdate({
+        ...automatic(options),
+        fetchFile: async () => {
+          throw new Error("download failed");
+        },
+      }),
+    /download failed/
+  );
+  const pending = JSON.parse(readFileSync(join(options.root, "data/manifest.json")));
+  pending.upstream.source = "local-files";
+  await assert.rejects(() => prepareDataUpdate({ ...automatic(options), pending }), /upstream-download/);
+  writeFileSync(join(options.from, "ip2region_v6.xdb"), xdbFixture({ family: 6, region: "bad|schema" }));
+  await assert.rejects(() => prepareDataUpdate(automatic(options)), /five columns/);
+  assert.deepEqual(snapshot(options.root), before);
+});
 
 test("local staging validates both families, records honest provenance and preserves installed files", async (t) => {
   const options = fixture(t);
