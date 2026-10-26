@@ -52,20 +52,20 @@ npm 成功后 GitHub 失败及重跑，不调用真实发布 API。这些测试�
 pnpm install --frozen-lockfile --ignore-scripts
 npm run check
 npm test
-node scripts/npm-release.mjs pack v4.0.0 /tmp/ip2region-release
-IP2REGION_BUN=bun IP2REGION_DENO=deno npm run test:packed -- /tmp/ip2region-release/ip2region-4.0.0.tgz
+node scripts/npm-release.mjs pack v4.0.1 /tmp/ip2region-release
+IP2REGION_BUN=bun IP2REGION_DENO=deno npm run test:packed -- /tmp/ip2region-release/ip2region-4.0.1.tgz
 ```
 
 `pack` 的版本参数必须匹配当次 `package.json`。常规 `npm run test:package` 仍会自行打包测试。
 
 ## 正式发版与重跑
 
-以下以尚未发布的 `4.0.1` 为例；发布时选择新的版本号：
+以下以尚未发布的 `4.0.2` 为例；发布时选择新的版本号：
 
-1. 修改 `package.json` 和 CHANGELOG；预发布使用例如 `4.0.1-rc.1`。将改动提交到 `main`，
+1. 修改 `package.json` 和 CHANGELOG；预发布使用例如 `4.0.2-rc.1`。将改动提交到 `main`，
    等跨平台 CI 通过，确认 npm Trusted Publisher 配置有效。
-2. 在确认过的提交上创建对应 tag，例如 `git tag -a v4.0.1 -m "Release 4.0.1"`，
-   再执行 `git push origin v4.0.1`。**推 tag 会真实发包。**
+2. 在确认过的提交上创建对应 tag，例如 `git tag -a v4.0.2 -m "Release 4.0.2"`，
+   再执行 `git push origin v4.0.2`。**推 tag 会真实发包。**
 3. 在 Actions 的 Release 工作流中检查 npm 发布和 GitHub Release 结果。
 
 失败时在 Actions 重跑原 tag 的失败 job。helper 查询精确的包版本：已存在就跳过 npm，
