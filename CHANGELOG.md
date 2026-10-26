@@ -2,6 +2,16 @@
 
 ## Unreleased
 
+## 4.0.1 — 2026-10-26
+
+- Refresh the packaged README and maintenance guides, remove the 3.x migration
+  section, and correct XDB vector-index error documentation.
+- Consolidate validation evidence and historical benchmark tables while retaining
+  original reports and reproduction commands.
+- Add validated upstream data-update PR automation, scheduled for Sunday 00:00
+  Asia/Shanghai (Saturday 16:00 UTC), with content-based deduplication and explicit
+  cross-platform CI dispatch.
+
 ## 4.0.0 — 2026-10-25
 
 ### Breaking changes
