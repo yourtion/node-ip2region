@@ -2,8 +2,8 @@ name: Data updates
 
 on:
   schedule:
-    # Daily at 03:17 UTC (11:17 Asia/Shanghai), away from the hourly rush.
-    - cron: "17 3 * * *"
+    # Sunday at 00:00 Asia/Shanghai is Saturday at 16:00 UTC.
+    - cron: "0 16 * * 6"
   workflow_dispatch:
 
 permissions:

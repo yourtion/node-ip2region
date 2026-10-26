@@ -74,7 +74,7 @@ export async function prepareDataUpdate({ root = rootDirectory, stage, revision,
     return { status: "unchanged", report, body: "The bundled data and license already match upstream.\n" };
   }
   if (pending && sameSnapshot(pending, report.manifest)) {
-    // Preserve the first retrieval date and avoid daily commits to the same pending PR.
+    // Preserve the first retrieval date and avoid repeated commits to the same pending PR.
     return { status: "pending", report, body: "The existing data PR already contains this snapshot.\n" };
   }
   await applyStage({ root, stage });
