@@ -42,7 +42,8 @@ recording new digests and rerunning reference and native-runtime validation.
 ### Scheduled pull requests
 
 [Data updates](../.github/workflows/data-update.yml) checks the upstream default
-branch daily at **03:17 UTC** (11:17 Asia/Shanghai); GitHub may delay scheduled runs.
+branch weekly at **Sunday 00:00 Asia/Shanghai** (Saturday 16:00 UTC).
+GitHub may delay scheduled runs.
 It can also be run from Actions → Data updates → Run workflow on `main`.
 The scheduled workflow starts operating after it is merged into the default branch.
 This repository's development/release branch is `main`; set **Settings → General →
