@@ -176,22 +176,4 @@ GitHub Actions 的 `Data updates` 每周日北京时间 00:00（UTC 周六 16:00
 自动创建或更新数据 PR，也可手动运行。PR 合并和 npm 发布仍由维护者决定。
 这是仓库维护工具，不会在导入、安装或查询时联网；操作与失败恢复说明见[数据维护](data/README.md)。
 
-## 从 3.x 升级
-
-4.0 统一使用类构造器，并明确区分同步与异步方法。已有 3.x 调用需要调整：
-
-| 3.x                                                    | 4.0                                                                                                             |
-| ------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------- |
-| `createLookup(source, options)`                        | `new IP2Region({ source, ...options })`，从根入口导入                                                           |
-| `createAsyncLookup(source, options)`                   | `new AsyncIP2Region({ source, ...options })`                                                                    |
-| 原生入口 `openDefault(options)`                        | `await IP2Region.open(options)`                                                                                 |
-| 原生入口 `openDatabase(path, factory, options)`        | 内置格式使用 `await IP2Region.open({ database: { format, path }, ...options })`；自定义读取器通过 `source` 接入 |
-| 异步客户端 `lookup/lookupMany/lookupManySettled/close` | `lookupAsync/lookupManyAsync/lookupManySettledAsync/closeAsync`                                                 |
-| 异步 adapter 的 `close()`                              | `closeAsync()`；`lookupAsync()` 保持不变                                                                        |
-
-同步查询方法不变，外部来源仍默认借用。构造原生客户端时会同步读文件；需要保留异步加载行为，
-请使用 `IP2Region.open()`。3.x 类型 `ReaderFactory` 和 `DefaultOptions` 不再导出；原生入口现在提供
-`IP2RegionOptions`、`DatabaseOptions`、`DatabasesOptions`，自定义来源使用根入口的 adapter 类型。
-运行时最低版本与 3.0 相同，见[安装](#安装)。
-
 代码采用 [MIT](LICENSE) 许可；内置数据许可见[数据来源](data/README.md)。
