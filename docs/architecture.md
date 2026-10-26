@@ -40,16 +40,7 @@ and native runtime file loaders.
   native file APIs and share the same query engines. User-supplied readers do
   not require a registry or a library release.
 
-## Delivery and validation
-
-1. Pure core and extension contract: strict IP parsing, synchronous/asynchronous
-   functions and instances, errors, batches, ownership and close behavior.
-2. Native loading and ip2region XDB dual-stack data, IPIP IPDB and IP2Location BIN.
-   Validate each format with synthetic fixtures and an independent reader.
-3. Document data provenance and actual format/field/runtime capabilities.
-4. Test real tarballs, declarations, ESM/CJS, runtime permission failures and
-   memory-only operation. Record loading/memory/query performance separately
-   from location accuracy.
+## Batch and data boundaries
 
 Batch calls retain input order. `lookupMany` fails on the first error;
 `lookupManySettled` records per-item errors and continues. Async batches default
@@ -64,3 +55,6 @@ checks each reader's family support and owns their cleanup. Results retain the
 selected reader's interpretation and source; composite metadata retains the
 individual datasets. Maintainer data staging and application are explicit tools,
 outside runtime loading and queries.
+
+Build/test commands are in [development.md](development.md), with observed results
+and coverage limits in [validation.md](validation.md).

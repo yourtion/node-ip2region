@@ -45,10 +45,7 @@ recording new digests and rerunning reference and native-runtime validation.
 branch weekly at **Sunday 00:00 Asia/Shanghai** (Saturday 16:00 UTC).
 GitHub may delay scheduled runs.
 It can also be run from Actions → Data updates → Run workflow on `main`.
-The scheduled workflow starts operating after it is merged into the default branch.
-This repository's development/release branch is `main`; set **Settings → General →
-Default branch** to `main` before enabling the schedule. A workflow present only
-on `main` cannot run on a schedule while `master` remains the default branch.
+The schedule runs from the repository's default branch, `main`.
 
 Each run resolves a full upstream commit SHA, then uses the same staging and
 validation pipeline described below. Only changes to XDB bytes or the license
@@ -92,8 +89,8 @@ maintenance tools, not runtime APIs; normal imports, installation and lookups
 never download data. Network staging additionally requires `curl` on PATH and
 uses its inherited proxy and CA configuration.
 
-Build once, then stage a complete, pinned upstream revision into a **new directory
-outside the checkout**:
+Stage a complete, pinned upstream revision into a **new directory outside the
+checkout** (the npm commands build the tools before running them):
 
 ```sh
 npm run data:stage -- --revision f8b0792b0cd729f5b2593f690aeed225e49c1967 --stage /tmp/ip2region-candidate

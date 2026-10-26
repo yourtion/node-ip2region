@@ -1,117 +1,56 @@
 # Implementation validation
 
-## Database composition, async batches and data maintenance, 2026-10-25
+## Current evidence, 2026-10-26
 
-Local Node 24.19.0 validation passed 99 core, independent-reader, release-helper
-and data-update tests. The shared native suite contains 75 Node tests and 73
-Bun/Deno tests; real tarball consumers passed on Node 24.19.0, Bun 1.4.4 and
-Deno 2.9.6, including the 17 standalone custom examples, public option types,
-ESM/CJS declarations, permissions and manifest/data/license consistency.
+The [12-job CI for PR #46](https://github.com/yourtion/node-ip2region/actions/runs/40258583180)
+passed quality/workflow checks and real-package tests on Node 22.12.0/24 across
+Linux, macOS and Windows, plus minimum/current Bun and Deno on Linux.
+The Node test command contains 105 core, reference-reader, release-helper and
+data-update tests; the packaged shared suites contain 75 Node and 73 Bun/Deno
+cases, plus 17 standalone custom-adapter examples per runtime.
+Test counts describe this revision.
 
-Composition coverage includes both address families, mixed formats, custom
-columns, missing families, configuration rejection before I/O, partial-load
-cleanup and attempting all reader closes even when one throws. Async batch
-tests use controlled promises to check concurrency limits, lazy iteration,
-out-of-order completion, a slow first request, first-error draining, iterator
-cleanup, settled failures and close/reentrant-close behavior.
+The [4.0.0 release run](https://github.com/yourtion/node-ip2region/actions/runs/40164617294)
+validated one exact tarball on Node, Bun and Deno, published it through npm OIDC,
+and created the GitHub Release. The downloaded npm archive matched the validated
+SHA-256: `373d7c7a0adda1d690ec38e9241d46e816a00b75f2a46aac80975528f6d991b9`.
 
-Ten offline updater tests cover all-record validation, invalid families/columns/
-UTF-8, unknown build timestamps, report and payload edits, changed baselines,
-locks, partial downloads, handled replacement rollback and generated formatting.
-Real network staging of pinned revision `f8b0792b0cd729f5b2593f690aeed225e49c1967`
-verified 553,967 IPv4 ranges and 734,953 IPv6 ranges, all referenced payloads and
-256 independent-reader boundary checks per family. Candidate hashes and license
-matched the existing snapshots; no checked-in XDB bytes were updated.
+The first [manual Data updates run](https://github.com/yourtion/node-ip2region/actions/runs/40258072703)
+succeeded on `main`. The weekly schedule and permission requirements are described
+in [data maintenance](../data/README.md#scheduled-pull-requests).
 
-An isolated checkout exercised upstream and local staging/application. Applying
-local files retained explicit unverified/local provenance; the resulting checkout
-passed quality checks, a fresh build and all 75 Node shared tests. Multi-file
-application is not crash-atomic; recovery limits are documented in
-[data maintenance](../data/README.md).
+## Coverage and limits
 
-## XDB result mapping, 2026-10-25
+| Area              | Coverage                                                                                                                                      |
+| ----------------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
+| IP parsing        | Strict literals, every IPv4 octet value, full unsigned 128-bit IPv6, mapped-address policy and malformed input                                |
+| Native loading    | Selected-family I/O, sync constructors/async opening, configuration rejection before I/O, mixed-format composition and partial-load cleanup   |
+| Source lifecycle  | Functions/instances, `this`, ownership, stable errors, reentrant close, idempotence and attempting every child cleanup                        |
+| Async batches     | Bounded/lazy dispatch, ordered results, slow tasks, first-error draining, iterator cleanup, settled errors and closing during work            |
+| Binary readers    | Sparse XDB/vector bounds, custom columns/raw records, UTF-8, BIN DB1–DB26, structural string overlaps and IPDB language/trie bounds           |
+| Package consumers | Public examples/options, ESM/CJS, NodeNext declarations, pure core types without Node/DOM types, file permissions and manifest/license hashes |
+| Data updates      | All-record checks, altered stages/baselines, partial downloads, locks, rollback, unchanged/pending candidates and license-only changes        |
+| Release helpers   | Registry/auth failures, exact-version checks and resuming after npm succeeds but GitHub Release fails, using mocked APIs                      |
 
-On the Linux x64 cloud worker, Node 24.19.0 passed all 75 core,
-independent-reader and release-helper tests. Real-tarball validation passed on
-Node 24.19.0, Bun 1.4.4 and Deno 2.9.6, including the public custom adapter
-examples, ESM/CJS consumers, declarations, permission checks and pinned data
-hashes. The shared consumer suites contain 61 Node tests and 59 Bun/Deno tests;
-the standalone Node custom example suite contains 17 tests.
+Independent Node comparisons use `ip2region.js@3.1.8`,
+`ip2location-nodejs@9.8.0` and `ipip-ipdb@0.6.0` as development-only dependencies.
+XDB uses synthetic fixtures and both pinned real snapshots, including first/last
+addresses of 128 segments per file. BIN/IPDB use synthetic data; no commercial
+database is required, and not every vendor edition has been exercised.
 
-XDB regressions cover omitted fields and raw placeholders, name-only/code-only
-countries, the existing `Reserved` rules, reordered custom columns, independent
-nested results, and both too few and too many record columns. Query results
-remain independently mutable, including `extensions.raw` in unmapped mode.
+Data staging additionally checks all referenced nonempty XDB payloads for UTF-8
+and the configured five columns. Pinned revision
+`f8b0792b0cd729f5b2593f690aeed225e49c1967` contains 553,967 IPv4 and 734,953 IPv6
+ranges; staging verified 256 independent-reader boundary queries per family.
+An isolated checkout exercised both upstream and local application, retaining
+explicit unverified provenance for local files. Handled write failures roll back;
+multi-file application is not crash-atomic. See [recovery limits](../data/README.md).
 
-The repository-only XDB comparison against main `4e5c346` verified 120 fresh
-workers across Node/Bun/Deno. See [performance.md](performance.md) for throughput,
-latency tradeoffs and reproduction details. The earlier runtime-floor checks
-below remain historical; this local run uses the three versions listed above.
+Real-tarball tests use isolated consumers with no workspace dependency fallback.
+Test fixtures/helpers are injected separately; public custom examples are shipped
+and tested against the package's actual exports and declarations.
 
-## Previous validation, 2026-10-24
-
-Local validation on the Linux x64 cloud worker, 2026-10-24:
-
-| Consumer / check                                                      | Result                  |
-| --------------------------------------------------------------------- | ----------------------- |
-| Node 24.19.0 core, independent-reader and release-helper tests        | 73 tests passed         |
-| Node 22.12.0 / 24.19.0 real-tarball shared suite                      | 59 tests passed on each |
-| Bun 1.2.0 / 1.4.4 real-tarball shared suite, native loader            | 57 tests passed on each |
-| Deno 2.0.0 / 2.9.6 real-tarball shared suite, native loader           | 57 tests passed on each |
-| Public custom adapter examples, shipped in the tarball                | 17 tests per runtime    |
-| Packaged examples checked against actual public declarations          | Passed                  |
-| ESM, CJS, mixed-module error propagation                              | Passed                  |
-| NodeNext `.mts` / `.cts` consumer declarations                        | Passed                  |
-| Pure core/format declarations without Node or DOM types               | Passed                  |
-| Native file permission failures: Node, Bun and Deno                   | Passed                  |
-| Memory-only operation without database read permission: Node and Deno | Passed                  |
-| oxlint, oxfmt and TypeScript on Node 22.12.0 / 24.19.0                | Passed                  |
-| Frozen pnpm 9.15.9 lockfile, installation scripts disabled            | Passed                  |
-| Pinned XDB hashes, upstream license and distribution allowlist        | Passed                  |
-| CI and release workflows checked with actionlint 1.7.7                | Passed                  |
-| Recorded 2026-10-23 benchmark matrix, before the constructor API      | 54 runs passed          |
-| Repository-only XDB matrix, Node/Bun/Deno, 2026-10-24                 | 60 runs verified        |
-| Parsing optimization versus main, Node/Bun/Deno, 2026-10-24           | 120 runs verified       |
-
-The same byte fixtures and expected results are used across the runtimes.
-Parser regressions additionally exercise all 256 values in every IPv4 octet,
-reject leading-zero variants, and check every set/cleared bit across IPv4 and
-IPv6 unsigned word boundaries using independently constructed hexadecimal values.
-Checks cover complete 128-bit IPv6 values, mapped-address policy, first/last
-addresses, malformed literals, sparse XDB ranges and vector indexes, metadata language/family
-restrictions, truncated/corrupt files, fields/capabilities for DB1–DB26,
-ownership, this binding, error propagation and close lifecycle. Regression cases
-include close triggered synchronously inside an active async lookup (success and
-failure), BIN strings inside or crossing structural regions, 150,001 IPDB language
-entries and impossible offsets, raw XDB records with misleading five-column
-layouts, and native single-family loading. Constructors and asynchronous `open` share
-configuration and both return synchronous queries; async source clients expose
-only Async-suffixed methods. Runtime and type tests reject mixed sources, file
-configuration conflicts, malformed capabilities and invalid metadata. An instrumented loader verifies that
-unselected bundled files are never read and invalid family lists fail before I/O.
-
-The independent Node reference tests use official ip2region.js 3.1.8,
-ip2location-nodejs 9.8.0 and official ipip-ipdb 0.6.0. XDB comparisons include
-both synthetic fixtures and pinned real IPv4/IPv6 snapshots, sampling first/last
-addresses of 128 real segments per file. BIN/IPIP use synthetic records and
-require no commercial data. Real tarball checks run from an isolated consumer
-directory, exercising exports and copied library files without a source-tree or
-workspace dependency fallback. Test helpers are injected separately into the
-temporary installed package; they are not shipped in the tarball. The public
-custom examples are shipped separately, imported through package exports, and
-executed in the shared suites plus their standalone Node entry. JSDoc interfaces
-are checked both against source types and against the packed declarations.
-
-The CI workflow additionally runs Node on Windows/macOS/Linux, and minimum plus
-current Bun/Deno releases on Linux. Those remote runs are separate evidence from
-the local results above. npm publication requires a separate release decision.
-Performance observations are recorded in [performance.md](performance.md),
-not used as geographic-accuracy results. Reproduction commands and toolchain
-configuration are described in [development.md](development.md).
-
-Release automation additionally has network-free helper tests in `npm run test:release`
-and workflow validation with actionlint. `npm run test:packed -- /path/to/package.tgz`
-runs the same consumers against an existing archive, without repacking or modifying it.
-The tag workflow uses this mode before publishing that exact archive. Mocked release
-tests and local archive validation do not establish successful npm OIDC authentication;
-see [release setup](releasing.md).
+These checks establish interface and decoding behavior, not geographic accuracy.
+Performance evidence and its measurement limits are in [performance.md](performance.md).
+Reproduction commands are in [development.md](development.md); publication setup
+and retry rules are in [releasing.md](releasing.md).

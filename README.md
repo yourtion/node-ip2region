@@ -176,4 +176,6 @@ GitHub Actions 的 `Data updates` 每周日北京时间 00:00（UTC 周六 16:00
 自动创建或更新数据 PR，也可手动运行。PR 合并和 npm 发布仍由维护者决定。
 这是仓库维护工具，不会在导入、安装或查询时联网；操作与失败恢复说明见[数据维护](data/README.md)。
 
+开发与测试见[开发指南](docs/development.md)；性能数据与复现命令见[性能记录](docs/performance.md)。
+
 代码采用 [MIT](LICENSE) 许可；内置数据许可见[数据来源](data/README.md)。
