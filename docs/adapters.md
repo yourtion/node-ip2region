@@ -96,26 +96,11 @@ const settled = await query.lookupManySettledAsync(ips, { concurrency: 4 });
 
 ## 可运行示例与可复用测试
 
-[examples/custom](../examples/custom/) 中的代码通过公开包入口导入，随 npm 包分发，
-同时接受类型检查和 Node、Bun、Deno 的共享测试：
+[examples/custom](../examples/custom/) 提供同步函数、类、异步服务和自定义 JSON 字节格式，
+通过公开包入口导入，随 npm 包分发，并在 Node、Bun、Deno 上验证。
+文件目录与运行命令见[示例说明](../examples/custom/README.md)。
 
-| 文件                                                    | 用途                                                                                |
-| ------------------------------------------------------- | ----------------------------------------------------------------------------------- |
-| [readers.mjs](../examples/custom/readers.mjs)           | 有状态的 `MapReader`、可注入传输函数的 `ServiceReader`、自定义字节格式 `JSONReader` |
-| [contracts.mjs](../examples/custom/contracts.mjs)       | 可复制的同步 / 异步契约测试注册函数                                                 |
-| [custom-suite.mjs](../examples/custom/custom-suite.mjs) | 函数、类和自定义格式的完整接入与测试案例                                            |
-| [custom.test.mjs](../examples/custom/custom.test.mjs)   | 可单独执行的 Node 测试入口                                                          |
-
-在仓库中运行 `npm run test:examples`。包安装后也可直接运行：
-
-```sh
-node --test node_modules/ip2region/examples/custom/custom.test.mjs
-```
-
-Bun、Deno 使用仓库的 `tests/bun.test.mjs`、`tests/deno.test.mjs` 执行同一组案例。
-示例全部使用内存记录、合成 JSON 和可控异步函数，不请求外部服务、不需要商业数据库。
-
-接入自己的来源时，复制 `contracts.mjs`，提供每次创建独立来源的 `freshSource` 工厂，以及
-一个已知命中地址、一个已知未命中地址和预期记录。测试注册函数可传入 Node 的 `test`、
-Bun 的 `test` 或 `Deno.test`。再为自己的格式或传输补充损坏数据、权限、超时和资源清理测试。
+复用 `contracts.mjs` 时传入测试注册函数、每次创建独立来源的工厂函数，以及 `{ hit, miss, expected }` 样本。
+测试注册函数可使用 Node 的 `test`、Bun 的 `test` 或 `Deno.test`。
+再为自己的格式或传输补充损坏数据、权限、超时和资源清理测试。
 这些测试验证接口与解码行为，地理位置准确性需要单独的可追溯数据样本。

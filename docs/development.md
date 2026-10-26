@@ -14,8 +14,8 @@ emitting files, including the JSDoc-typed custom adapter examples.
 `npm run lint:fix` applies lint fixes; `npm run format` formats the repository. Generated output, lockfiles and the verbatim upstream license are
 excluded from formatting. CI and release validation enforce the same checks.
 
-`npm test` builds ESM/CJS and runs Node core, independent-reference and release
-helper tests, including the shared custom adapter examples. `test:package`
+`npm test` builds ESM/CJS and runs Node core, independent-reference, release-helper
+and data-update tests, including the shared custom adapter examples. `test:package`
 additionally packs the library and exercises isolated consumers, declarations, exports, permission failures and bundled data hashes.
 To validate all native consumers, install Bun and Deno and run:
 
@@ -50,22 +50,8 @@ deterministic corpus, with optional built revisions as a baseline. It validates
 every result before measuring and writes JSON; see
 [the workload and commands](performance.md#repository-xdb-measurements).
 
-Data maintenance is explicit and separate from runtime use. `npm run data:stage --
---revision <full-commit-sha> --stage <new-directory>` downloads pinned candidates
-and writes a review report; `--from <directory>` stages local files without claiming
-their revision was verified upstream. `data:validate` rechecks the stage and
-installed baseline, and `data:apply` replaces both snapshots and their metadata.
-See [data maintenance](../data/README.md) for commands and recovery limits.
-Network staging needs `curl`; offline staging and tests do not. Formatting uses
-the repository's existing development formatter.
-
-The scheduled Data updates workflow wraps the same updater with content-based
-change detection and one reusable PR branch. See [scheduled pull requests](../data/README.md#scheduled-pull-requests)
-for timing, GitHub permissions, CI dispatch and manual invocation. Its orchestration
-tests run offline with the update-tool tests, including unchanged data, pending
-candidates, license-only updates and failures that preserve the checkout.
-
-`npm test` includes offline update-tool tests in temporary repositories: invalid
-files, provenance, changed stages/baselines, locks, and replacement-failure rollback.
-Native composition and async batch tests are shared across all three runtime
-consumers; package checks also validate public option types and the data manifest.
+Data maintenance uses `data:stage`, `data:validate` and `data:apply`; the weekly
+Data updates workflow proposes changes on one reusable PR branch. Commands,
+provenance, permissions, reports and recovery limits are documented in
+[data maintenance](../data/README.md). Network staging needs `curl`; the updater
+and orchestration tests run offline as part of `npm test`.

@@ -17,7 +17,8 @@ IPv4 range endpoints use little endian; IPv6 endpoints retain all 128 bits in
 network order. The reader validates sorted non-overlapping ranges, segment/data
 bounds and every vector entry. Inclusive and exclusive vector end pointers from
 upstream makers are normalized; queries never read past the final segment.
-Missing vectors, sparse gaps and zero-length records return null.
+Empty vector buckets with no indexed ranges, sparse gaps and zero-length records
+return null. Missing or inconsistent required vector entries raise INVALID_DATABASE.
 
 XDB contains a UTF-8 region string, **not a field schema**. `createXDB(bytes)`
 defaults to uninterpreted raw records and advertises no geographic fields.

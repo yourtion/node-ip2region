@@ -13,7 +13,7 @@
   or a custom `source`. Native entries also offer synchronous construction.
 - Async clients use `lookupAsync`, `lookupManyAsync`, `lookupManySettledAsync`
   and `closeAsync`; async adapters now implement `lookupAsync` and optional `closeAsync`.
-  Synchronous query method names remain unchanged. See the README migration table.
+  Synchronous query method names remain unchanged.
 
 ### Added and improved
 

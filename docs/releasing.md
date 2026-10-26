@@ -4,7 +4,7 @@
 普通 `main` 提交、PR 和 GitHub Release 页面操作都不会触发发包。
 版本由 `package.json` 指定；仅提交 workflow 不会发布 npm 版本。
 
-## 首次发布前配置 npm
+## Trusted Publisher 配置
 
 在 npm 的 `ip2region` 包 Settings → Trusted publishing 中添加 GitHub Actions：
 
@@ -20,9 +20,10 @@
 无需添加 `NPM_TOKEN` 或 `NODE_AUTH_TOKEN`，也无需授予独立的 `npm dist-tag` 权限。
 Publishing access 中限制传统 token 的选项与 OIDC publisher 的 Allowed actions 是不同设置。
 
-**代码接入不等于 npm 后台已绑定，也不等于 OIDC 已验证。** 实际验证以 Release 工作流和 npm 发布记录为准。
-按 [npm 官方文档](https://docs.npmjs.com/trusted-publishers/)，新 publisher 配置需在创建后
-两天内完成首次成功发布，否则会过期。因此准备首发时再完成或核实绑定，不为验证配置提前发包。
+[4.0.0 发布工作流](https://github.com/yourtion/node-ip2region/actions/runs/40164617294)
+已成功通过 OIDC 发布并创建 GitHub Release。新增或重新配置 publisher 时，按
+[npm 官方文档](https://docs.npmjs.com/trusted-publishers/)核实绑定与有效期，
+配置状态以 npm 后台和实际发布结果为准。
 公开仓库、公开包通过 OIDC 发布会自动生成 npm provenance；这里不提供 GitHub 附件
 attestation，也没有 Release 二进制附件。
 
@@ -59,12 +60,12 @@ IP2REGION_BUN=bun IP2REGION_DENO=deno npm run test:packed -- /tmp/ip2region-rele
 
 ## 正式发版与重跑
 
-只有决定实际发布后，才执行以下流程：
+以下以尚未发布的 `4.0.1` 为例；发布时选择新的版本号：
 
-1. 修改 `package.json` 和 CHANGELOG；预发布使用例如 `4.0.0-rc.1`。将改动提交到 `main`，
+1. 修改 `package.json` 和 CHANGELOG；预发布使用例如 `4.0.1-rc.1`。将改动提交到 `main`，
    等跨平台 CI 通过，确认 npm Trusted Publisher 配置有效。
-2. 在确认过的提交上创建对应 tag，例如 `git tag -a v4.0.0 -m "Release 4.0.0"`，
-   再执行 `git push origin v4.0.0`。**推 tag 会真实发包。**
+2. 在确认过的提交上创建对应 tag，例如 `git tag -a v4.0.1 -m "Release 4.0.1"`，
+   再执行 `git push origin v4.0.1`。**推 tag 会真实发包。**
 3. 在 Actions 的 Release 工作流中检查 npm 发布和 GitHub Release 结果。
 
 失败时在 Actions 重跑原 tag 的失败 job。helper 查询精确的包版本：已存在就跳过 npm，
