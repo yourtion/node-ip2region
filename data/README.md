@@ -4,13 +4,13 @@
 
 Both unmodified files were downloaded from the pinned upstream revision below.
 
-Source: [lionsoul2014/ip2region](https://github.com/lionsoul2014/ip2region/tree/f8b0792b0cd729f5b2593f690aeed225e49c1967/data),
-revision `f8b0792b0cd729f5b2593f690aeed225e49c1967`, retrieved 2026-10-23.
+Source: [lionsoul2014/ip2region](https://github.com/lionsoul2014/ip2region/tree/cba49ef11b4051bc25334a3c5712715d636de90d/data),
+revision `cba49ef11b4051bc25334a3c5712715d636de90d`, retrieved 2026-11-21.
 
 | File             |      Bytes | Header build time (UTC)  | SHA-256                                                            |
 | ---------------- | ---------: | ------------------------ | ------------------------------------------------------------------ |
-| ip2region_v4.xdb | 11,122,642 | 2026-10-14T02:11:07.000Z | `27ecba8c9a6d5e3b280aedbe7ee15c65372b179fbd0dad3845d8c608f2fcace1` |
-| ip2region_v6.xdb | 37,277,813 | 2026-08-14T05:38:41.000Z | `939f6b46bd2b8bec3cf7c5ceb8ba782266ae9b1f35b5ba7916700dec0b7506ed` |
+| ip2region_v4.xdb | 11,123,810 | 2026-11-21T12:54:11.000Z | `4ed5d3398f0a72346a6cec780c57601bb6977fa4f29e9682cd60a66e3478c542` |
+| ip2region_v6.xdb | 37,283,761 | 2026-11-12T02:18:23.000Z | `1f0be1ffbbc3e4eeef10f354e01355f22f57ec649a496a17fd602539f3d384c1` |
 
 License file SHA-256: `fe01f2f8fcaafac539154e6aa80b0b7f8af54e01dc4d52322f72971991c6280e`.
 <!-- bundled-data:end -->
